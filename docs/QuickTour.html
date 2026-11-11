@@ -1198,13 +1198,13 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb55-1"><a h
 functions were exported implicitly. With Tasklet, functions must be
 exported explicitly.</p>
 <h3 id="content-generation-functions">Content Generation Functions</h3>
-<p>The <code>@tasklet.content("config/XXX")</code> decorator allows a
-script to dynamically generate content for the project’s
-<code>config</code> directory. The following example generates the
-contents of the <code>config/html-testdaq.html</code> file from the
-previous section within the task script.</p>
+<p>The <code>@tasklet.content(FILENAME)</code> decorator allows a script
+to dynamically generate content for the project’s <code>config</code>
+directory. The following example generates the contents of the
+<code>config/html-testdaq.html</code> file from the previous section
+within the task script.</p>
 <div class="sourceCode" id="cb56"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;config/html-testdaq.html&#39;</span>)</span>
+class="sourceCode python"><code class="sourceCode python"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;html-testdaq.html&#39;</span>)</span>
 <span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> html():</span>
 <span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&#39;&#39;&#39;</span></span>
 <span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a><span class="st">      &lt;form&gt;</span></span>
@@ -1222,7 +1222,7 @@ usage and generates an HTML table.</p>
 <div class="sourceCode" id="cb57"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shutil, datetime</span>
 <span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;config/html-disk_usage.html&#39;</span>)</span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;html-disk_usage.html&#39;</span>)</span>
 <span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> html_disk_usage():</span>
 <span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>    total, used, free <span class="op">=</span> <span class="bu">tuple</span>((<span class="bu">int</span>(x<span class="op">*</span><span class="fl">1e-8</span>)<span class="op">/</span><span class="fl">10.0</span>) <span class="cf">for</span> x <span class="kw">in</span> shutil.disk_usage(<span class="st">&#39;.&#39;</span>))</span>
 <span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a>    used_percent <span class="op">=</span> <span class="bu">int</span>(<span class="dv">100</span> <span class="op">*</span> used<span class="op">/</span>total) <span class="cf">if</span> total <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">else</span> <span class="dv">100</span></span>
@@ -1287,7 +1287,7 @@ instance.</li>
 <code>@tasklet.mesh.export()</code>.</li>
 <li>Remove <code>config/html-testdaq.html</code> and generate its
 contents with a function decorated with
-<code>@tasklet.content("config/html-testdaq.html")</code>.</li>
+<code>@tasklet.content("html-testdaq.html")</code>.</li>
 <li>Give the HTML form a name to enable synchronization across browsers
 and persistence of input values.</li>
 </ul>
@@ -1357,7 +1357,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb60-1"><a h
 <span id="cb60-61"><a href="#cb60-61" aria-hidden="true" tabindex="-1"></a>    run_status.running <span class="op">=</span> <span class="va">False</span></span>
 <span id="cb60-62"><a href="#cb60-62" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb60-63"><a href="#cb60-63" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb60-64"><a href="#cb60-64" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;config/html-testdaq.html&#39;</span>)</span>
+<span id="cb60-64"><a href="#cb60-64" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;html-testdaq.html&#39;</span>)</span>
 <span id="cb60-65"><a href="#cb60-65" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> html():</span>
 <span id="cb60-66"><a href="#cb60-66" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&#39;&#39;&#39;</span></span>
 <span id="cb60-67"><a href="#cb60-67" aria-hidden="true" tabindex="-1"></a><span class="st">      &lt;form name=&quot;testdaq&quot;&gt;</span></span>

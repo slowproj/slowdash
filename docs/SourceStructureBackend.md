@@ -803,7 +803,7 @@ For the user-facing concepts and further examples, see [SlowMesh and SlowTask (J
 | `@tasklet.once(delay=0)` | Runs once after initialization and the specified delay. |
 | `@tasklet.loop(interval=1, ticks=None)` | Repeatedly runs a callback; an integer `ticks` supplies a periodic boolean argument, while a dictionary supplies named flags such as `tick.store`. |
 | `@tasklet.schedule("08:00", use_utc=False)` | Runs on matching clock times; supports comma-separated `HH:MM` entries and `*` fields, using local time unless UTC is selected. |
-| `@tasklet.content("config/html-status")` | Registers an on-demand content generator, fetched through the task's `_sd_get_content` RPC; it is not a periodic callback. |
+| `@tasklet.content("html-status.html")` | Registers an on-demand content generator, fetched through the task's `_sd_get_content` RPC; it is not a periodic callback. |
 
 Multiple callbacks can use the same decorator. Main callbacks are separate asyncio tasks, but share the event loop with Mesh communication and heartbeats. A single loop callback is awaited before its next invocation; missed intervals do not create overlapping invocations. Blocking I/O or `time.sleep()` in any callback blocks the whole event loop. Use asynchronous I/O and `await asyncio.sleep()` when a delay is needed. Finalizers are not guaranteed to run after a process kill or crash.
 

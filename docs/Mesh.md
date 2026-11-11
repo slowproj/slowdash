@@ -799,7 +799,7 @@ For systems requiring high reliability, one advanced approach is to run a SlowTa
 The `@content(name:str)` decorator can dynamically generate the contents of files that would normally be placed under the SlowDash project's `config` directory. In the following example, the browser sees an HTML file named `html-disk_usage.html` as though it existed in `config`, while its contents change each time it is reloaded. By checking `On update: reload HTML` in the browser's HTML form, new HTML can be generated and displayed each time data is updated.
 
 ```python
-@tasklet.content('config/html-disk_usage.html')
+@tasklet.content('html-disk_usage.html')
 def html_disk_usage():
     total, used, free = tuple((int(x*1e-8)/10.0) for x in shutil.disk_usage('.'))
     return f'''
@@ -841,8 +841,8 @@ Even when Tasklet is not explicitly used in a script, an arbitrary Python script
   - `_finalize()`: equivalent to `@tasklet.finalize()`
   - `_run()`: equivalent to `@tasklet.once()`
   - `_loop()`: equivalent to `@tasklet.loop(interval=0)`
-  - `_get_html()`: equivalent to `@tasklet.content('config/html-{name}.html')`
-  - `_get_layout()`: equivalent to `@tasklet.content('config/slowplot-{name}.json')`
+  - `_get_html()`: equivalent to `@tasklet.content('html-{name}.html')`
+  - `_get_layout()`: equivalent to `@tasklet.content('slowplot-{name}.json')`
 
 
 # Example Projects
@@ -984,7 +984,7 @@ The Store task in this example also includes an example of dynamically generatin
 `@content(name)` associates a content name with the function that generates it.
 
 ```python
-@tasklet.content('config/html-disk_usage.html')
+@tasklet.content('html-disk_usage.html')
 def html_disk_usage():
     total, used, free = tuple((int(x*1e-8)/10.0) for x in shutil.disk_usage('.'))
     used_percent = int(100 * used/total) if total > 0 else 100

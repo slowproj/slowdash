@@ -144,7 +144,7 @@ async def get_object(address:str, subaddress:str='0'):
     
     
 
-@tasklet.content('config/html-NanotechMotor.html')
+@tasklet.content('html-NanotechMotor.html')
 async def html():
     html = f'''
     | <form name="nanotech_motor">

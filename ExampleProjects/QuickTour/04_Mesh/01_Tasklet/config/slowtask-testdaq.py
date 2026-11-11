@@ -57,7 +57,7 @@ async def stop():
     run_status.running = False
 
 
-@tasklet.content('config/html-testdaq.html')
+@tasklet.content('html-testdaq.html')
 async def html():
     return '''
       <form name="testdaq">

@@ -806,7 +806,7 @@ SlowTask は，内部に接続済 SlowMesh を保持していて，これを介�
 `@content(name:str)` デコレータにより，通常は SlowDash プロジェクトの `config` 以下に置かれるファイルの内容を動的に生成することができます．以下の例では，ブラウザからは HTML ファイル `html-disk_usage.html` が `config` に存在するかのように見え，かつ，リロードする度に内容が変わるものです．ブラウザの HTML フォームで `On update: reload HTML` をチェックすることにより，データ更新のたびに新しい HTML が生成され表示されるようにすることができます．
 
 ```python
-@tasklet.content('config/html-disk_usage.html')
+@tasklet.content('html-disk_usage.html')
 def html_disk_usage():
     total, used, free = tuple((int(x*1e-8)/10.0) for x in shutil.disk_usage('.'))
     return f'''
@@ -849,8 +849,8 @@ Tasklet のコンストラクタの `use_mesh_stdio` パラメータに `True` �
   - `_finalize()`: `@tasklet.finalize()` と同等
   - `_run()`: `@tasklet.once()` と同等
   - `_loop()`: `@tasklet.loop(interval=0)` と同等
-  - `_get_html()`: `@tasklet.content('config/html-{name}.html')` と同等
-  - `_get_layout()`: `@tasklet.content('config/slowplot-{name}.json')` と同等
+  - `_get_html()`: `@tasklet.content('html-{name}.html')` と同等
+  - `_get_layout()`: `@tasklet.content('slowplot-{name}.json')` と同等
 
 
 # Example Projects
@@ -992,7 +992,7 @@ publish が基本的にデータ生成元からの push なのに対して，Con
 `@content(name)` で，コンテンツ名と，それを生成する関数を結びつけています．
 
 ```python
-@tasklet.content('config/html-disk_usage.html')
+@tasklet.content('html-disk_usage.html')
 def html_disk_usage():
     total, used, free = tuple((int(x*1e-8)/10.0) for x in shutil.disk_usage('.'))
     used_percent = int(100 * used/total) if total > 0 else 100

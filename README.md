@@ -6,7 +6,7 @@ SlowDash is a web-based platform for monitoring and controlling distributed syst
 - LabVIEW-like visual control (graphical control panel and control logic behind it)
 - Jupyter-like Python scripting
 
-#### Current Status: ~70% of the initial design implemented
+#### Current Status: ~85% of the initial design implemented
 - Data browser mostly working
 - Controls partly implemented
 - Analysis part (scripting etc.) is experimental

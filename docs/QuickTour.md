@@ -913,11 +913,11 @@ With Tasklet, functions must be exported explicitly.
 
 ### Content Generation Functions
 
-The `@tasklet.content("config/XXX")` decorator allows a script to dynamically generate content for the project's `config` directory.
+The `@tasklet.content(FILENAME)` decorator allows a script to dynamically generate content for the project's `config` directory.
 The following example generates the contents of the `config/html-testdaq.html` file from the previous section within the task script.
 
 ```python
-@tasklet.content('config/html-testdaq.html')
+@tasklet.content('html-testdaq.html')
 async def html():
     return '''
       <form>
@@ -937,7 +937,7 @@ For example, the following function monitors disk usage and generates an HTML ta
 ```python
 import shutil, datetime
 
-@tasklet.content('config/html-disk_usage.html')
+@tasklet.content('html-disk_usage.html')
 async def html_disk_usage():
     total, used, free = tuple((int(x*1e-8)/10.0) for x in shutil.disk_usage('.'))
     used_percent = int(100 * used/total) if total > 0 else 100
@@ -999,7 +999,7 @@ The changes are:
 - Import `Tasklet` and create a `tasklet` instance.
 - Explicitly declare the loop callback with `@tasklet.loop(interval=1.0)` and remove the `time.sleep(1.0)` call inside it.
 - Explicitly export the browser-callable `start()` and `stop()` functions with `@tasklet.mesh.export()`.
-- Remove `config/html-testdaq.html` and generate its contents with a function decorated with `@tasklet.content("config/html-testdaq.html")`.
+- Remove `config/html-testdaq.html` and generate its contents with a function decorated with `@tasklet.content("html-testdaq.html")`.
 - Give the HTML form a name to enable synchronization across browsers and persistence of input values.
 
 Here is the complete updated SlowTask script (`config/slowtask-testdaq.py`).
@@ -1068,7 +1068,7 @@ async def stop():
     run_status.running = False
 
 
-@tasklet.content('config/html-testdaq.html')
+@tasklet.content('html-testdaq.html')
 async def html():
     return '''
       <form name="testdaq">

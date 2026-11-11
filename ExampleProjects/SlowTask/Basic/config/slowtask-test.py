@@ -52,7 +52,7 @@ def loop():
     ctrl.stream('ramping.status', status)
 
     
-@tasklet.content('config/html-test.html')
+@tasklet.content('html-test.html')
 def html():
     return '''
         <form name="test">

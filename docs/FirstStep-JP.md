@@ -1058,11 +1058,11 @@ async def start(auto_stop:bool, run_length:float):
 
 #### コンテンツ生成関数
 
-`@tasklet.content("config/XXX")` デコレータにより，プロジェクトの `config` ディレクトリの内容を動的に生成できます．
+`@tasklet.content(FILE_NAME)` デコレータにより，プロジェクトの `config` ディレクトリの内容を動的に生成できます．
 以下は，前章の `config/html-testdaq.html` ファイルをタスクスクリプトから生成するようにしたものです．
 
 ```python
-@tasklet.content('config/html-testdaq.html')
+@tasklet.content('html-testdaq.html')
 async def html():
     return '''
       <form>
@@ -1080,7 +1080,7 @@ async def html():
 ```python
 import shutil, datetime
 
-@tasklet.content('config/html-disk_usage.html')
+@tasklet.content('html-disk_usage.html')
 async def html_disk_usage():
     total, used, free = tuple((int(x*1e-8)/10.0) for x in shutil.disk_usage('.'))
     used_percent = int(100 * used/total) if total > 0 else 100
@@ -1138,7 +1138,7 @@ HTML パネルにおいて，フォームエレメントに名前をつけるこ
 - `Tasklet` を import してインスタンス `tasklet` を作成
 - `_loop()` コールバックを `@tasklet.loop(interval=1.0)` で明示的に指定．`_loop()` の中の `time.sleep(1.0)` を削除
 - ブラウザから呼ばれる関数 `start()` および `stop()` を，`@tasklet.mesh.export()` で明示的に指定
-- `config/html-testdaq.html` ファイルを削除し，変わりにスクリプト中の `tasklet.content("config/html-testdaq.html")` の関数で生成
+- `config/html-testdaq.html` ファイルを削除し，変わりにスクリプト中の `tasklet.content("html-testdaq.html")` の関数で生成
 - HTML フォームに名前をつけて，入力値のブラウザ間同期と永続性を有効化
 
 以下は，変更後の完全な SlowTask スクリプト(`config/slowtask-testdaq.py`)です．
@@ -1208,7 +1208,7 @@ async def stop():
     run_status.running = False
 
 
-@tasklet.content('config/html-testdaq.html')
+@tasklet.content('html-testdaq.html')
 async def html():
     return '''
       <form name="testdaq">

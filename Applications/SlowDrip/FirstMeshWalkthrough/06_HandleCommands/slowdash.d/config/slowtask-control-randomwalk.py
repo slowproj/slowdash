@@ -19,7 +19,7 @@ def finalize():
     dripline.close()
 
     
-@tasklet.content('html/html-control-randomwalk.html')
+@tasklet.content('html-control-randomwalk.html')
 def html():
     return '''
       <form>

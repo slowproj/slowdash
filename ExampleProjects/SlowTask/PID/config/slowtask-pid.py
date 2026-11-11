@@ -74,7 +74,7 @@ def set_output(output:float):
     
 
     
-@tasklet.content('config/html-pid_control.html')
+@tasklet.content('html-pid_control.html')
 def html_control():
     return '''
       <form name="pid_control">
@@ -94,7 +94,7 @@ def html_control():
       </form>
     '''
     
-@tasklet.content('config/html-pid_setup.html')
+@tasklet.content('html-pid_setup.html')
 def html_setup():
     return '''
       <form name="pid_setup">

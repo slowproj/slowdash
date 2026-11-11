@@ -1057,8 +1057,8 @@ If a script does not use Tasklet, the following functions, if defined, are calle
 | `_run()` | Called once after `_initialize()`. | `@tasklet.once()` |
 | `_loop()` | Called repeatedly after `_initialize()`, until the user stops the system. | `@tasklet.loop(interval=0)` |
 | `_finalize()` | Called once after `_run()` or `_loop()`. | `@tasklet.finalize()` |
-| `_get_html()` | Returns HTML content (described later). | `@tasklet.content('config/html-{TASK_NAME}.html')` |
-| `_get_layout()` | Returns a SlowPlot layout (described later). | `@tasklet.content('config/slowplot-{TASK_NAME}.json')` |
+| `_get_html()` | Returns HTML content (described later). | `@tasklet.content('html-{TASK_NAME}.html')` |
+| `_get_layout()` | Returns a SlowPlot layout (described later). | `@tasklet.content('slowplot-{TASK_NAME}.json')` |
 
 Note that, unlike when using Tasklet, the `_loop()` function is called repeatedly and immediately, without sleeping.
 Therefore, `_loop()` needs to sleep to adjust the period.
@@ -1178,7 +1178,7 @@ Multiple input values can also be set at once with `ctrl.form(name).aio_set(dict
 With the `@tasklet.content(name)` decorator, the contents of files that are normally placed under `config` of a SlowDash project can be generated dynamically.
 This makes it possible to put a task script and the HTML form to control it into a single file, making it easier to keep them consistent.
 ```python
-@tasklet.content('config/html-test.html')
+@tasklet.content('html-test.html')
 def html():
     return '''
       <form name="test">
@@ -1194,7 +1194,7 @@ Here is an example of displaying disk usage formatted in a table.
 ```python
 import shutil
 
-@tasklet.content('config/html-disk_usage.html')
+@tasklet.content('html-disk_usage.html')
 def html_disk_usage():
     total, used, free = tuple((int(x*1e-8)/10.0) for x in shutil.disk_usage('.'))
     return f'''

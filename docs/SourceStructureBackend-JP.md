@@ -803,7 +803,7 @@ asyncio.run(main())
 | `@tasklet.once(delay=0)` | 初期化完了後，指定秒数の遅延を経て一度実行する． |
 | `@tasklet.loop(interval=1, ticks=None)` | 周期的に実行する．整数の `ticks` は周期的な真偽値を引数として渡し，辞書なら `tick.store` などの名前付きフラグを渡す． |
 | `@tasklet.schedule("08:00", use_utc=False)` | 指定時刻に実行する．カンマ区切りの `HH:MM` と `*` に対応し，UTC 指定がなければローカル時刻を使う． |
-| `@tasklet.content("config/html-status")` | `_sd_get_content` RPC から要求時に呼ばれるコンテンツ生成関数を登録する．周期実行のコールバックではない． |
+| `@tasklet.content("html-status.html")` | `_sd_get_content` RPC から要求時に呼ばれるコンテンツ生成関数を登録する．周期実行のコールバックではない． |
 
 同じデコレータで複数の関数を登録できます．メイン処理のコールバックはそれぞれ asyncio タスクとして動きますが，Mesh 通信やハートビートとイベントループを共有します．一つのループコールバックは処理完了を待ってから次回を実行し，周期を超過しても同じコールバックを重複起動しません．ブロッキング I/O や `time.sleep()` はイベントループ全体を止めるので，非同期 I/O を使い，待機が必要なら `await asyncio.sleep()` を使います．強制終了やクラッシュでは finalize の実行は保証されません．
 

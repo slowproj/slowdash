@@ -50,7 +50,7 @@ async def loop():
     await ctrl.aio_stream('xy.stream', g_xy)
 
         
-@tasklet.content('config/html-control.html')
+@tasklet.content('html-control.html')
 def html():
     return '''
     <form name="control">

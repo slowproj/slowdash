@@ -319,10 +319,19 @@ class HtmlPanel extends Panel {
                 throw new Error(`empty response: ${submit_name} might not exist`);
             }
             const reply_doc = JSON.parse(reply);
-            if ((reply_doc.status ?? '').toUpperCase() == 'ERROR') {
+            const status = (reply_doc.status ?? '').toUpperCase();
+            if (status == 'ERROR') {
                 throw new Error(reply_doc.message ?? '');
             }
-            this.indicator.close("Command Processed", "&#x2705;", 1000);
+            else if (status == 'NOTICE') {
+                this.indicator.close("Notice: " + (reply_doc.message??'(none)'), "&#x270b;", 3000);
+            }
+            else if (status == 'ACCEPTED') {
+                this.indicator.close("Background Command Accepted", "&#x2705;", 1000);
+            }
+            else if (status == 'OK') {
+                this.indicator.close("Command Processed", "&#x2705;", 1000);
+            }
             
             this.callbacks.forceUpdate();
         }
@@ -362,7 +371,7 @@ class HtmlPanel extends Panel {
             if (! formInput) {
                 continue;
             }
-            if (((formInput.sender_id ?? '') == this.sender_id) || (formInput.value == null)) {
+            if (((formInput.sender_id ?? '') == this.senderId) || (formInput.value == null)) {
                 continue;
             }
             let form = this.contentDiv.find(`form[name="${formName}"]`);
@@ -585,7 +594,7 @@ class HrefPanel extends Panel {
             <p>
             <div font="small">
                <ul>
-                 <li>For User-HTML page, prepend "./api/userhtml/" before the file name.
+                 <li>For User-HTML page, prepend "/userhtml/" before the file name.
                  <li>For external page, start with "https://".
                  <li>Auto-scale and Offset do not work for external pages.
                </ul>

@@ -558,7 +558,8 @@ class Mesh:
         
         elif concurrency in ['single', 'parallel']:
             if concurrency == 'single' and len(func.running_tasks) > 0:
-                return { 'status': 'notice', 'message': f'already running: {function_name}', 'return_value': None }
+                lapse = int(time.monotonic() - next(iter(func.running_tasks))._sd_start_time)
+                return { 'status': 'notice', 'message': f'already running ({lapse} s)', 'return_value': None }
                 
             if len(func.running_tasks) >= self._max_rpc_parallel_tasks:
                 return { 'status': 'error', 'message': f'too many parallel tasks: {function_name}', 'return_value': None }
@@ -575,6 +576,7 @@ class Mesh:
                         logging.warning(f'background function error: {function_name}: {result.get("message","")}')
                         
             task = asyncio.create_task(self._execute_rpc_function(func, args, kwargs))
+            task._sd_start_time = time.monotonic()
             func.running_tasks.add(task)
             task.add_done_callback(on_done)
             return { 'status': 'accepted', 'message': f'task scheduled: {function_name}', 'return_value': None }

@@ -802,9 +802,10 @@ class TaskComponent(Component):
             if task._is_dead:
                 continue
             for content_file_name in task.contents:
-                if not content_file_name.startswith('config/'):
-                    continue
-                config_file = content_file_name[len('config/'):]
+                if content_file_name.startswith('config/'):   #... for backwards compatibility
+                    config_file = content_file_name[len('config/'):]
+                else:
+                    config_file = content_file_name
                 root_name = Path(config_file).stem
                 if '-' not in root_name:
                     continue

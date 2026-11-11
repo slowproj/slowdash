@@ -10,8 +10,9 @@
       div.column{display: inline-block; vertical-align: top; width: 50%;}
   </style>
   <style type="text/css">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -273,7 +274,7 @@ systems available in SlowPy Control can be selected:</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Backbone</th>
 <th>SlowPy Module</th>
 <th>Broker</th>
@@ -281,31 +282,31 @@ systems available in SlowPy Control can be selected:</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>SlowMQ</td>
 <td>control-AsyncSlowMQ.py</td>
 <td>Not required (built into SlowDash)</td>
 <td>HTTP(S)-based and accessible across firewalls</td>
 </tr>
-<tr class="even">
+<tr>
 <td>NATS</td>
 <td>control-AsyncNATS.py</td>
 <td>A separate NATS Broker is required</td>
 <td></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>MQTT</td>
 <td>control-AsyncMQTT.py</td>
 <td>A separate MQTT Broker (such as eclipse-mosquitto) is required</td>
 <td></td>
 </tr>
-<tr class="even">
+<tr>
 <td>RabbitMQ</td>
 <td>control-AsyncRabbitMQ.py</td>
 <td>A separate RabbitMQ Broker is required</td>
 <td></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Redis-PubSub</td>
 <td>control-AsyncRedis.py</td>
 <td>A separate Redis server is required</td>
@@ -321,30 +322,30 @@ Mesh constructor (or the <code>connect()</code> function):</p>
 <col style="width: 50%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Backbone</th>
 <th>URL Format</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>SlowMQ (WebSockets over HTTP or HTTPS)</td>
 <td><code>slowmq://HOST:PORT</code> (HTTP) or
 <code>slowmqs://HOST:PORT</code> (HTTPS)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>NATS</td>
 <td><code>nats://HOST</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>MQTT</td>
 <td><code>mqtt://HOST</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>RabbitMQ</td>
 <td><code>rabbitmq://USER:PASS@HOST/EXCHANGE</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Redis-PubSub</td>
 <td><code>redis://HOST/DB</code></td>
 </tr>
@@ -380,7 +381,7 @@ which does not use a strict hierarchy, filter behavior may differ.</p>
 <col style="width: 3%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Backbone</th>
 <th>Hierarchy Separator</th>
 <th>One-Level Match</th>
@@ -390,7 +391,7 @@ which does not use a strict hierarchy, filter behavior may differ.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>(original characters)</td>
 <td><code>.</code></td>
 <td><code>*</code></td>
@@ -398,7 +399,7 @@ which does not use a strict hierarchy, filter behavior may differ.</p>
 <td><code>data.store.&gt;</code></td>
 <td><code>data.*.HV.ch100</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>SlowMQ</td>
 <td><code>.</code></td>
 <td><code>*</code></td>
@@ -406,7 +407,7 @@ which does not use a strict hierarchy, filter behavior may differ.</p>
 <td><code>data.store.&gt;</code></td>
 <td><code>data.*.HV.ch100</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>NATS</td>
 <td><code>.</code></td>
 <td><code>*</code></td>
@@ -414,7 +415,7 @@ which does not use a strict hierarchy, filter behavior may differ.</p>
 <td><code>data.store.&gt;</code></td>
 <td><code>data.*.HV.ch100</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>MQTT</td>
 <td><code>/</code></td>
 <td><code>+</code></td>
@@ -422,7 +423,7 @@ which does not use a strict hierarchy, filter behavior may differ.</p>
 <td><code>data/store/#</code></td>
 <td><code>data/+/HV/ch100</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>RabbitMQ</td>
 <td><code>.</code></td>
 <td><code>*</code></td>
@@ -430,7 +431,7 @@ which does not use a strict hierarchy, filter behavior may differ.</p>
 <td><code>data.store.#</code></td>
 <td><code>data.*.HV.ch100</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Redis-PubSub</td>
 <td><code>:</code></td>
 <td><code>*</code> (approximate behavior)</td>
@@ -465,21 +466,21 @@ following MeshPackets are currently available.</p>
 <col style="width: 57%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Topic</th>
 <th>MeshPacket Constructor</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>data.*.&gt;</code></td>
 <td><code>DataPacket(values, *, tag:str|None=None, timestamp:float|None=None)</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>form.&gt;</code></td>
 <td><code>FormPacket(form:str, element:str, value)</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>control.&gt;</code></td>
 <td><code>ControlPacket()</code> TODO: not implemented</td>
 </tr>
@@ -600,19 +601,19 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb10-1"><a h
 <col style="width: 60%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Value</th>
 <th>Behavior</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>sync</code> (default)</td>
 <td>Executes the function, waits for it to finish, and returns
 <code>{ "status": "ok", "return_value": result }</code> if it completes
 successfully.</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>single</code></td>
 <td>Executes the function in the background and returns
 <code>{ "status": "accepted" }</code> without waiting for it to
@@ -621,7 +622,7 @@ is not executed again, and
 <code>{ "status": "notice", "message": "already running" }</code> is
 returned.</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>parallel</code></td>
 <td>Executes the function in the background and returns
 <code>{ "status": "accepted" }</code> without waiting for it to
@@ -1313,7 +1314,7 @@ By checking <code>On update: reload HTML</code> in the browser’s HTML
 form, new HTML can be generated and displayed each time data is
 updated.</p>
 <div class="sourceCode" id="cb39"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;config/html-disk_usage.html&#39;</span>)</span>
+class="sourceCode python"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;html-disk_usage.html&#39;</span>)</span>
 <span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> html_disk_usage():</span>
 <span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>    total, used, free <span class="op">=</span> <span class="bu">tuple</span>((<span class="bu">int</span>(x<span class="op">*</span><span class="fl">1e-8</span>)<span class="op">/</span><span class="fl">10.0</span>) <span class="cf">for</span> x <span class="kw">in</span> shutil.disk_usage(<span class="st">&#39;.&#39;</span>))</span>
 <span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ss">f&#39;&#39;&#39;</span></span>
@@ -1374,9 +1375,9 @@ browsers)</li>
 <li><code>_loop()</code>: equivalent to
 <code>@tasklet.loop(interval=0)</code></li>
 <li><code>_get_html()</code>: equivalent to
-<code>@tasklet.content('config/html-{name}.html')</code></li>
+<code>@tasklet.content('html-{name}.html')</code></li>
 <li><code>_get_layout()</code>: equivalent to
-<code>@tasklet.content('config/slowplot-{name}.json')</code></li>
+<code>@tasklet.content('slowplot-{name}.json')</code></li>
 </ul></li>
 </ul>
 <h1 id="example-projects">Example Projects</h1>
@@ -1540,7 +1541,7 @@ SlowDash project’s <code>config</code> directory.
 <code>@content(name)</code> associates a content name with the function
 that generates it.</p>
 <div class="sourceCode" id="cb48"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;config/html-disk_usage.html&#39;</span>)</span>
+class="sourceCode python"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;html-disk_usage.html&#39;</span>)</span>
 <span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> html_disk_usage():</span>
 <span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>    total, used, free <span class="op">=</span> <span class="bu">tuple</span>((<span class="bu">int</span>(x<span class="op">*</span><span class="fl">1e-8</span>)<span class="op">/</span><span class="fl">10.0</span>) <span class="cf">for</span> x <span class="kw">in</span> shutil.disk_usage(<span class="st">&#39;.&#39;</span>))</span>
 <span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>    used_percent <span class="op">=</span> <span class="bu">int</span>(<span class="dv">100</span> <span class="op">*</span> used<span class="op">/</span>total) <span class="cf">if</span> total <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">else</span> <span class="dv">100</span></span>
@@ -1612,18 +1613,18 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb50-1"><a h
 <p>The browser Web form publishes start/stop commands and performs
 set-point RPC calls.</p>
 <div class="sourceCode" id="cb51"><pre
-class="sourceCode html"><code class="sourceCode html"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;run_control&quot;</span><span class="dt">&gt;</span></span>
+class="sourceCode html"><code class="sourceCode html"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;run_control&quot;</span><span class="dt">&gt;</span></span>
 <span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">b</span><span class="dt">&gt;</span>Device Controls<span class="dt">&lt;/</span><span class="kw">b</span><span class="dt">&gt;</span> (Function Call)<span class="dt">&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>  V0 Set Point: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V0_setpoint&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;randomwalk.set_value()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>  V0 Set Point: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;V0_setpoint&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;randomwalk.set_value()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
 <span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span>  </span>
 <span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">b</span><span class="dt">&gt;</span>Run Controls (V0)<span class="dt">&lt;/</span><span class="kw">b</span><span class="dt">&gt;</span> (Publish)<span class="dt">&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;publish control.start()&quot;</span><span class="dt">&gt;</span>Start<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
-<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;publish control.stop()&quot;</span><span class="dt">&gt;</span>Stop<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;publish control.start()&quot;</span><span class="dt">&gt;</span>Start<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;publish control.stop()&quot;</span><span class="dt">&gt;</span>Stop<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
 <span id="cb51-9"><a href="#cb51-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span>  </span>
 <span id="cb51-10"><a href="#cb51-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">b</span><span class="dt">&gt;</span>Run Controls (V1)<span class="dt">&lt;/</span><span class="kw">b</span><span class="dt">&gt;</span> (No-Tasklet Function Call)<span class="dt">&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb51-11"><a href="#cb51-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;no_tasklet.start()&quot;</span><span class="dt">&gt;</span>Start<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
-<span id="cb51-12"><a href="#cb51-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;no_tasklet.stop()&quot;</span><span class="dt">&gt;</span>Stop<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb51-11"><a href="#cb51-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;no_tasklet.start()&quot;</span><span class="dt">&gt;</span>Start<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb51-12"><a href="#cb51-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;no_tasklet.stop()&quot;</span><span class="dt">&gt;</span>Stop<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
 <span id="cb51-13"><a href="#cb51-13" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
 <p>The <code>name</code> attribute of a button
 (<code>&lt;button&gt;</code> or

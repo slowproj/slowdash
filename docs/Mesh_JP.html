@@ -10,8 +10,9 @@
       div.column{display: inline-block; vertical-align: top; width: 50%;}
   </style>
   <style type="text/css">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -271,7 +272,7 @@ SlowPy Control にある以下のメッセージングシステムを選べま�
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>バックボーン</th>
 <th>SlowPy モジュール</th>
 <th>ブローカー</th>
@@ -279,31 +280,31 @@ SlowPy Control にある以下のメッセージングシステムを選べま�
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>SlowMQ</td>
 <td>control-AsyncSlowMQ.py</td>
 <td>不要 (SlowDash 組み込み)</td>
 <td>HTTP(S) ベースで，ファイアウォールを超えてアクセス可能</td>
 </tr>
-<tr class="even">
+<tr>
 <td>NATS</td>
 <td>control-AsyncNATS.py</td>
 <td>別に NATS Broker が必要</td>
 <td></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>MQTT</td>
 <td>control-AsyncMQTT.py</td>
 <td>別に MQTT Broker（eclipse-mosquitto など）が必要</td>
 <td></td>
 </tr>
-<tr class="even">
+<tr>
 <td>RabbitMQ</td>
 <td>control-AsyncRabbitMQ.py</td>
 <td>別に RabbitMQ Broker が必要</td>
 <td></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Redis-PubSub</td>
 <td>control-AsyncRedis.py</td>
 <td>別に Redis サーバーが必要</td>
@@ -319,30 +320,30 @@ SlowPy Control にある以下のメッセージングシステムを選べま�
 <col style="width: 50%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>バックボーン</th>
 <th>URL 形式</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>SlowMQ (HTTP または HTTPS 上の WebSockets)</td>
 <td><code>slowmq://HOST:PORT</code> (HTTP) または
 <code>slowmqs://HOST:PORT</code> (HTTPS)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>NATS</td>
 <td><code>nats://HOST</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>MQTT</td>
 <td><code>mqtt://HOST</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>RabbitMQ</td>
 <td><code>rabbitmq://USER:PASS@HOST/EXCHANGE</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Redis-PubSub</td>
 <td><code>redis://HOST/DB</code></td>
 </tr>
@@ -375,7 +376,7 @@ Redis の場合，フィルタの動作が変わる場合があります．</p>
 <col style="width: 3%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>バックボーン</th>
 <th>階層区切り文字</th>
 <th>一階層マッチ</th>
@@ -385,7 +386,7 @@ Redis の場合，フィルタの動作が変わる場合があります．</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>(元の文字)</td>
 <td><code>.</code></td>
 <td><code>*</code></td>
@@ -393,7 +394,7 @@ Redis の場合，フィルタの動作が変わる場合があります．</p>
 <td><code>data.store.&gt;</code></td>
 <td><code>data.*.HV.ch100</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>SlowMQ</td>
 <td><code>.</code></td>
 <td><code>*</code></td>
@@ -401,7 +402,7 @@ Redis の場合，フィルタの動作が変わる場合があります．</p>
 <td><code>data.store.&gt;</code></td>
 <td><code>data.*.HV.ch100</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>NATS</td>
 <td><code>.</code></td>
 <td><code>*</code></td>
@@ -409,7 +410,7 @@ Redis の場合，フィルタの動作が変わる場合があります．</p>
 <td><code>data.store.&gt;</code></td>
 <td><code>data.*.HV.ch100</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>MQTT</td>
 <td><code>/</code></td>
 <td><code>+</code></td>
@@ -417,7 +418,7 @@ Redis の場合，フィルタの動作が変わる場合があります．</p>
 <td><code>data/store/#</code></td>
 <td><code>data/+/HV/ch100</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>RabbitMQ</td>
 <td><code>.</code></td>
 <td><code>*</code></td>
@@ -425,7 +426,7 @@ Redis の場合，フィルタの動作が変わる場合があります．</p>
 <td><code>data.store.#</code></td>
 <td><code>data.*.HV.ch100</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Redis-PubSub</td>
 <td><code>:</code></td>
 <td><code>*</code> (近似動作)</td>
@@ -457,21 +458,21 @@ MeshPacket が利用できます． MeshPacket
 <col style="width: 57%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>トピック</th>
 <th>MeshPacket コンストラクタ</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>data.*.&gt;</code></td>
 <td><code>DataPacket(values, *, tag:str|None=None, timestamp:float|None=None)</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>form.*.&gt;</code></td>
 <td><code>FormPacket(form:str, element:str, value)</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>control.&gt;</code></td>
 <td><code>ControlPacket()</code> TODO:未実装</td>
 </tr>
@@ -598,25 +599,25 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb10-1"><a h
 <col style="width: 60%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>値</th>
 <th>動作</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>sync</code> (default)</td>
 <td>関数を実行し，終了を待ち，正常終了なら
 <code>{ "status": "ok","return_value": result }</code> を返す　</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>single</code></td>
 <td>関数をバックグランド実行し，終了を待たずに
 <code>{ "status": "accepted" }</code>
 を返す．<br>関数実行中に同じ関数が呼ばれた場合は，実行は行わず，<code>{ "status": "notice", "message": "already running" }</code>
 を返す</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>parallel</code></td>
 <td>関数をバックグランド実行し，終了を待たずに
 <code>{ "status": "accepted" }</code>
@@ -1312,7 +1313,7 @@ HTML フォームで <code>On update: reload HTML</code>
 をチェックすることにより，データ更新のたびに新しい HTML
 が生成され表示されるようにすることができます．</p>
 <div class="sourceCode" id="cb39"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;config/html-disk_usage.html&#39;</span>)</span>
+class="sourceCode python"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;html-disk_usage.html&#39;</span>)</span>
 <span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> html_disk_usage():</span>
 <span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>    total, used, free <span class="op">=</span> <span class="bu">tuple</span>((<span class="bu">int</span>(x<span class="op">*</span><span class="fl">1e-8</span>)<span class="op">/</span><span class="fl">10.0</span>) <span class="cf">for</span> x <span class="kw">in</span> shutil.disk_usage(<span class="st">&#39;.&#39;</span>))</span>
 <span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ss">f&#39;&#39;&#39;</span></span>
@@ -1372,9 +1373,9 @@ Tasklet を使用しない場合</h2>
 <li><code>_loop()</code>: <code>@tasklet.loop(interval=0)</code>
 と同等</li>
 <li><code>_get_html()</code>:
-<code>@tasklet.content('config/html-{name}.html')</code> と同等</li>
+<code>@tasklet.content('html-{name}.html')</code> と同等</li>
 <li><code>_get_layout()</code>:
-<code>@tasklet.content('config/slowplot-{name}.json')</code> と同等</li>
+<code>@tasklet.content('slowplot-{name}.json')</code> と同等</li>
 </ul></li>
 </ul>
 <h1 id="example-projects">Example Projects</h1>
@@ -1532,7 +1533,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb47-1"><a h
 <code>@content(name)</code>
 で，コンテンツ名と，それを生成する関数を結びつけています．</p>
 <div class="sourceCode" id="cb48"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;config/html-disk_usage.html&#39;</span>)</span>
+class="sourceCode python"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;html-disk_usage.html&#39;</span>)</span>
 <span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> html_disk_usage():</span>
 <span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>    total, used, free <span class="op">=</span> <span class="bu">tuple</span>((<span class="bu">int</span>(x<span class="op">*</span><span class="fl">1e-8</span>)<span class="op">/</span><span class="fl">10.0</span>) <span class="cf">for</span> x <span class="kw">in</span> shutil.disk_usage(<span class="st">&#39;.&#39;</span>))</span>
 <span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>    used_percent <span class="op">=</span> <span class="bu">int</span>(<span class="dv">100</span> <span class="op">*</span> used<span class="op">/</span>total) <span class="cf">if</span> total <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">else</span> <span class="dv">100</span></span>
@@ -1604,18 +1605,18 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb50-1"><a h
 <p>ブラウザの Web フォームからスタート・ストップの publish
 やセットポイント設定の RPC を行っています．</p>
 <div class="sourceCode" id="cb51"><pre
-class="sourceCode html"><code class="sourceCode html"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;run_control&quot;</span><span class="dt">&gt;</span></span>
+class="sourceCode html"><code class="sourceCode html"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;run_control&quot;</span><span class="dt">&gt;</span></span>
 <span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">b</span><span class="dt">&gt;</span>Device Controls<span class="dt">&lt;/</span><span class="kw">b</span><span class="dt">&gt;</span> (Function Call)<span class="dt">&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>  V0 Set Point: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V0_setpoint&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;randomwalk.set_value()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>  V0 Set Point: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;V0_setpoint&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;randomwalk.set_value()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
 <span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span>  </span>
 <span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">b</span><span class="dt">&gt;</span>Run Controls (V0)<span class="dt">&lt;/</span><span class="kw">b</span><span class="dt">&gt;</span> (Publish)<span class="dt">&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;publish control.start()&quot;</span><span class="dt">&gt;</span>Start<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
-<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;publish control.stop()&quot;</span><span class="dt">&gt;</span>Stop<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;publish control.start()&quot;</span><span class="dt">&gt;</span>Start<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;publish control.stop()&quot;</span><span class="dt">&gt;</span>Stop<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
 <span id="cb51-9"><a href="#cb51-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span>  </span>
 <span id="cb51-10"><a href="#cb51-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">b</span><span class="dt">&gt;</span>Run Controls (V1)<span class="dt">&lt;/</span><span class="kw">b</span><span class="dt">&gt;</span> (No-Tasklet Function Call)<span class="dt">&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb51-11"><a href="#cb51-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;no_tasklet.start()&quot;</span><span class="dt">&gt;</span>Start<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
-<span id="cb51-12"><a href="#cb51-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;no_tasklet.stop()&quot;</span><span class="dt">&gt;</span>Stop<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb51-11"><a href="#cb51-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;no_tasklet.start()&quot;</span><span class="dt">&gt;</span>Start<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb51-12"><a href="#cb51-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;no_tasklet.stop()&quot;</span><span class="dt">&gt;</span>Stop<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
 <span id="cb51-13"><a href="#cb51-13" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
 <p>ボタン（<code>&lt;button&gt;</code> または
 <code>&lt;input type="submit"&gt;</code>）の <code>name</code>

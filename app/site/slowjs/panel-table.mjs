@@ -420,8 +420,8 @@ class TreePanel extends Panel {
         const depth_list = scan_depth(tree);
         const max_depth = depth_list.reduce((a,b)=>Math.max(a,b), 0);
         const min_depth = depth_list.reduce((a,b)=>Math.min(a,b), max_depth);
-        
-        if (max_depth <= 2) {
+
+        if ((min_depth == max_depth) && (max_depth <= 2)) {
             // simple list of key-value pairs, or multiple lists of key-value pairs
             this.treeWidgetDiv.css('display', 'none');
             this.contentDiv.css('display', 'block');
@@ -581,7 +581,7 @@ class BlobPanel extends Panel {
             }
         }
 
-        this.titleDiv.text(new JGDateTime(t).asString(this.config.title));
+        this.titleDiv.text(new JGDateTime(time).asString(this.config.title));
         this.contentDiv.empty();
         
         if (! value?.mime || ! value?.id) {

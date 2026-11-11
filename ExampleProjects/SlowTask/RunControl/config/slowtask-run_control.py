@@ -79,7 +79,7 @@ async def stop():
     return True
 
 
-@tasklet.content('config/html-run_control.html')
+@tasklet.content('html-run_control.html')
 def html():
     return '''
       <h3>Run Control</h3>

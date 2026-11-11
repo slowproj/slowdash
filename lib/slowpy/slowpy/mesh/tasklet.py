@@ -198,9 +198,9 @@ class Tasklet:
         
         
     async def add_content(self, name:str, content_type:str, func:Callable):
-        """decorator to declare a content generator
+        """
         Args:
-          name (str): name of the content, e.g., "config/html-mytask" / "config/slowplot-mytask"
+          name (str): name of the content, e.g., "html-mytask.html" / "slowplot-mytask"
           content_type (str): content MIME type
           func (callable): content generator function
         """
@@ -284,7 +284,7 @@ class Tasklet:
     def content(self, name:str, *, content_type:str|None=None):
         """decorator to declare a content generator
         Args:
-        name (str): name of the content, e.g., "config/html-mytask" / "config/slowplot-mytask"
+        name (str): name of the content, e.g., "html-mytask.html" / "slowplot-mytask"
         content_type (str|None): content MIME type; None for automatically detect from the name
         """
         def wrapper(func):
@@ -342,11 +342,11 @@ class Tasklet:
         # content generators
         func_html = _get_func('_get_html')
         if func_html:
-            self._content_generators[f'config/html-{self.name}.html'] = ('text/html', func_html)
+            self._content_generators[f'html-{self.name}.html'] = ('text/html', func_html)
             
         func_layout = _get_func('_get_layout')
         if func_layout:
-            self._content_generators[f'config/slowplot-{self.name}.json'] = ('application/json', func_layout)
+            self._content_generators[f'slowplot-{self.name}.json'] = ('application/json', func_layout)
             
         # normal function exports
         for name, func in module.__dict__.items():

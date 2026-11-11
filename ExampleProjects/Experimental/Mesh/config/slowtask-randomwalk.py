@@ -1,4 +1,4 @@
-
+import asyncio
 from slowpy.mesh import Tasklet, DataPacket
 tasklet = Tasklet()
 
@@ -13,18 +13,18 @@ async def initialize():
 
     
 @tasklet.loop(interval=0.5)
-def loop():
+async def loop():
     if not device.is_running:
         return
     
-    data = device.ch(0).get()
+    data = await device.ch(0).aio_get()
     print(data)
         
-    tasklet.mesh.publish(DataPacket(data, tag='HV.ch0.V').to('data.store'))
+    await tasklet.mesh.aio_publish(DataPacket(data, tag='HV.ch0.V').to('data.store'))
 
 
-@tasklet.mesh.export
-def set_value(V0_setpoint:float):
+@tasklet.mesh.export()
+async def set_value(V0_setpoint:float):
     print(f'set: {V0_setpoint}')
     device.ch(0).set(V0_setpoint)
 

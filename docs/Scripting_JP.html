@@ -10,8 +10,9 @@
       div.column{display: inline-block; vertical-align: top; width: 50%;}
   </style>
   <style type="text/css">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -199,29 +200,29 @@ href="QuickTour.html">Quick Tour</a>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>名前</th>
 <th>役割</th>
 <th>外部依存</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>control</td>
 <td>デバイスや外部制御システムのコントロール</td>
 <td>ベンダ提供ライブラリ（もしあれば）</td>
 </tr>
-<tr class="even">
+<tr>
 <td>(トップレベル)</td>
 <td>ヒストグラムなどのデータ解析部品</td>
 <td>-</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>store</td>
 <td>データ記録</td>
 <td>使用するデータベースシステム</td>
 </tr>
-<tr class="even">
+<tr>
 <td>mesh</td>
 <td>SlowMesh 通信</td>
 <td>SlowDash サーバー</td>
@@ -285,8 +286,8 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a hr
 <p>Web GUI のユーザー作成 HTML (<code>config/html-test.html</code>):</p>
 <div class="sourceCode" id="cb6"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  Voltage output: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;value&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_Vout()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  Voltage output: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;value&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.set_Vout()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
 <p>ブラウザ上で <code>Set</code>
 ボタンをクリックすると，<code>&lt;input name="value"&gt;</code>
@@ -772,44 +773,44 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb15-1"><a h
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>クラス</th>
 <th>URL 形式</th>
 <th>備考</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>DataStore_SQLite</code></td>
 <td><code>sqlite:///FILE_NAME</code></td>
 <td>第２引数はテーブル名</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>DataStore_PostgreSQL</code></td>
 <td><code>postgresql://USER:PASS@HOST:PORT/DB</code></td>
 <td>第２引数はテーブル名</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>DataStore_MySQL</code></td>
 <td><code>mysql://USER:PASS@HOST:PORT/DB</code></td>
 <td>第２引数はテーブル名</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>DataStore_InfluxDB2</code></td>
 <td><code>influxdb2://ORGANIZATION:TOKEN@HOST:PORT/BUCKET</code></td>
 <td>第２引数は measurement 名</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>DataStore_Redis</code></td>
 <td><code>redis://HOST:PORT/DB</code></td>
 <td></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>DataStore_HDF5</code></td>
 <td>（ファイル名）</td>
 <td>第２引数はデータセット名．ランごとのファイル記録など</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>DataStore_CSV</code></td>
 <td><code>csv:///FILE_NAME</code></td>
 <td></td>
@@ -984,7 +985,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb23-1"><a h
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>コマンド</th>
 <th>動作</th>
 <th>コマンド例</th>
@@ -992,31 +993,31 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb23-1"><a h
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>*IDN?</code></td>
 <td>デバイスIDを返す</td>
 <td><code>*IDN?</code></td>
 <td><code>MyMemoryDevice</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>Volt &lt;Value&gt;</code></td>
 <td>値を設定する</td>
 <td><code>V 10</code></td>
 <td>(なし)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>MEASure:Volt?</code></td>
 <td>値を取得する</td>
 <td><code>MEAS:V?</code></td>
 <td><code>10</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>*OPC?</code></td>
 <td>コマンドの完了を待ち，ステータスを返す</td>
 <td><code>*OPC?</code></td>
 <td><code>1</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>SYSTem:ERRor?</code></td>
 <td>エラーメッセージを返す</td>
 <td><code>SYST:ERR?</code></td>
@@ -1131,35 +1132,35 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb27-1"><a href=
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>パラメータ</th>
 <th>内容</th>
 <th>デフォルト</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>name</code></td>
 <td>タスク名</td>
 <td>（必須）</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>auto_start</code></td>
 <td>サーバー開始時にタスクを自動で開始するか（旧名
 <code>auto_load</code> も使用可）</td>
 <td><code>false</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>parameters</code></td>
 <td>スクリプトに渡すパラメータ</td>
 <td>なし</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>file_path</code></td>
 <td>スクリプトファイルのパス</td>
 <td><code>config/slowtask-{name}.py</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>command</code></td>
 <td>タスクの開始コマンド</td>
 <td><code>slowdash-task {file_path} --name={name}</code></td>
@@ -1313,7 +1314,7 @@ id="エクスポートした関数の実行時間について">エクスポー�
 <code>&lt;input type="submit"&gt;</code>）をクリックすると，その関数が呼ばれます：</p>
 <div class="sourceCode" id="cb32"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.destroy_apparatus()&quot;</span><span class="dt">&gt;</span>Finish<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.destroy_apparatus()&quot;</span><span class="dt">&gt;</span>Finish<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
 <span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
 <p>ここで，ボタン名の最後の括弧は，このボタンが SlowTask
 の関数に結び付けられていることを示しています．</p>
@@ -1334,9 +1335,9 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb33-1"><a h
 の値から取られます：</p>
 <div class="sourceCode" id="cb34"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  Voltage: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;voltage&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;ramping&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;1&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V0()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  Voltage: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;voltage&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;ramping&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;1&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.set_V0()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
 <span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
 <p><code>&lt;input&gt;</code> の <code>name</code>
 属性が，関数の引数名に対応します． フォーム中の
@@ -1351,15 +1352,15 @@ class="sourceCode html"><code class="sourceCode html"><span id="cb34-1"><a href=
 <p>一つのフォームに複数のボタンを配置することもできます：</p>
 <div class="sourceCode" id="cb35"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;ramping&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;1&quot;</span> <span class="er">style</span><span class="ot">=</span><span class="st">&quot;width:5em&quot;</span><span class="dt">&gt;</span>/sec</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;ramping&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;1&quot;</span><span class="ot"> style</span><span class="op">=</span><span class="st">&quot;width:5em&quot;</span><span class="dt">&gt;</span>/sec</span>
 <span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span></span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  V0: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V0&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V0()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  V1: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V1&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V1()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>  V2: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V2&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V2()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>  V3: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V3&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V3()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  V0: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;V0&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.set_V0()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  V1: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;V1&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.set_V1()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>  V2: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;V2&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.set_V2()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>  V3: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;V3&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.set_V3()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
 <span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span></span>
-<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_all()&quot;</span><span class="dt">&gt;</span>Set All<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
-<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.stop()&quot;</span><span class="dt">&gt;</span>Stop Ramping<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.set_all()&quot;</span><span class="dt">&gt;</span>Set All<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.stop()&quot;</span><span class="dt">&gt;</span>Stop Ramping<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
 <span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
 <div class="sourceCode" id="cb36"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_V0(V0:<span class="bu">float</span>, ramping:<span class="bu">float</span>):</span>
@@ -1375,15 +1376,15 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb36-1"><a h
 の名前の中に直接書くこともできます．</p>
 <div class="sourceCode" id="cb37"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;ramping&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;1&quot;</span> <span class="er">style</span><span class="ot">=</span><span class="st">&quot;width:5em&quot;</span><span class="dt">&gt;</span>/sec</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;ramping&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;1&quot;</span><span class="ot"> style</span><span class="op">=</span><span class="st">&quot;width:5em&quot;</span><span class="dt">&gt;</span>/sec</span>
 <span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span></span>
-<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  V0: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V0&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V(ch=0)&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>  V1: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V1&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V(ch=1)&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>  V2: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V2&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V(ch=2)&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>  V3: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V3&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V(ch=3)&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  V0: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;V0&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.set_V(ch=0)&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>  V1: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;V1&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.set_V(ch=1)&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>  V2: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;V2&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.set_V(ch=2)&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>  V3: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;V3&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.set_V(ch=3)&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
 <span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span></span>
-<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_all()&quot;</span><span class="dt">&gt;</span>Set All<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
-<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.stop()&quot;</span><span class="dt">&gt;</span>Stop Ramping<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.set_all()&quot;</span><span class="dt">&gt;</span>Set All<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.stop()&quot;</span><span class="dt">&gt;</span>Stop Ramping<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
 <span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
 <div class="sourceCode" id="cb38"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_V(ch:<span class="bu">int</span>, V0:<span class="bu">float</span>, ramping:<span class="bu">float</span>):</span>
@@ -1399,8 +1400,8 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb38-1"><a h
 の節を参照）．</p>
 <div class="sourceCode" id="cb39"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;publish mydaq.control.start()&quot;</span><span class="dt">&gt;</span>Start<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
-<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;publish mydaq.control.stop()&quot;</span><span class="dt">&gt;</span>Stop<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;publish mydaq.control.start()&quot;</span><span class="dt">&gt;</span>Start<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;publish mydaq.control.stop()&quot;</span><span class="dt">&gt;</span>Stop<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
 <span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
 <p>publish されるデータは，括弧内の引数とフォームの
 <code>&lt;input&gt;</code> の name-value 対を合わせた dict です．</p>
@@ -1412,8 +1413,8 @@ class="sourceCode html"><code class="sourceCode html"><span id="cb39-1"><a href=
 (<code>registry-pubsub-form.json</code>)
 に保存され，サーバーの終了・再スタート時に，以前のフォームの値が自動で設定されるようになります．</p>
 <div class="sourceCode" id="cb40"><pre
-class="sourceCode html"><code class="sourceCode html"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;voltage_control&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;ramping&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;1&quot;</span> <span class="er">style</span><span class="ot">=</span><span class="st">&quot;width:5em&quot;</span><span class="dt">&gt;</span>/sec</span>
+class="sourceCode html"><code class="sourceCode html"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;voltage_control&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;ramping&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;1&quot;</span><span class="ot"> style</span><span class="op">=</span><span class="st">&quot;width:5em&quot;</span><span class="dt">&gt;</span>/sec</span>
 <span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>...</span>
 <span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
 <p>名前を付けたフォームの値は，SlowTask
@@ -1426,9 +1427,9 @@ SlowTask
 からストリーミングまたはエクスポートした値（後述）を使えば，タスクの状態に応じて，例えば実行中は
 Start ボタンを無効にする，といったことができます．</p>
 <div class="sourceCode" id="cb41"><pre
-class="sourceCode html"><code class="sourceCode html"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;run_control&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.start()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Start&quot;</span> <span class="er">sd-enabled</span><span class="ot">=</span><span class="st">&quot;run_status[&#39;running&#39;]-&gt;invert()&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.stop()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Stop&quot;</span> <span class="er">sd-enabled</span><span class="ot">=</span><span class="st">&quot;run_status[&#39;running&#39;]&quot;</span><span class="dt">&gt;</span></span>
+class="sourceCode html"><code class="sourceCode html"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;run_control&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.start()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Start&quot;</span><span class="ot"> sd-enabled</span><span class="op">=</span><span class="st">&quot;run_status[&#39;running&#39;]-&gt;invert()&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.stop()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Stop&quot;</span><span class="ot"> sd-enabled</span><span class="op">=</span><span class="st">&quot;run_status[&#39;running&#39;]&quot;</span><span class="dt">&gt;</span></span>
 <span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
 <p><code>sd-enabled</code>
 に指定する値は真偽値である必要があります．値の変換については <a
@@ -1609,45 +1610,45 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb49-1"><a h
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>関数</th>
 <th>説明</th>
 <th>Tasklet での相当</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>_initialize(params)</code></td>
 <td>スクリプトのロード時に一度呼ばれる．<code>params</code> の値は
 SlowDash の設定で与えられる．</td>
 <td><code>@tasklet.initialize()</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>_run()</code></td>
 <td><code>_initialize()</code> の後に一度呼ばれる．</td>
 <td><code>@tasklet.once()</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>_loop()</code></td>
 <td><code>_initialize()</code>
 の後，ユーザーがシステムを停止するまで繰り返し呼ばれる．</td>
 <td><code>@tasklet.loop(interval=0)</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>_finalize()</code></td>
 <td><code>_run()</code> または <code>_loop()</code>
 の後に一度呼ばれる．</td>
 <td><code>@tasklet.finalize()</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>_get_html()</code></td>
 <td>HTML コンテンツを返す（後述）．</td>
-<td><code>@tasklet.content('config/html-{タスク名}.html')</code></td>
+<td><code>@tasklet.content('html-{タスク名}.html')</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>_get_layout()</code></td>
 <td>SlowPlot レイアウトを返す（後述）．</td>
-<td><code>@tasklet.content('config/slowplot-{タスク名}.json')</code></td>
+<td><code>@tasklet.content('slowplot-{タスク名}.json')</code></td>
 </tr>
 </tbody>
 </table>
@@ -1792,7 +1793,7 @@ SlowDash プロジェクトの <code>config</code>
 これにより，タスクスクリプトと，それをコントロールするための HTML
 フォームを一つのファイルにまとめて，整合をとりやすくできます．</p>
 <div class="sourceCode" id="cb57"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;config/html-test.html&#39;</span>)</span>
+class="sourceCode python"><code class="sourceCode python"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;html-test.html&#39;</span>)</span>
 <span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> html():</span>
 <span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&#39;&#39;&#39;</span></span>
 <span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a><span class="st">      &lt;form name=&quot;test&quot;&gt;</span></span>
@@ -1809,7 +1810,7 @@ HTML ページを動的に生成することもできます．
 <div class="sourceCode" id="cb58"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shutil</span>
 <span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;config/html-disk_usage.html&#39;</span>)</span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;html-disk_usage.html&#39;</span>)</span>
 <span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> html_disk_usage():</span>
 <span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>    total, used, free <span class="op">=</span> <span class="bu">tuple</span>((<span class="bu">int</span>(x<span class="op">*</span><span class="fl">1e-8</span>)<span class="op">/</span><span class="fl">10.0</span>) <span class="cf">for</span> x <span class="kw">in</span> shutil.disk_usage(<span class="st">&#39;.&#39;</span>))</span>
 <span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ss">f&#39;&#39;&#39;</span></span>
@@ -1952,7 +1953,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb61-1"><a href=
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>バックボーン</th>
 <th>URL 形式</th>
 <th>ブローカー</th>
@@ -1960,32 +1961,32 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb61-1"><a href=
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>SlowMQ</td>
 <td><code>slowmq://HOST:PORT</code> (HTTP) または
 <code>slowmqs://HOST:PORT</code> (HTTPS)</td>
 <td>不要 (SlowDash 組み込み)</td>
 <td>デフォルト．ファイアウォールを超えてアクセス可能</td>
 </tr>
-<tr class="even">
+<tr>
 <td>NATS</td>
 <td><code>nats://HOST</code></td>
 <td>別に NATS サーバーが必要</td>
 <td></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>MQTT</td>
 <td><code>mqtt://HOST</code></td>
 <td>別に MQTT ブローカー（eclipse-mosquitto など）が必要</td>
 <td></td>
 </tr>
-<tr class="even">
+<tr>
 <td>RabbitMQ</td>
 <td><code>rabbitmq://USER:PASS@HOST/EXCHANGE</code></td>
 <td>別に RabbitMQ サーバーが必要</td>
 <td></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Redis-PubSub</td>
 <td><code>redis://HOST/DB</code></td>
 <td>別に Redis サーバーが必要</td>
@@ -2036,25 +2037,25 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb63-1"><a h
 <col style="width: 50%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>関数の形</th>
 <th>渡されるもの</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>def handler()</code></td>
 <td>なし（受信したことだけを知りたい場合）</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>def handler(data)</code></td>
 <td>メッセージ本体</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>def handler(packet:DataPacket)</code></td>
 <td>MeshPacket に変換したメッセージ（後述）</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>def handler(headers, data)</code></td>
 <td>ヘッダとメッセージ本体．受信したトピック名は
 <code>headers['topic']</code></td>
@@ -2106,34 +2107,34 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb63-1"><a h
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>トピック</th>
 <th>内容</th>
 <th>MeshPacket</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>data.store.{channel}</code></td>
 <td>記録するデータ（通常，記録用のタスクがデータベースに保存する）</td>
 <td><code>DataPacket</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>data.stream.{channel}</code></td>
 <td>表示用のデータ（記録されない）</td>
 <td><code>DataPacket</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>form.{form_name}.{element_name}</code></td>
 <td>名前を付けた HTML フォームの入力値</td>
 <td><code>FormPacket</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>log.{level}.{logger}</code></td>
 <td>ログメッセージ</td>
 <td></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>sd.&gt;</code></td>
 <td>SlowDash の内部使用（タスク管理，RPC など）</td>
 <td></td>
@@ -2157,19 +2158,19 @@ MeshPacket
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>MeshPacket</th>
 <th>対象トピック</th>
 <th>コンストラクタ</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>DataPacket</code></td>
 <td><code>data.*.&gt;</code></td>
 <td><code>DataPacket(values, *, tag=None, timestamp=None)</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>FormPacket</code></td>
 <td><code>form.*.&gt;</code></td>
 <td><code>FormPacket(form, element, value)</code></td>

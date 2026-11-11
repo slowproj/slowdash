@@ -1057,8 +1057,8 @@ async def my_work(tick):
 | `_run()` | `_initialize()` の後に一度呼ばれる． | `@tasklet.once()` |
 | `_loop()` | `_initialize()` の後，ユーザーがシステムを停止するまで繰り返し呼ばれる． | `@tasklet.loop(interval=0)` |
 | `_finalize()` | `_run()` または `_loop()` の後に一度呼ばれる． | `@tasklet.finalize()` |
-| `_get_html()` | HTML コンテンツを返す（後述）． | `@tasklet.content('config/html-{タスク名}.html')` |
-| `_get_layout()` | SlowPlot レイアウトを返す（後述）． | `@tasklet.content('config/slowplot-{タスク名}.json')` |
+| `_get_html()` | HTML コンテンツを返す（後述）． | `@tasklet.content('html-{タスク名}.html')` |
+| `_get_layout()` | SlowPlot レイアウトを返す（後述）． | `@tasklet.content('slowplot-{タスク名}.json')` |
 
 Tasklet を使用した場合と異なり，`_loop()` 関数はスリープせずに即座に繰り返し呼ばれることに注意してください．
 このため，`_loop()` の中で，周期を調整するためのスリープを行う必要があります．
@@ -1178,7 +1178,7 @@ async def stop():
 `@tasklet.content(name)` デコレーターにより，通常は SlowDash プロジェクトの `config` 以下に置かれるファイルの内容を動的に生成することができます．
 これにより，タスクスクリプトと，それをコントロールするための HTML フォームを一つのファイルにまとめて，整合をとりやすくできます．
 ```python
-@tasklet.content('config/html-test.html')
+@tasklet.content('html-test.html')
 def html():
     return '''
       <form name="test">
@@ -1194,7 +1194,7 @@ HTML パネルで `On Update: Reload HTML` をチェックすると，データ�
 ```python
 import shutil
 
-@tasklet.content('config/html-disk_usage.html')
+@tasklet.content('html-disk_usage.html')
 def html_disk_usage():
     total, used, free = tuple((int(x*1e-8)/10.0) for x in shutil.disk_usage('.'))
     return f'''

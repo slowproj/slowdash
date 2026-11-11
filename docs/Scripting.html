@@ -10,8 +10,9 @@
       div.column{display: inline-block; vertical-align: top; width: 50%;}
   </style>
   <style type="text/css">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -205,29 +206,29 @@ referring to them, as in <code>slowpy.control.XXX</code>. Alternatively,
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Name</th>
 <th>Role</th>
 <th>External Dependency</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>control</td>
 <td>Controlling devices and external control systems</td>
 <td>Vendor-provided libraries (if any)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>(top level)</td>
 <td>Data analysis components such as histograms</td>
 <td>-</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>store</td>
 <td>Data recording</td>
 <td>The database system used</td>
 </tr>
-<tr class="even">
+<tr>
 <td>mesh</td>
 <td>SlowMesh communication</td>
 <td>SlowDash server</td>
@@ -291,8 +292,8 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a hr
 (<code>config/html-test.html</code>):</p>
 <div class="sourceCode" id="cb6"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  Voltage output: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;value&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_Vout()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  Voltage output: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;value&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.set_Vout()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
 <p>When the <code>Set</code> button is clicked on the browser, the value
 in the <code>&lt;input name="value"&gt;</code> field is converted to
@@ -774,45 +775,45 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb15-1"><a h
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Class</th>
 <th>URL Format</th>
 <th>Notes</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>DataStore_SQLite</code></td>
 <td><code>sqlite:///FILE_NAME</code></td>
 <td>The second argument is the table name</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>DataStore_PostgreSQL</code></td>
 <td><code>postgresql://USER:PASS@HOST:PORT/DB</code></td>
 <td>The second argument is the table name</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>DataStore_MySQL</code></td>
 <td><code>mysql://USER:PASS@HOST:PORT/DB</code></td>
 <td>The second argument is the table name</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>DataStore_InfluxDB2</code></td>
 <td><code>influxdb2://ORGANIZATION:TOKEN@HOST:PORT/BUCKET</code></td>
 <td>The second argument is the measurement name</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>DataStore_Redis</code></td>
 <td><code>redis://HOST:PORT/DB</code></td>
 <td></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>DataStore_HDF5</code></td>
 <td>(file name)</td>
 <td>The second argument is the dataset name. For per-run file recording,
 etc.</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>DataStore_CSV</code></td>
 <td><code>csv:///FILE_NAME</code></td>
 <td></td>
@@ -982,7 +983,7 @@ case-insensitive):</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Command</th>
 <th>Action</th>
 <th>Command Example</th>
@@ -990,31 +991,31 @@ case-insensitive):</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>*IDN?</code></td>
 <td>Returns the device ID</td>
 <td><code>*IDN?</code></td>
 <td><code>MyMemoryDevice</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>Volt &lt;Value&gt;</code></td>
 <td>Sets the value</td>
 <td><code>V 10</code></td>
 <td>(none)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>MEASure:Volt?</code></td>
 <td>Gets the value</td>
 <td><code>MEAS:V?</code></td>
 <td><code>10</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>*OPC?</code></td>
 <td>Waits for command completion and returns the status</td>
 <td><code>*OPC?</code></td>
 <td><code>1</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>SYSTem:ERRor?</code></td>
 <td>Returns the error message</td>
 <td><code>SYST:ERR?</code></td>
@@ -1134,35 +1135,35 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb27-1"><a href=
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Parameter</th>
 <th>Description</th>
 <th>Default</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>name</code></td>
 <td>Task name</td>
 <td>(required)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>auto_start</code></td>
 <td>Whether to start the task automatically when the server starts (the
 old name <code>auto_load</code> can also be used)</td>
 <td><code>false</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>parameters</code></td>
 <td>Parameters passed to the script</td>
 <td>none</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>file_path</code></td>
 <td>Path of the script file</td>
 <td><code>config/slowtask-{name}.py</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>command</code></td>
 <td>Command to start the task</td>
 <td><code>slowdash-task {file_path} --name={name}</code></td>
@@ -1314,7 +1315,7 @@ ways. In the following, the script file name is assumed to be
 attribute has a task name and a function name calls that function:</p>
 <div class="sourceCode" id="cb32"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.destroy_apparatus()&quot;</span><span class="dt">&gt;</span>Finish<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.destroy_apparatus()&quot;</span><span class="dt">&gt;</span>Finish<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
 <span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
 <p>Here, the parentheses at the end of the button name indicate that
 this button is bound to a SlowTask function.</p>
@@ -1334,9 +1335,9 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb33-1"><a h
 <code>&lt;input&gt;</code> elements of the form:</p>
 <div class="sourceCode" id="cb34"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  Voltage: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;voltage&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;ramping&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;1&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V0()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  Voltage: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;voltage&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;ramping&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;1&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.set_V0()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
 <span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
 <p>The <code>name</code> attribute of an <code>&lt;input&gt;</code>
 corresponds to the argument name of the function. Of the
@@ -1351,15 +1352,15 @@ checkbox (<code>&lt;input type="checkbox"&gt;</code>) can be passed to a
 <p>Multiple buttons can be placed in a single form:</p>
 <div class="sourceCode" id="cb35"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;ramping&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;1&quot;</span> <span class="er">style</span><span class="ot">=</span><span class="st">&quot;width:5em&quot;</span><span class="dt">&gt;</span>/sec</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;ramping&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;1&quot;</span><span class="ot"> style</span><span class="op">=</span><span class="st">&quot;width:5em&quot;</span><span class="dt">&gt;</span>/sec</span>
 <span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span></span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  V0: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V0&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V0()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  V1: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V1&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V1()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>  V2: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V2&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V2()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>  V3: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V3&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V3()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  V0: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;V0&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.set_V0()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  V1: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;V1&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.set_V1()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>  V2: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;V2&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.set_V2()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>  V3: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;V3&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.set_V3()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
 <span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span></span>
-<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_all()&quot;</span><span class="dt">&gt;</span>Set All<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
-<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.stop()&quot;</span><span class="dt">&gt;</span>Stop Ramping<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.set_all()&quot;</span><span class="dt">&gt;</span>Set All<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.stop()&quot;</span><span class="dt">&gt;</span>Stop Ramping<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
 <span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
 <div class="sourceCode" id="cb36"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_V0(V0:<span class="bu">float</span>, ramping:<span class="bu">float</span>):</span>
@@ -1375,15 +1376,15 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb36-1"><a h
 <code>&lt;button&gt;</code> name.</p>
 <div class="sourceCode" id="cb37"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;ramping&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;1&quot;</span> <span class="er">style</span><span class="ot">=</span><span class="st">&quot;width:5em&quot;</span><span class="dt">&gt;</span>/sec</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;ramping&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;1&quot;</span><span class="ot"> style</span><span class="op">=</span><span class="st">&quot;width:5em&quot;</span><span class="dt">&gt;</span>/sec</span>
 <span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span></span>
-<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  V0: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V0&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V(ch=0)&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>  V1: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V1&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V(ch=1)&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>  V2: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V2&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V(ch=2)&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>  V3: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V3&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V(ch=3)&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  V0: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;V0&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.set_V(ch=0)&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>  V1: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;V1&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.set_V(ch=1)&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>  V2: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;V2&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.set_V(ch=2)&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>  V3: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;V3&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.set_V(ch=3)&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
 <span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span></span>
-<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_all()&quot;</span><span class="dt">&gt;</span>Set All<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
-<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.stop()&quot;</span><span class="dt">&gt;</span>Stop Ramping<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.set_all()&quot;</span><span class="dt">&gt;</span>Set All<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.stop()&quot;</span><span class="dt">&gt;</span>Stop Ramping<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
 <span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
 <div class="sourceCode" id="cb38"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_V(ch:<span class="bu">int</span>, V0:<span class="bu">float</span>, ramping:<span class="bu">float</span>):</span>
@@ -1400,8 +1401,8 @@ event such as “start”, rather than calling a function of a specific task
 (see the SlowMesh section).</p>
 <div class="sourceCode" id="cb39"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;publish mydaq.control.start()&quot;</span><span class="dt">&gt;</span>Start<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
-<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;publish mydaq.control.stop()&quot;</span><span class="dt">&gt;</span>Stop<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;publish mydaq.control.start()&quot;</span><span class="dt">&gt;</span>Start<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;publish mydaq.control.stop()&quot;</span><span class="dt">&gt;</span>Stop<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
 <span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
 <p>The published data is a dict combining the arguments in the
 parentheses and the name-value pairs of the form’s
@@ -1415,8 +1416,8 @@ project directory (<code>registry-pubsub-form.json</code>), and the
 previous form values are automatically restored when the server is
 stopped and restarted.</p>
 <div class="sourceCode" id="cb40"><pre
-class="sourceCode html"><code class="sourceCode html"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;voltage_control&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;ramping&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;1&quot;</span> <span class="er">style</span><span class="ot">=</span><span class="st">&quot;width:5em&quot;</span><span class="dt">&gt;</span>/sec</span>
+class="sourceCode html"><code class="sourceCode html"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;voltage_control&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;ramping&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;1&quot;</span><span class="ot"> style</span><span class="op">=</span><span class="st">&quot;width:5em&quot;</span><span class="dt">&gt;</span>/sec</span>
 <span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>...</span>
 <span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
 <p>The values of named forms can also be read and written from SlowTask
@@ -1429,9 +1430,9 @@ according to data values. Using values streamed or exported from a
 SlowTask (described later), it is possible, for example, to disable the
 Start button while running, according to the task status.</p>
 <div class="sourceCode" id="cb41"><pre
-class="sourceCode html"><code class="sourceCode html"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;run_control&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.start()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Start&quot;</span> <span class="er">sd-enabled</span><span class="ot">=</span><span class="st">&quot;run_status[&#39;running&#39;]-&gt;invert()&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.stop()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Stop&quot;</span> <span class="er">sd-enabled</span><span class="ot">=</span><span class="st">&quot;run_status[&#39;running&#39;]&quot;</span><span class="dt">&gt;</span></span>
+class="sourceCode html"><code class="sourceCode html"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;run_control&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.start()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Start&quot;</span><span class="ot"> sd-enabled</span><span class="op">=</span><span class="st">&quot;run_status[&#39;running&#39;]-&gt;invert()&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.stop()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Stop&quot;</span><span class="ot"> sd-enabled</span><span class="op">=</span><span class="st">&quot;run_status[&#39;running&#39;]&quot;</span><span class="dt">&gt;</span></span>
 <span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
 <p>The value specified in <code>sd-enabled</code> must be a boolean. For
 value conversion, see the <a href="DataTransform.html">Data Transform
@@ -1613,44 +1614,44 @@ defined, are called at specific timings.</p>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Function</th>
 <th>Description</th>
 <th>Tasklet Equivalent</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>_initialize(params)</code></td>
 <td>Called once when the script is loaded. The value of
 <code>params</code> is given by the SlowDash configuration.</td>
 <td><code>@tasklet.initialize()</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>_run()</code></td>
 <td>Called once after <code>_initialize()</code>.</td>
 <td><code>@tasklet.once()</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>_loop()</code></td>
 <td>Called repeatedly after <code>_initialize()</code>, until the user
 stops the system.</td>
 <td><code>@tasklet.loop(interval=0)</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>_finalize()</code></td>
 <td>Called once after <code>_run()</code> or <code>_loop()</code>.</td>
 <td><code>@tasklet.finalize()</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>_get_html()</code></td>
 <td>Returns HTML content (described later).</td>
-<td><code>@tasklet.content('config/html-{TASK_NAME}.html')</code></td>
+<td><code>@tasklet.content('html-{TASK_NAME}.html')</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>_get_layout()</code></td>
 <td>Returns a SlowPlot layout (described later).</td>
-<td><code>@tasklet.content('config/slowplot-{TASK_NAME}.json')</code></td>
+<td><code>@tasklet.content('slowplot-{TASK_NAME}.json')</code></td>
 </tr>
 </tbody>
 </table>
@@ -1797,7 +1798,7 @@ SlowDash project can be generated dynamically. This makes it possible to
 put a task script and the HTML form to control it into a single file,
 making it easier to keep them consistent.</p>
 <div class="sourceCode" id="cb57"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;config/html-test.html&#39;</span>)</span>
+class="sourceCode python"><code class="sourceCode python"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;html-test.html&#39;</span>)</span>
 <span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> html():</span>
 <span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&#39;&#39;&#39;</span></span>
 <span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a><span class="st">      &lt;form name=&quot;test&quot;&gt;</span></span>
@@ -1814,7 +1815,7 @@ usage formatted in a table.</p>
 <div class="sourceCode" id="cb58"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shutil</span>
 <span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;config/html-disk_usage.html&#39;</span>)</span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;html-disk_usage.html&#39;</span>)</span>
 <span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> html_disk_usage():</span>
 <span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>    total, used, free <span class="op">=</span> <span class="bu">tuple</span>((<span class="bu">int</span>(x<span class="op">*</span><span class="fl">1e-8</span>)<span class="op">/</span><span class="fl">10.0</span>) <span class="cf">for</span> x <span class="kw">in</span> shutil.disk_usage(<span class="st">&#39;.&#39;</span>))</span>
 <span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ss">f&#39;&#39;&#39;</span></span>
@@ -1961,7 +1962,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb61-1"><a href=
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Backbone</th>
 <th>URL Format</th>
 <th>Broker</th>
@@ -1969,32 +1970,32 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb61-1"><a href=
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>SlowMQ</td>
 <td><code>slowmq://HOST:PORT</code> (HTTP) or
 <code>slowmqs://HOST:PORT</code> (HTTPS)</td>
 <td>Not needed (built into SlowDash)</td>
 <td>Default. Accessible across firewalls</td>
 </tr>
-<tr class="even">
+<tr>
 <td>NATS</td>
 <td><code>nats://HOST</code></td>
 <td>Separate NATS server required</td>
 <td></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>MQTT</td>
 <td><code>mqtt://HOST</code></td>
 <td>Separate MQTT broker (eclipse-mosquitto, etc.) required</td>
 <td></td>
 </tr>
-<tr class="even">
+<tr>
 <td>RabbitMQ</td>
 <td><code>rabbitmq://USER:PASS@HOST/EXCHANGE</code></td>
 <td>Separate RabbitMQ server required</td>
 <td></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Redis-PubSub</td>
 <td><code>redis://HOST/DB</code></td>
 <td>Separate Redis server required</td>
@@ -2045,26 +2046,26 @@ annotations of the function.</p>
 <col style="width: 50%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Function Form</th>
 <th>What Is Passed</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>def handler()</code></td>
 <td>Nothing (when you only want to know that a message was
 received)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>def handler(data)</code></td>
 <td>Message body</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>def handler(packet:DataPacket)</code></td>
 <td>Message converted to a MeshPacket (described later)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>def handler(headers, data)</code></td>
 <td>Headers and message body. The received topic name is
 <code>headers['topic']</code></td>
@@ -2118,35 +2119,35 @@ be used freely by users:</p>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Topic</th>
 <th>Content</th>
 <th>MeshPacket</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>data.store.{channel}</code></td>
 <td>Data to be recorded (usually saved into a database by a recording
 task)</td>
 <td><code>DataPacket</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>data.stream.{channel}</code></td>
 <td>Data for display (not recorded)</td>
 <td><code>DataPacket</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>form.{form_name}.{element_name}</code></td>
 <td>Input values of named HTML forms</td>
 <td><code>FormPacket</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>log.{level}.{logger}</code></td>
 <td>Log messages</td>
 <td></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>sd.&gt;</code></td>
 <td>Internal use by SlowDash (task management, RPC, etc.)</td>
 <td></td>
@@ -2170,19 +2171,19 @@ saved.</p>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>MeshPacket</th>
 <th>Target Topics</th>
 <th>Constructor</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>DataPacket</code></td>
 <td><code>data.*.&gt;</code></td>
 <td><code>DataPacket(values, *, tag=None, timestamp=None)</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>FormPacket</code></td>
 <td><code>form.*.&gt;</code></td>
 <td><code>FormPacket(form, element, value)</code></td>

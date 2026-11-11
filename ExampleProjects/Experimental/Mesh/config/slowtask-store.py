@@ -49,7 +49,7 @@ tasklet.mesh.export('disk_usage', DiskUsageNode())
 
 import datetime
 
-@tasklet.content('config/html-disk_usage.html')
+@tasklet.content('html-disk_usage.html')
 def html_disk_usage():
     total, used, free = tuple((int(x*1e-8)/10.0) for x in shutil.disk_usage('.'))
     used_percent = int(100 * used/total) if total > 0 else 100
