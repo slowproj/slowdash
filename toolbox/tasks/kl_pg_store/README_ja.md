@@ -1,23 +1,53 @@
 # `kl_pg_store`
 
-`kl_pg_store` は, 長期間の実験の時系列データを想定して, `data.store.>` の `DataPacket`を, PostgreSQLに保存するSlowtaskです.
+`kl_pg_store` は, 長期間の実験の時系列データを想定して, `data.store.>` の `DataPacket` を, PostgreSQLに保存するslowtaskです.
 PostgreSQLの基本機能を活用し, コア機能はextensionや, 外部ツールに依存しません.
 コア概念は他のRDBでの設計にも流用可能です.
-KamLAND2 実験のSlow control データの収集のために構築されましたが, **KamLAND実験特有のものはない, 汎用の構成です**.
+KamLAND2実験のslow controlデータの収集のために構築されましたが, **KamLAND実験特有のものはない, 汎用の構成です**.
 
 想定している規模は, channel数 1000, 100 行/秒 (1 message あたり 10 channel), 保存期間は永久 (実験期間 ~30 年) です.
 この規模で, 年間 約 32 億行, 約 300 GB になります.
 
-ここには, PostgreSQL構築のためのスキーマ定義 (table, view, function, role) と, そのデータベースに値を保存するためのSlowtask, Slowdash向けの設定の例が含まれています.
+ここには, PostgreSQLのschema定義 (table, view, function, role) と, そのdatabaseに値を保存するslowtask, Slowdash向けの設定の例が含まれています.
 他にも管理スクリプトや, dockerで立ち上げる例などもあります.
-DBのSchema定義はslowtaskから独立して動きます.
+DBのschema定義は, slowtaskから独立して動きます.
 slowtaskを使わずに, 他のアプリケーションから直接 `insert_records()` などのSQL関数を呼んで書き込むこともできます.
 
-### 設計方針
+## 目次
+
+ - [設計方針](#設計方針)
+ - [Dash start](#dash-start)
+    - [1. DBを起動する](#1-dbを起動する)
+    - [2. Slowdashの設定](#2-slowdashの設定)
+    - [3. データを送る, 見る](#3-データを送る-見る)
+    - [4. channelの情報を書く](#4-channelの情報を書く)
+ - [Core concept](#core-concept)
+ - [PostgreSQL databaseの詳細仕様](#postgresql-databaseの詳細仕様)
+    - [Install](#install)
+    - [dockerのデータ](#dockerのデータ)
+    - [INSERT用の関数](#insert用の関数)
+    - [値の型](#値の型)
+    - [拒否と `rejections`](#拒否と-rejections)
+    - [channelの管理](#channelの管理)
+    - [Partition](#partition)
+    - [最新値](#最新値)
+    - [Role](#role)
+    - [設定](#設定)
+    - [直接操作する場合](#直接操作する場合)
+    - [Performance, index](#performance-index)
+ - [Slowdashからの利用](#slowdashからの利用)
+    - [配置](#配置)
+    - [Slowdashをdockerで動かす](#slowdashをdockerで動かす)
+    - [channelのページ](#channelのページ)
+    - [slowtaskの動作](#slowtaskの動作)
+ - [採用しなかったこと](#採用しなかったこと)
+
+
+## 設計方針
 
  - 入り口は一つ. 書き込みは全て `insert_records()` を通ります. tableへの直接のINSERTは許可しません. 入力の検査, channelの自動作成, partitionの作成, 最新値の更新は全てこの関数の中で行われます.
- - 単純なSQLで取り出せる. データは `records` などのViewに対する普通の `SELECT` や `COPY` で取り出せます. 内部に複雑な仕組みを持ち込まず, Slowdashからも自然なData sourceに見えます.
- - 受け取ったデータは消さない. 拒否した入力も `rejections` テーブルに全て保存します.
+ - 単純なSQLで取り出せる. データは `records` などのviewに対する普通の `SELECT` や `COPY` で取り出せます. 内部に複雑な仕組みを持ち込まず, Slowdashからも自然なData sourceに見えます.
+ - 受け取ったデータは消さない. 拒否した入力も `rejections` tableに全て保存します.
  - Slowdashのmeshとの連携が検証されています.
 
 
@@ -34,7 +64,7 @@ docker compose exec db psql -U postgres -d kldb -c '\password kl_writer'
 docker compose exec db psql -U postgres -d kldb -c '\password kl_monitor'
 ```
 PostgreSQL 16が起動し, 初回の起動時に `sql/install.sql` でstoreがinstallされます.
-roleのpasswordは, 自分で決めて `\password` で手動で設定します (dockerを使わない「Install」と同じです). 
+roleのpasswordは, 自分で決めて `\password` で設定します (dockerを使わない[Install](#install)と同じです).
 
 環境変数 (`docker/.env` に書きます) は以下です. `KL_DB_PORT` と `KL_DATA` 以外は, 初回の起動時 (databaseの作成時) だけ使われます.
 
@@ -49,13 +79,13 @@ roleのpasswordは, 自分で決めて `\password` で手動で設定します (
 
  - 接続先は `<DBのhost>:15432` (同じhostからは `localhost:15432`), database `kldb`, schema `kl_store` です.
    portは全てのnetwork interfaceに公開されるので, 閉じたnetworkの中で使ってください.
- - role `kl_admin`, `kl_writer`, `kl_monitor`, `kl_analyzer` が作られます (後述の「Role」).
+ - role `kl_admin`, `kl_writer`, `kl_monitor`, `kl_analyzer` が作られます (後述の[Role](#role)).
    passwordを設定していないroleは, containerの外からは接続できず, containerの中からだけ使えます (`docker compose exec db psql -U kl_admin -d kldb`). passwordは, 使うroleにだけ設定します.
- - データはdockerのvolume `kl_data` に保存されます. `docker compose down` では残り, `docker compose down -v` で消えます. 実際の運用では, `KL_DATA=/data/kldb` のようにhostのdirectoryを指定してください (後述の「dockerのデータ」).
+ - データはdockerのvolume `kl_data` に保存されます. `docker compose down` では残り, `docker compose down -v` で消えます. 実際の運用では, `KL_DATA=/data/kldb` のようにhostのdirectoryを指定してください (後述の[dockerのデータ](#dockerのデータ)).
  - passwordを後から変える時も, `\password` を使います.
- - `max_locks_per_transaction` は 512 です (`docker-compose.yaml` の `command`. 後述の「ロック表」).
+ - `max_locks_per_transaction` は 512 です (`docker-compose.yaml` の `command`. 後述の[ロック表](#ロック表)).
 
-dockerを使わずに, 既存のPostgreSQLにinstallする方法は後述の「Install」にあります.
+dockerを使わずに, 既存のPostgreSQLにinstallする方法は後述の[Install](#install)にあります.
 
 
 ### 2. Slowdashの設定
@@ -84,16 +114,16 @@ slowdash_project:
         spool: ./kl_pg_store-spool.jsonl
 ```
 
- - `name`, `title` などは自分のprojectのものです. 
+ - `name`, `title` などは自分のprojectのものです.
  - DBの接続先 (PostgreSQLのURL) は, 環境変数 `KL_WRITER_DB`, `KL_MONITOR_DB` で与えます. 1.のDBなら以下です. 設定していないと, Slowdashのlogに `variable substitution error: KL_WRITER_DB` と出ます.
    ```bash
    export KL_WRITER_DB=postgresql://kl_writer:PASSWORD@localhost:15432/kldb
    export KL_MONITOR_DB=postgresql://kl_monitor:PASSWORD@localhost:15432/kldb
    ```
- - `data_source`: Slowdashのplotは, `kl_monitor` で `records` Viewを読みます. 数値は `value` を, histogramなどのobjectは `value_jsonb` を読みます.
- - `task`: slowtask `kl_pg_store` が, `data.store.>` のmessageを受け取って, `kl_writer` でDBに書き込みます. DBに書き込めなかったmessageは `spool` のファイルに残ります (後述の「slowtaskの動作」).
+ - `data_source`: Slowdashのplotは, `kl_monitor` で `records` viewを読みます. 数値は `value` を, histogramなどのobjectは `value_jsonb` を読みます.
+ - `task`: slowtask `kl_pg_store` が, `data.store.>` のmessageを受け取って, `kl_writer` でDBに書き込みます. DBに書き込めなかったmessageは `spool` のファイルに残ります (後述の[slowtaskの動作](#slowtaskの動作)).
 
-Slowdashはいつも通りに起動します. Slowdashをdockerで動かす場合は, 後述の「Slowdashをdockerで動かす」の手順で, DBに接続します.
+Slowdashはいつも通りに起動します. Slowdashをdockerで動かす場合は, 後述の[Slowdashをdockerで動かす](#slowdashをdockerで動かす)の手順で, DBに接続します.
 
 ### 3. データを送る, 見る
 SlowdashのWebMeshに, `data.store.` で始まるtopicで `DataPacket` を送ります. `t` は時刻, `x` は値です.
@@ -108,7 +138,7 @@ curl -X POST -H 'Content-Type: application/json' \
   -d '{ "env.laboratory.temperature": { "t": "2026-11-10T21:45:10+09:00", "x": 24.3 } }' \
   http://localhost:18881/api/webmesh/publish/data.store._
 ```
-`t` は今の時刻にしてください (plotの表示範囲に入るように). `t` は日付, 時刻, timezoneを全て含むISO 8601の文字列か, UNIX time (`date +%s`) です (後述の「INSERT用の関数」の `ts`). 1回のPOSTで複数のchannelを送ることもできます.
+`t` は今の時刻にしてください (plotの表示範囲に入るように). `t` は日付, 時刻, timezoneを全て含むISO 8601の文字列か, UNIX time (`date +%s`) です (後述の[INSERT用の関数](#insert用の関数)の `ts`). 1回のPOSTで複数のchannelを送ることもできます.
 
 channel `env.laboratory.temperature` は, 最初の値から型 (`double`) を推定して, 自動的に作られます.
 
@@ -139,9 +169,9 @@ SELECT create_channel('env.laboratory.pressure', 'double', 'hPa', 'Laboratory ro
 ```
 こちらは `kl_writer` (または `kl_admin`) で実行します (`docker compose exec db psql -U kl_writer -d kldb`).
 
-多くのchannelをまとめて書く時は, 管理スクリプト `utils/kl_admin.py` でCSVから書けます (後述の「管理スクリプト」).
+多くのchannelをまとめて書く時は, 管理スクリプト `utils/kl_admin.py` でCSVから書けます (後述の[管理スクリプト](#管理スクリプト)).
 
-Slowdashの画面からも書けます. slowtask `kl_pg_store` は, channelの一覧と, unit, descriptionの入力欄, channelの作成欄を持つHTML panel `kl_channels` を提供します (後述の「channelのページ」).
+Slowdashの画面からも書けます. slowtask `kl_pg_store` は, channelの一覧と, unit, descriptionの入力欄, channelの作成欄を持つHTML panel `kl_channels` を提供します (後述の[channelのページ](#channelのページ)).
 
 とりあえずこれで運用を始められます.
 
@@ -150,7 +180,7 @@ Slowdashの画面からも書けます. slowtask `kl_pg_store` は, channelの�
 
 全てのobjectは専用のschema (default: `kl_store`) に置かれます.
 
-`channels`テーブルはchannel (値として入る変数名) を定義しています.
+`channels` tableは, channel (値として入る変数名) を定義します.
 ```
 | cid | name                         | valid_from | type   | unit | description                 |
 | --- | ---------------------------- | ---------- | ------ | ---- | --------------------------- |
@@ -159,11 +189,11 @@ Slowdashの画面からも書けます. slowtask `kl_pg_store` は, channelの�
 | 3   | analysis.onlinetool.darkrate | -infinity  | double | cps  | Online average dark rate    |
 | .   | ............................ | .......... | ...... | ...  | ........................... |
 ```
-未知のchannelがくると, 最初の値から型を推定して, 自動的に新規作成されます.
+未知のchannelが来ると, 最初の値から型を推定して, 自動的に作成します.
 単位や説明は人間が書き足します.
 なお, channelのnameは自由な形式で名付けることができますが, ここでは, `<subsystem>.<source>.<quantity>` のruleで命名しています. `source` は値の出どころ (機器名, 機器のchannel, 場所など), `quantity` は物理量です. 一般的に, 実験で一貫したnaming ruleを持つことをおすすめします.
 
-`raw_records` テーブルは, Long-formatでデータを集約する実体のテーブルです.
+`raw_records` tableは, データをlong format (1行に1つの値) で持つ実体のtableです.
 ```
 | cid | ts                   | inserted_at          | value |
 | --- | -------------------- | -------------------- | ----- |
@@ -177,9 +207,9 @@ Slowdashの画面からも書けます. slowtask `kl_pg_store` は, channelの�
 ```
 実際には, 値の列は型ごとに `value` (double), `value_int`, `value_text`, `value_bool`, `value_jsonb` の5本あり, 各行ではchannelの型に対応する1本だけが値を持ちます.
 
-このテーブルはとても大きくなるので, 週次のTime partitionを使って整理されています.
+このtableはとても大きくなるので, 週ごとのpartitionに分けています.
 
-ユーザーは, この実体や, cidの対応付けを意識せずに, `records` Viewをnameで読みます.
+ユーザーは, この実体や, cidの対応付けを意識せずに, `records` viewをnameで読みます.
 ```sql
 SELECT * FROM records
   WHERE name = 'calc.server01.cpu_usage' AND ts > now() - interval '1 day'
@@ -189,13 +219,13 @@ SELECT * FROM records
 `value` は数値の型 (double, integer, boolean) の値をdoubleにしたもので, textとjsonの値は `value_text`, `value_jsonb` に入ります.
 Slowdashも, 数値は `value` を, histogramなどのobjectは `value_jsonb` を, この `records` から読みます.
 
-`records` を読む時は, 必ず `ts` の範囲を指定してください. 
+`records` を読む時は, 必ず `ts` の範囲を指定してください.
 運が悪く, 未来のtime partitionが大量に作成されていたり, そのchannelの更新がはるか過去に止まっていたりすると, そのchannelの全期間を読みます.
-範囲が分からない時は, `latest` からcidを決めます (後述の「Viewを読む時の注意」).
+範囲が分からない時は, `latest` からcidを決めます (後述の[viewを読む時の注意](#viewを読む時の注意)).
 
-書き込みは, 全て `insert_records()` 関数を通ります (後述の「INSERT用の関数」).
+書き込みは, 全て `insert_records()` 関数を通ります (後述の[INSERT用の関数](#insert用の関数)).
 
-テーブルとViewの一覧です. 
+tableとviewの一覧です.
 
 | 名前                | 種類  | 内容                                                    |
 | ------------------- | ----- | ------------------------------------------------------- |
@@ -209,14 +239,15 @@ Slowdashも, 数値は `value` を, histogramなどのobjectは `value_jsonb` �
 | `settings`          | table | schemaのversion, 受け付ける時間範囲などの設定 (1行)     |
 | `channel_log`       | table | channel定義の変更履歴. 削除しない                       |
 
-`raw_` が付くものはcidで引く実体のテーブルで, 普段は直接読みません.
+`raw_` が付くものはcidで引く実体のtableで, 普段は直接読みません.
 
 
-## PostgreSQL Databaseの詳細仕様
+## PostgreSQL databaseの詳細仕様
 
 ### Install
 dockerを使わずに, 既存のPostgreSQL (16以降) にinstallする場合は, superuserで以下を実行します.
-database `kldb` は先に作っておきます (`createdb kldb`).  database名は自由です (この文書の例では `kldb`).
+ubuntuなら, `sudo apt install postgresql libpq-dev` して, `sudo -u postgres psql ...` と実行します.
+database `kldb` は先に作っておきます (`createdb kldb`). database名は自由です (この文書の例では `kldb`).
 ```bash
 psql -d kldb -f sql/install.sql
 psql -d kldb -c '\password kl_admin'
@@ -225,9 +256,9 @@ psql -d kldb -c '\password kl_monitor'
 psql -d kldb -c '\password kl_analyzer'
 ```
 passwordは, 使うroleにだけ設定します.
-接続したdatabaseにinstallされます. 
+接続したdatabaseにinstallされます.
 `install.sql` は冪等です.
-`postgresql.conf` の `max_locks_per_transaction` は大きめ (例えば 512) にしてください (後述の「ロック表」). 
+`postgresql.conf` の `max_locks_per_transaction` は大きめ (例えば 512) にしてください (後述の[ロック表](#ロック表)).
 変更にはserverの再起動が必要です.
 `postgresql.conf` の場所は, installの方法によって違います. `psql -c 'SHOW config_file'` で分かります.
 dockerのDBでは `postgresql.conf` を編集せず, `docker-compose.yaml` の `command` に `-c max_locks_per_transaction=512` のように渡しています.
@@ -255,10 +286,10 @@ dockerのDBのデータ (PostgreSQLのdata directory) の置き場所は, `KL_DA
 directoryは空の状態で指定します. 初回の起動時に, そこにdatabaseが作られます.
 
 ### INSERT用の関数
-パーティションの作成や, 矛盾のないデータ整理の源泉は, DBのtableに直接INSERTさせず, `insert_records()` だけに入力を集中させていることにあります.
+partitionの作成や, 矛盾のないデータの整理ができるのは, tableへの直接のINSERTを許さず, 入力を `insert_records()` だけに集中させているからです.
 この関数が, 入力データとchannel定義の整合性を保ちます.
 slowtaskは内部でこの関数を呼んでいます.
-slowtask (やslowdash) なしで, DBの定義だけを使う場合も, 入力のチェックはSQLの関数が責任を持ちます.
+slowtask (やSlowdash) を使わずに, DBの定義だけを使う場合も, 入力の検査はSQLの関数が責任を持ちます.
 
 ```sql
 SELECT * FROM insert_records('[
@@ -273,7 +304,7 @@ SELECT * FROM insert_records('[
  - `ts` は日付, 時刻, timezoneを全て含むISO 8601の文字列 (`2026-10-10T01:10:01Z`, `2026-10-10 10:10:01.5+09:00` など) か, UNIX time (秒, 小数可) です.
    日付だけ (`2026-10-10`) やtimezoneの無い文字列は, 補わずに拒否します. 補うと, timezoneの解釈が設定によって変わったり, 同じ日の値が全て `duplicate` になったりするためです. 秒は省略できます.
    ミリ秒のUNIX time (`1791594601250` など) は `invalid_record` として拒否します.
- - `ts` を省略した場合 (または `null` の場合) は, サーバーの時刻 (`statement_timestamp()`) を使います. この時 `inserted_at` と同じ値になるので, `ts = inserted_at` の行は, サーバーで時刻を補ったものと判断できます.
+ - `ts` を省略した場合 (または `null` の場合) は, serverの時刻 (`statement_timestamp()`) を使います. この時 `inserted_at` と同じ値になるので, `ts = inserted_at` の行は, serverで時刻を補ったものと判断できます.
  - 戻り値は, 書き込めなかったrecordだけの一覧 (`input_index`, `status`, `cid`, `detail`) です. 空なら全て書き込めています.
  - `update_latest => false` にすると, 最新値の表 (`raw_latest`) を更新しません. CSVからの過去データの一括投入など, 最新値が変わらないと分かっている場合に使います.
 
@@ -328,7 +359,7 @@ JSONではNaNを表現できないので, slowtaskは非有限の値を文字列
 推定が外れた場合は, 後述の `replace_channel()` で型を切り替えます.
 
 ### 拒否と `rejections`
-以下の入力は拒否し, 元の入力のまま `rejections` テーブルに保存します.
+以下の入力は拒否し, 元の入力のまま `rejections` tableに保存します.
 `rejections` は誰かが日常的に読むものではありませんが, 受け取ったデータは消さないという原則のために存在します.
 
 | `status`                 | 内容                                                                                      |
@@ -355,11 +386,11 @@ FROM rejections WHERE received_at > now() - interval '1 day'
 GROUP BY 1, 2 ORDER BY 3 DESC;
 ```
 
-受け付ける時間範囲は, `settings` テーブルの `max_past`, `max_future` で指定します.
+受け付ける時間範囲は, `settings` tableの `max_past`, `max_future` で指定します.
 defaultは過去, 未来とも100年で, 実質的に制限しません.
 時計のずれた機器 (時計が1970年に戻った, など) からのデータが, 誰も見ない時期に散らばるのを防ぎたい場合は, 短く設定します (例: `UPDATE settings SET max_past = '2 months', max_future = '1 day';`). 負の値は指定できません.
 
-### Channelの管理
+### channelの管理
 
 #### 期間とcid
 channelの一意性は `(name, valid_from)` で, 同じnameを複数のcidが期間を分けて持てます.
@@ -369,7 +400,7 @@ nameの最初のchannelの `valid_from` は `-infinity` (全期間有効) です
 nameで書き込む時は, `valid_from <= ts` を満たす中で `valid_from` が最も新しいchannelに入ります.
 期間を区切るのは `replace_channel()` だけです.
 
-読む時は, Viewがcidでjoinしているので, nameで引くと複数のcidの履歴がつながって返ります.
+読む時は, viewがcidでjoinしているので, nameで引くと複数のcidの履歴がつながって返ります.
 各行の `unit` や `type` は, その行のcidのものです.
 channelの期間は重ならないので, 同じnameで同じ `ts` の行が2つ返ることはありません.
 
@@ -384,13 +415,13 @@ channelの期間は重ならないので, 同じnameで同じ `ts` の行が2つ
 | `merge_channel(cid, into_name, allow_rounding)`                              | cidのデータを別のnameに移し, cidを消す      | admin                  |
 | `drop_channel(cid)`                                                          | channelを消す. データは `rejections` に移す | admin                  |
 
- - **`create_channel()`:** nameが既にあり, 型が同じなら, 何もせずに今のcidを返します. DAQの起動scriptから毎回呼ぶ使い方を想定しています. 型が違う場合はエラーです. 既存のchannelのunit, descriptionは書き換えません (違う値を渡すとWARNINGを出します).
- - **`describe_channel()`:** nameで指定すると, `valid_from` が最も新しいcidを書き換えます. `replace_channel(name, 未来のT)` で切り替えを予定している場合は, 切り替え後のchannelです. 過去の期間はcidで指定します. 渡した値がそのまま入ります (unitとdescriptionの両方を渡します). `NULL` は未記入で, 自動作成されたchannelが持ちます. `''` は記入済みで空 (unitなら単位の無い量. `ratio_ab` など) です. `NULL` を渡すと未記入に戻ります. Slowdashのページと管理スクリプトのCSVは `NULL` を渡さず, 空欄は `''` として書きます. unitとdescriptionしか変えないので, monitorにも許可しています. Slowdashのページ (後述の「channelのページ」) や管理用scriptから呼ぶことを想定しています.
- - **`replace_channel()`:** 「このnameは, 時刻 `valid_from` から別のchannel (新しいcid) になる」という操作です. `type`, `unit`, `description` は, 省略すると切り替え前のchannelのものを引き継ぎます. `valid_from` が過去の場合は, 切り替え前のchannelの `ts >= valid_from` のデータを新しいcidに移します. 型が変わる場合は, 全てのデータが情報を失わずに変換できる時 (「値の型」の表の ✓) だけ実行し, 1つでも変換できなければエラーにします. `integer` から `double` に変える時に `2**53` を超えてdoubleで正確に表せない値があるとエラーにし, `allow_rounding => true` を付けると丸めて移します.
- - **`rename_channel(name, new_name)`:** そのnameの全ての期間を改名します. 履歴は全て新しいnameに付いていきます.
- - **`rename_channel(cid, new_name)`:** 1つの期間だけを, 新しいnameに移します. 新しいnameでは, そのchannelは全期間有効 (`valid_from = -infinity`) になります. 元のnameでは, その期間は1つ前の期間の続きになります (1つ前の期間が無ければ, その期間の `ts` の書き込みは `out_of_validity` で拒否されます).
- - **`merge_channel(cid, into_name)`:** cidのデータを, `into_name` のchannelへ, それぞれの `ts` で有効なcidに振り分けて移し, cidを消します. `into_name` はcid自身のnameでもよく, `replace_channel()` の取り消しに使います. 型の変換は `replace_channel()` と同じです.
- - **`drop_channel(cid)`:** channelを消します. データは `dropped` として `rejections` に移すので, 失われません.
+ - `create_channel()`: nameが既にあり, 型が同じなら, 何もせずに今のcidを返します. DAQの起動scriptから毎回呼ぶ使い方を想定しています. 型が違う場合はエラーです. 既存のchannelのunit, descriptionは書き換えません (違う値を渡すとWARNINGを出します).
+ - `describe_channel()`: nameで指定すると, `valid_from` が最も新しいcidを書き換えます. `replace_channel(name, 未来のT)` で切り替えを予定している場合は, 切り替え後のchannelです. 過去の期間はcidで指定します. 渡した値がそのまま入ります (unitとdescriptionの両方を渡します). `NULL` は未記入で, 自動作成されたchannelが持ちます. `''` は記入済みで空 (unitなら単位の無い量. `ratio_ab` など) です. `NULL` を渡すと未記入に戻ります. channelのページと管理スクリプトのCSVは `NULL` を渡さず, 空欄は `''` として書きます. unitとdescriptionしか変えないので, monitorにも許可しています. channelのページ (後述の[channelのページ](#channelのページ)) や管理スクリプトから呼ぶことを想定しています.
+ - `replace_channel()`: 「このnameは, 時刻 `valid_from` から別のchannel (新しいcid) になる」という操作です. `type`, `unit`, `description` は, 省略すると切り替え前のchannelのものを引き継ぎます. `valid_from` が過去の場合は, 切り替え前のchannelの `ts >= valid_from` のデータを新しいcidに移します. 型が変わる場合は, 全てのデータが情報を失わずに変換できる時 ([値の型](#値の型)の表の ✓) だけ実行し, 1つでも変換できなければエラーにします. `integer` から `double` に変える時に `2**53` を超えてdoubleで正確に表せない値があるとエラーにし, `allow_rounding => true` を付けると丸めて移します.
+ - `rename_channel(name, new_name)`: そのnameの全ての期間を改名します. 履歴は全て新しいnameに付いていきます.
+ - `rename_channel(cid, new_name)`: 1つの期間だけを, 新しいnameに移します. 新しいnameでは, そのchannelは全期間有効 (`valid_from = -infinity`) になります. 元のnameでは, その期間は1つ前の期間の続きになります (1つ前の期間が無ければ, その期間の `ts` の書き込みは `out_of_validity` で拒否されます).
+ - `merge_channel(cid, into_name)`: cidのデータを, `into_name` のchannelへ, それぞれの `ts` で有効なcidに振り分けて移し, cidを消します. `into_name` はcid自身のnameでもよく, `replace_channel()` の取り消しに使います. 型の変換は `replace_channel()` と同じです.
+ - `drop_channel(cid)`: channelを消します. データは `dropped` として `rejections` に移すので, 失われません.
 
 `rename_channel()` の `new_name` に既存のnameは指定できません. 既存のnameに合流させる時は `merge_channel()` を使います.
 
@@ -417,10 +448,10 @@ channelの期間は重ならないので, 同じnameで同じ `ts` の行が2つ
 | 17  | 撤去後, 同じnameで再設置                                     | 同じものなら何もしない. 別物なら8と同じ                           |
 | 18  | 1つのnameに2つのセンサーが同時に書いていた                   | 対応しない. tsで分けられないので人間が解析する                    |
 
- - **6:** 切り替えの前に `type_mismatch` で拒否された値は, `rejections.record` に元の入力がそのまま残っています. `SELECT insert_records(jsonb_agg(record)) FROM rejections WHERE ...` のように渡し直せます.
- - **7:** 空になった古いcidは `drop_channel()` で消せます.
- - **12:** `rename_channel()` の後も古いnameで送ってくるwriterがいると, 古いnameのchannelが新しく自動作成されます. 送信側のnameを先に変えてください.
- - **13:** 古いセンサーの期間を別のnameに退避して, 同じnameを新しいセンサーに使う場合は, `replace_channel(name, T)` で期間を区切ってから, 古い期間を `rename_channel(古いcid, 'x.old')` で退避します. 古いセンサーのデータが古いnameのまま遅れて届いても, 新しいセンサーのchannelには入らず, `out_of_validity` で拒否されます. 先に退避してから新しいchannelを自動作成させると, 新しいchannelは全期間有効になるので, 遅れて届いた古いデータが新しいchannelに入ってしまいます.
+ - 6: 切り替えの前に `type_mismatch` で拒否された値は, `rejections.record` に元の入力がそのまま残っています. `SELECT insert_records(jsonb_agg(record)) FROM rejections WHERE ...` のように渡し直せます.
+ - 7: 空になった古いcidは `drop_channel()` で消せます.
+ - 12: `rename_channel()` の後も古いnameで送ってくるwriterがいると, 古いnameのchannelが新しく自動作成されます. 送信側のnameを先に変えてください.
+ - 13: 古いセンサーの期間を別のnameに退避して, 同じnameを新しいセンサーに使う場合は, `replace_channel(name, T)` で期間を区切ってから, 古い期間を `rename_channel(古いcid, 'x.old')` で退避します. 古いセンサーのデータが古いnameのまま遅れて届いても, 新しいセンサーのchannelには入らず, `out_of_validity` で拒否されます. 先に退避してから新しいchannelを自動作成させると, 新しいchannelは全期間有効になるので, 遅れて届いた古いデータが新しいchannelに入ってしまいます.
 
 #### ロック
 `replace_channel()`, `rename_channel()`, `merge_channel()`, `drop_channel()` は, 実行中の書き込みが終わるのを待ち, 完了するまで新しい書き込みを待たせます.
@@ -436,7 +467,7 @@ channelの期間は重ならないので, 同じnameで同じ `ts` の行が2つ
 `raw_records` を直接変更した場合は記録されません.
 
 #### 管理スクリプト
-`utils/kl_admin.py` は, 日常の管理をコマンドラインで行うscriptです. SQLの全ての機能は網羅しません. それ以外の操作はSQLで行います.
+`utils/kl_admin.py` は, 日常の管理をコマンドラインで行うスクリプトです. SQLの全ての機能は網羅しません. それ以外の操作はSQLで行います.
 `asyncpg` が必要です (Slowdashの環境に含まれます).
 
 接続先は `--dsn` か, 環境変数 `KL_ADMIN_DB` (無ければ `KL_WRITER_DB`) で指定します.
@@ -471,26 +502,26 @@ python3 utils/kl_admin.py import channels.csv --yes    # 書き込む
 
 ### Partition
 `raw_records` は週ごと (UTCの月曜 00:00 が境界) にpartitionされます.
-partitionは `insert_records()` が自分で作ります. 
+partitionは `insert_records()` が自分で作ります.
 
- - **書き込む週:** 書き込むrecordの週のpartitionが無ければ, その場で作ります.
- - **次の週:** 呼び出しのたびに, 現在の次の週のpartitionがあるかを確かめ, 無ければ作ります. このため, 週の始めの書き込みは, 通常は作成を待ちません.
+ - 書き込む週: 書き込むrecordの週のpartitionが無ければ, その場で作ります.
+ - 次の週: 呼び出しのたびに, 現在の次の週のpartitionがあるかを確かめ, 無ければ作ります. このため, 週の始めの書き込みは, 通常は作成を待ちません.
 
 作成は `CREATE TABLE ... (LIKE raw_records)` と `ALTER TABLE ... ATTACH PARTITION` の2段階で行うので, 作成中も他の読み書きを止めません.
-(`CREATE TABLE ... PARTITION OF` は親テーブル全体をロックし, 読み書きが全て止まります.)
+(`CREATE TABLE ... PARTITION OF` は親table全体をロックし, 読み書きが全て止まります.)
 
 人間や外部のscriptから先の分を作っておく場合は, `ensure_partitions(weeks)` を使います. 今週と, その先 `weeks` 週 (default: 4, 最大 10000) のpartitionを作り, 作成した数を返します.
 ```sql
 SELECT ensure_partitions(52);   -- 1年先まで
 ```
-空のpartitionは1つ 約64 kBです. ただし, partitionが多いほど `ts` の範囲を指定しないqueryは遅くなるので ("Viewを読む時の注意"), 何年分も先に作る必要はありません.
+空のpartitionは1つ 約64 kBです. ただし, partitionが多いほど `ts` の範囲を指定しないqueryは遅くなるので (後述の[viewを読む時の注意](#viewを読む時の注意)), 何年分も先に作る必要はありません.
 
 同じpartitionを同時に作ろうとした場合は, 順番に処理されます.
 default partitionは持ちません.
 古いpartitionは永久に保存します. 将来archiveする場合は `DETACH PARTITION` で切り離せます.
 
 ### 最新値
-最新値は `latest` Viewで読みます. nameごとに1行です.
+最新値は `latest` viewで読みます. nameごとに1行です.
 
 ```sql
 -- 現在値の一覧
@@ -502,7 +533,7 @@ SELECT name, ts FROM latest WHERE ts < now() - interval '10 minutes';
 
 `value` は数値の型 (double, integer, boolean) の値をdoubleにしたもので, `records` と同じです. textとjsonの値は `value_text`, `value_jsonb` に入ります. integerの正確な値は `value_int` にもあります.
 
-実体は `raw_latest` テーブルで, cidごとの最新の値を持ちます.
+実体は `raw_latest` tableで, cidごとの最新の値を持ちます.
 `insert_records()` の中で, 書き込んだrecordをcidごとにまとめてから更新するので, 1回の呼び出しでの更新は (recordの数ではなく) channelの数だけです.
 `ts` が今の最新値より古い場合は更新しません.
 
@@ -523,26 +554,26 @@ SELECT name, ts FROM latest WHERE ts < now() - interval '10 minutes';
 4つともLOGIN roleです. `role_prefix` を変えると `kl` の部分が変わります.
 `rejections` と `channel_log` は全てのroleが読めます.
 `kl_admin` は `pg_read_all_stats` を持ち, cluster内の全てのsessionのqueryを見られます.
-roleの設定はメンバーシップでは継承されないので, 別のLOGIN roleを作ってこれらのroleに所属させても, timeoutは効かないことに注意してください.
+roleの設定はmembershipでは継承されないので, 別のLOGIN roleを作ってこれらのroleに所属させても, timeoutは効かないことに注意してください.
 
 `kl_analyzer` の `search_path` は作業用schemaが先頭なので, schema名を付けずに作ったtableは作業用schemaに入ります.
-作業用schemaに `records` など同じ名前のtableを作ると, Viewが隠れることに注意してください.
+作業用schemaに `records` など同じ名前のtableを作ると, viewが隠れることに注意してください.
 
 ### 設定
 設定は種類ごとに以下に置かれます.
-`settings_overview` Viewで, 全ての設定を一覧できます (読むだけです. 変更はそれぞれの置き場所で行います).
+`settings_overview` viewで, 全ての設定を一覧できます (読むだけです. 変更はそれぞれの置き場所で行います).
 
-| 種類                             | 項目                                                | 置き場所, 変更方法                              |
-| -------------------------------- | --------------------------------------------------- | ----------------------------------------------- |
-| インストール時に決め, 以後は固定 | `schema`, `role_prefix`                             | `install.sql` の変数                            |
-| storeの関数の振る舞い            | `max_past`, `max_future`                            | `settings` テーブル (`UPDATE settings SET ...`) |
-| roleの設定                       | `statement_timeout`, 接続数の上限, `search_path`    | `ALTER ROLE ...`. 初期値は `install.sql` の変数 |
-| PostgreSQL serverの設定          | `max_locks_per_transaction`, `max_connections` など | `postgresql.conf`                               |
-| slowtask                         | `dsn`, `spool` など                                 | `SlowdashProject.yaml`                          |
+| 種類                        | 項目                                                | 置き場所, 変更方法                              |
+| --------------------------- | --------------------------------------------------- | ----------------------------------------------- |
+| install時に決め, 以後は固定 | `schema`, `role_prefix`                             | `install.sql` の変数                            |
+| storeの関数の振る舞い       | `max_past`, `max_future`                            | `settings` table (`UPDATE settings SET ...`)    |
+| roleの設定                  | `statement_timeout`, 接続数の上限, `search_path`    | `ALTER ROLE ...`. 初期値は `install.sql` の変数 |
+| PostgreSQL serverの設定     | `max_locks_per_transaction`, `max_connections` など | `postgresql.conf`                               |
+| slowtask                    | `dsn`, `spool` など                                 | `SlowdashProject.yaml`                          |
 
-storeの関数の振る舞いに関わる設定は, 全て `settings` テーブル (1行) の列にします. 列ごとに型とCHECK制約を持つので, 不正な値は入りません.
+storeの関数の振る舞いに関わる設定は, 全て `settings` table (1行) の列にします. 列ごとに型とCHECK制約を持つので, 不正な値は入りません.
 `settings.schema_version` はschemaのversionで, 変更しないでください.
-PostgreSQL自体の設定は二重管理にならないよう, テーブルには写さず, PostgreSQLの仕組みのまま変更します.
+PostgreSQL自体の設定は二重管理にならないよう, tableには写さず, PostgreSQLの仕組みのまま変更します.
 
 ### 直接操作する場合
 用意した関数で対応できない場合は, adminが直接SQLで `channels` や `raw_records` を操作します.
@@ -569,7 +600,7 @@ COMMIT;
 ```
 
 `check_integrity(ts_from, ts_to)` は, 不変条件 1 ~ 4 を検査して, 違反を一覧で返します.
-1 と 3 は `[ts_from, ts_to)` の範囲の `raw_records` を全て読みます. 省略すると全期間で, テーブル全体を読む重い処理になります. 2 と 4 はindexだけで検査します.
+1 と 3 は `[ts_from, ts_to)` の範囲の `raw_records` を全て読みます. 省略すると全期間で, table全体を読む重い処理になります. 2 と 4 はindexだけで検査します.
 `channels` の変更は `channel_log` に記録されますが, `raw_records` の直接の変更は記録されません.
 
 ### Performance, index
@@ -582,12 +613,13 @@ COMMIT;
 `rejections` は `received_at` のBRIN indexを持ちます (最近の拒否を見るquery用).
 `raw_records` から `channels` へのforeign keyは持ちません. cidの整合性は入り口の関数が保証します. (foreign keyがあると, partitionの作成時に `channels` がロックされ, channelの自動作成とdeadlockする可能性があります.)
 
-#### Viewを読む時の注意
-Viewはqueryの中に展開されるので, `name` と `ts` の条件はそのまま `raw_records` のindexとpartitionの選択に使われます.
+#### viewを読む時の注意
+viewはqueryの中に展開されるので, `name` と `ts` の条件はそのまま `raw_records` のindexとpartitionの選択に使われます.
 ただし, `ts` の範囲を指定しないと, 全てのpartitionを読みます.
-例えば「最新の10件」を範囲なしで求めると, Viewはnameからcidをjoinで求めるため, そのchannelの全期間の行を読んでから並べ替えます.
+例えば「最新の10件」を範囲なしで求めると, viewはnameからcidをjoinで求めるため, そのchannelの全期間の行を読んでから並べ替えます.
 
-`SELECT * FROM ...`
+queryは `SELECT * FROM` に続く部分です.
+
 | query (最新10件)                                                                              | 時間 (200 channel, 4週間, 1600万行) |
 | --------------------------------------------------------------------------------------------- | ----------------------------------- |
 | `records WHERE name='x' ORDER BY ts DESC LIMIT 10`                                            | 410 ms (全期間に比例して遅くなる)   |
@@ -603,17 +635,17 @@ Viewはqueryの中に展開されるので, `name` と `ts` の条件はその�
    ```
    cidが先に1つに決まるので, 新しいpartitionから順に読んで, 必要な行数で止まります. 止まったchannelでも, 期間の長さによらず速く読めます.
    `latest` のcidは, そのnameで一番新しい行を持つcidです. そのnameに複数のcidがある場合 (`replace_channel()` の後) は, そのcidの行だけが返ります. 期間は重ならないので違う行が返ることはありませんが, 切り替えの直後は件数が足りないことがあります.
-   その場合は,
+   その場合は, cidごとに新しい方から読みます.
    ```sql
    SELECT r.* FROM (SELECT cid FROM channels WHERE name = 'x') c
     CROSS JOIN LATERAL (SELECT * FROM raw_records r WHERE r.cid = c.cid ORDER BY r.ts DESC LIMIT 10) r
     ORDER BY r.ts DESC LIMIT 10;
    ```
-   などが解決策になりえます. Slowdashのクエリ なら `ts` の条件をつけてくれるので, あまり面倒なことを考えなくて良いです.
+   Slowdashのqueryは常に `ts` の範囲を付けるので, この問題は起きません.
 
  - 現在値だけが欲しい場合は `latest` を使います.
 
-検討して採らなかった方法は, 後述の「採用しなかったこと」にあります.
+検討して採らなかった方法は, 後述の[採用しなかったこと](#採用しなかったこと)にあります.
 
 #### ロック表
 30年分のpartitionは約1560個になります.
@@ -650,17 +682,17 @@ slowtaskは失敗したmessageをspoolに残すので, 再投入すれば失わ�
 ## Slowdashからの利用
 
 ### 配置
-`SlowdashProject.yaml` に加える設定の例は `SlowdashProject_example.yaml` です (Quick startの2).
+`SlowdashProject.yaml` に加える設定の例は `SlowdashProject_example.yaml` です ([Dash start](#dash-start)の2).
 
  - 数値のchannelは `records` の `value` を, json型のchannel (histogramなど) は `value_jsonb` を読みます.
  - `tags` を指定しないと, Slowdashはchannelの一覧を得るためにデータ全体を走査します. 必ず指定してください.
  - `kl_monitor` には `search_path` が設定されているので, schema名を付けずに `records` と書けます.
- - `@toolbox/kl_pg_store` は, Slowdashのinstall先の `toolbox/tasks/kl_pg_store/` のslowtaskを指します. Slowdashをdockerで動かす場合は, imageに `toolbox/` が含まれていなければ, このrepositoryの `toolbox/` を `/slowdash/toolbox` にmountします. 手順は次の「Slowdashをdockerで動かす」にあります.
+ - `@toolbox/kl_pg_store` は, Slowdashのinstall先の `toolbox/tasks/kl_pg_store/` のslowtaskを指します. Slowdashをdockerで動かす場合は, imageに `toolbox/` が含まれていなければ, このrepositoryの `toolbox/` を `/slowdash/toolbox` にmountします. 手順は次の[Slowdashをdockerで動かす](#slowdashをdockerで動かす)にあります.
  - slowtaskは `asyncpg` を使います. Slowdashのinstall時に `pg_config` があれば, `requirements.txt` に含まれます.
  - DBの接続先は, 環境変数 `KL_WRITER_DB`, `KL_MONITOR_DB` (PostgreSQLのURL) で与えます.
 
 ### Slowdashをdockerで動かす
-DBはportを公開しているので, Slowdashのcontainerからも, 他のclientと同じくhost名 (またはIP address) と 設定したPORT, (例)`15432` で接続します.
+DBはportを公開しているので, Slowdashのcontainerからも, 他のclientと同じく, host名 (またはIP address) と公開したport (default `15432`) で接続します.
 containerの中の `localhost` はcontainer自身なので, `localhost:15432` は使えません.
 
 自分のprojectのdirectory (`SlowdashProject.yaml` のあるところ) に, 以下の `docker-compose.yaml` を置きます.
@@ -683,7 +715,7 @@ docker compose up -d
 
  - `dbhost` はDBのhost名にします. DBが同じhostにある場合は, `host.docker.internal` を使い, Linuxでは `extra_hosts: ["host.docker.internal:host-gateway"]` も加えます.
  - imageには `toolbox/` が含まれていないので, このrepositoryの `toolbox/` をmountします. `/path/to/slowdash` は自分の環境のpathにします.
- - `KL_WRITER_DB`, `KL_MONITOR_DB` は, Quick startの2と同じです. `PASSWORD` は `\password` で設定したものにします.
+ - `KL_WRITER_DB`, `KL_MONITOR_DB` は, [Dash start](#dash-start)の2と同じです. `PASSWORD` は `\password` で設定したものにします.
  - spoolのファイル (`./kl_pg_store-spool.jsonl`) は, mountしたprojectのdirectoryに書かれます.
 
 手元のSlowdash (このrepositoryのcheckout) を使う場合は, repositoryのtopの `Dockerfile` でimageを作り, `image` をそれに替えます.
@@ -719,8 +751,8 @@ HTML panelはJavaScriptを使えず, 状態を持てないので, 絞り込み, 
 `reload HTML` がoffだと, ボタンを押してもページが読み直されず, 何も変わらないように見えます.
 ページの実装は `kl_channel_page.py` にあり, slowtaskはこれを読み込むだけです.
 
-なお, formの値はslowdashによって一度jsonになるので, 紛らわしいことをすると面倒なことになります.
-descriptionに `1.50` と入れると `1.5`に, unitに`null` と入れると`None` になる, 既知の問題があります.
+なお, formの値はSlowdashが一度JSONとして解釈するので, 紛らわしい値は変わってしまいます.
+descriptionに `1.50` と入れると `1.5` に, unitに `null` と入れると `None` になる, 既知の問題があります.
 将来的に, Slowdashがサポートする仕組みの中でシンプルに解決できることを期待しています.
 
 関数はslowtaskの中で `kl_writer` の接続で実行されるので, Slowdashの画面を開ける人は誰でもchannelを書き換え, 作成できます.
@@ -757,28 +789,17 @@ spoolの1行は `insert_records()` の入力そのもの (recordのJSON配列) �
 
 ## 採用しなかったこと
 
- - Summary table
-  例えば週のsummary tableは, `(cid, week)` ごとに件数, 最小, 最大, 平均などを持つtableと, それを作る関数で作れます.
-  必要な時間幅や, 遅れてくるデータの量, 更新頻度が実験ごとにバラバラで, 実装も容易なのでここでは対応しません.
-  `raw_records` から作れる派生データにすること, 書き込みの経路に手を入れないことが重要だと思います.
-  遅れて届いたデータや, `insert_record_by_cid()` で補ったデータで過去の週が古くなりますが, 前回以降の `inserted_at` を持つ行を探せば, 作り直す `(cid, week)` が分かります.
-  行はほぼ `inserted_at` の順に入るので, `inserted_at` のBRIN indexを足せば, 小さいindexで探せます.
-  
- - 単位変換
-  例えば, naming_ruleの最後のsectionを単位にする (と物理量も推測できる) というアイデアをとれば, なにかしらスマートなことが実装できそうですが, それらはユーザーのwrapperに譲ります.
-  ここでは, naming_ruleはユーザーの自由です. (それでも, なにかしらの規則を持つことを強くお勧めします.)
-  名前に単位を含んでいなくても, `records` は行ごとにその時点のcidの `unit` を返すので, 途中でunitが変わったnameも, 行ごとに変換できます.
-
- - `latest` の `ts` を上限にするViewでの高速化
-  `ts <= (最新のts)` は結果を変えない条件ですが, 最新より古い全期間を読むことは変わらず, 速くなりません. 
-  速くなるのは下限ですが, 下限 (例えば `最新のts - 1 day`) は `LIMIT` を前提にした推測で, Viewからは `LIMIT` が見えないので作れません.
-
- - `ts` のB-tree index
-  測定して, あまりメリットがなかったので入れていません.
-
- - プロット用の関数, 便利Trigger, Stored procedure
-  過度に複雑になると, かえってユーザーが自由に環境に応じていじくり回すのを妨げると考え, 入れていません. (triggerはlog用途にだけ採用)
-
- - 古い週のデータへの自動的なCLUSTER
-  単一channel, 長いtime rangeの際に得をして, 短いtimerange, 複数channelで損をするはずです.
-  後からどうとでもできるので, 採用を見送っています.
+ - summary table: 例えば週のsummary tableは, `(cid, week)` ごとに件数, 最小, 最大, 平均などを持つtableと, それを作る関数で作れます.
+   必要な時間幅や, 遅れてくるデータの量, 更新頻度が実験ごとにバラバラで, 実装も容易なのでここでは対応しません.
+   `raw_records` から作れる派生データにすること, 書き込みの経路に手を入れないことが重要だと思います.
+   遅れて届いたデータや, `insert_record_by_cid()` で補ったデータで過去の週が古くなりますが, 前回以降の `inserted_at` を持つ行を探せば, 作り直す `(cid, week)` が分かります.
+   行はほぼ `inserted_at` の順に入るので, `inserted_at` のBRIN indexを足せば, 小さいindexで探せます.
+ - 単位変換: 例えば, naming ruleの最後の部分を単位にする (と物理量も推測できる) というアイデアをとれば, 何かしらスマートなことが実装できそうですが, それらはユーザーのwrapperに譲ります.
+   ここでは, naming ruleはユーザーの自由です (それでも, 何かしらの規則を持つことを強くおすすめします).
+   名前に単位を含んでいなくても, `records` は行ごとにその時点のcidの `unit` を返すので, 途中でunitが変わったnameも, 行ごとに変換できます.
+ - `latest` の `ts` を上限にするviewでの高速化: `ts <= (最新のts)` は結果を変えない条件ですが, 最新より古い全期間を読むことは変わらず, 速くなりません.
+   速くなるのは下限ですが, 下限 (例えば `最新のts - 1 day`) は `LIMIT` を前提にした推測で, viewからは `LIMIT` が見えないので作れません.
+ - `ts` のB-tree index: 測定して, あまりメリットがなかったので入れていません.
+ - plot用の関数, 便利なtrigger, stored procedure: 過度に複雑になると, かえってユーザーが環境に応じて自由にいじくり回すのを妨げると考え, 入れていません (triggerはlog用途にだけ採用).
+ - 古い週のデータへの自動的なCLUSTER: 単一channel, 長い時間範囲の時に得をして, 短い時間範囲, 複数channelで損をするはずです.
+   後からどうとでもできるので, 採用を見送っています.
