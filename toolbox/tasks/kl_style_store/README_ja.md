@@ -21,41 +21,42 @@ slowtaskを使わずに, 他のアプリケーションから直接 `insert_reco
  - Slowdashのmeshとの連携が検証されています.
 
 
-## Quick start
+## Dash start
+
+DBの起動 -> Slowdashの設定 -> データを送る/見る -> channel情報を書く
 
 ### 1. DBを起動する
 ```bash
 cd toolbox/tasks/kl_style_store/docker
+echo 'POSTGRES_PASSWORD=<your_password>' > .env     # superuser postgres のpassword
 docker compose up -d
+docker compose exec db psql -U postgres -d kldb -c '\password kl_writer'
+docker compose exec db psql -U postgres -d kldb -c '\password kl_monitor'
 ```
 PostgreSQL 16が起動し, 初回の起動時に `sql/install.sql` でstoreがinstallされます.
+roleのpasswordは, 自分で決めて `\password` で手動で設定します (dockerを使わない「Install」と同じです). 
 
-環境変数で以下を変更できます (全て省略可能). `KL_DB_PORT` と `KL_DATA` 以外は, 初回の起動時 (databaseの作成時) だけ使われます.
+環境変数 (`docker/.env` に書きます) は以下です. `KL_DB_PORT` と `KL_DATA` 以外は, 初回の起動時 (databaseの作成時) だけ使われます.
 
-| 変数                   | default    | 内容                                                  |
-| ---------------------- | ---------- | ----------------------------------------------------- |
-| `KL_DB_PORT`           | `15432`    | 公開するport. 他のhostからも接続できます              |
-| `KL_DB_NAME`           | `kldb`     | database名                                            |
-| `KL_DATA`              | `kl_data`  | データの置き場所. dockerのvolume名か, hostのdirectory |
-| `POSTGRES_PASSWORD`    | `postgres` | superuser `postgres` のpassword                       |
-| `KL_ADMIN_PASSWORD`    | (無し)     | `kl_admin` (管理用) のpassword                        |
-| `KL_WRITER_PASSWORD`   | `writer`   | `kl_writer` (書き込み用) のpassword                   |
-| `KL_MONITOR_PASSWORD`  | `monitor`  | `kl_monitor` (Slowdashなどの読み込み用) のpassword    |
-| `KL_ANALYZER_PASSWORD` | `analyzer` | `kl_analyzer` (解析用) のpassword                     |
-
-例えば, `KL_DB_PORT=25432 KL_WRITER_PASSWORD=xxx docker compose up -d` のように指定します. 毎回同じ値を使うので, `docker/.env` に書いておくと便利です.
+| 変数                 | default   | 内容                                                  |
+| ------------------- | --------- | ----------------------------------------------------- |
+| `POSTGRES_PASSWORD` | (必須)    | superuser `postgres` のpassword                       |
+| `KL_DB_PORT`        | `15432`   | 公開するport. 他のhostからも接続できます              |
+| `KL_DB_NAME`        | `kldb`    | database名                                            |
+| `KL_DATA`           | `kl_data` | データの置き場所. dockerのvolume名か, hostのdirectory |
 
 初期設定は以下です.
 
  - 接続先は `<DBのhost>:15432` (同じhostからは `localhost:15432`), database `kldb`, schema `kl_store` です.
-   portは全てのnetwork interfaceに公開されるので, 閉じたnetworkの中で使い, passwordは必ずdefaultから変えてください.
+   portは全てのnetwork interfaceに公開されるので, 閉じたnetworkの中で使ってください.
  - role `kl_admin`, `kl_writer`, `kl_monitor`, `kl_analyzer` が作られます (後述の「Role」).
-   passwordが空のroleは, containerの外からは接続できず, containerの中からだけ使えます (`docker compose exec db psql -U kl_admin -d kldb`). defaultでは `kl_admin` がこれにあたります.
- - `max_locks_per_transaction` は 512 です (`docker-compose.yaml` の `command`. 後述の「ロック表」).
+   passwordを設定していないroleは, containerの外からは接続できず, containerの中からだけ使えます (`docker compose exec db psql -U kl_admin -d kldb`). passwordは, 使うroleにだけ設定します.
  - データはdockerのvolume `kl_data` に保存されます. `docker compose down` では残り, `docker compose down -v` で消えます. 実際の運用では, `KL_DATA=/data/kldb` のようにhostのdirectoryを指定してください (後述の「dockerのデータ」).
- - passwordを後から変える時は, `ALTER ROLE kl_writer PASSWORD '...'` で変更します.
+ - passwordを後から変える時も, `\password` を使います.
+ - `max_locks_per_transaction` は 512 です (`docker-compose.yaml` の `command`. 後述の「ロック表」).
 
 dockerを使わずに, 既存のPostgreSQLにinstallする方法は後述の「Install」にあります.
+
 
 ### 2. Slowdashの設定
 `SlowdashProject_example.yaml` の内容を, 自分のprojectの `SlowdashProject.yaml` にコピーします.
@@ -63,13 +64,9 @@ dockerを使わずに, 既存のPostgreSQLにinstallする方法は後述の「I
 slowdash_project:
   # name, title, etc. of your project
 
-  # The defaults are for the DB of docker/
-  environment:
-    - WRITER_DB=${KL_WRITER_DB:-postgresql://kl_writer:writer@localhost:15432/kldb}
-    - MONITOR_DB=${KL_MONITOR_DB:-postgresql://kl_monitor:monitor@localhost:15432/kldb}
-
+  # KL_WRITER_DB, KL_MONITOR_DB: PostgreSQL URLs, given as environment variables
   data_source:
-    url: ${MONITOR_DB}
+    url: ${KL_MONITOR_DB}
     time_series:
       schema: records[name]@ts(with timezone)=value
       tags:
@@ -83,12 +80,16 @@ slowdash_project:
     - name: "@toolbox/kl_style_store"
       auto_start: true
       parameters:
-        dsn: ${WRITER_DB}
+        dsn: ${KL_WRITER_DB}
         spool: ./kl_style_store-spool.jsonl
 ```
 
  - `name`, `title` などは自分のprojectのものです. 
- - `environment`: DBの接続先です. defaultは1.のDBで, portやpasswordを変えた場合は, 環境変数 `KL_WRITER_DB`, `KL_MONITOR_DB` で上書きします.
+ - DBの接続先 (PostgreSQLのURL) は, 環境変数 `KL_WRITER_DB`, `KL_MONITOR_DB` で与えます. 1.のDBなら以下です. 設定していないと, Slowdashのlogに `variable substitution error: KL_WRITER_DB` と出ます.
+   ```bash
+   export KL_WRITER_DB=postgresql://kl_writer:PASSWORD@localhost:15432/kldb
+   export KL_MONITOR_DB=postgresql://kl_monitor:PASSWORD@localhost:15432/kldb
+   ```
  - `data_source`: Slowdashのplotは, `kl_monitor` で `records` Viewを読みます. 数値は `value` を, histogramなどのobjectは `value_jsonb` を読みます.
  - `task`: slowtask `kl_style_store` が, `data.store.>` のmessageを受け取って, `kl_writer` でDBに書き込みます. DBに書き込めなかったmessageは `spool` のファイルに残ります (後述の「slowtaskの動作」).
 
@@ -215,6 +216,7 @@ Slowdashも, 数値は `value` を, histogramなどのobjectは `value_jsonb` �
 
 ### Install
 dockerを使わずに, 既存のPostgreSQL (16以降) にinstallする場合は, superuserで以下を実行します.
+database `kldb` は先に作っておきます (`createdb kldb`).  database名は自由です (この文書の例では `kldb`).
 ```bash
 psql -d kldb -f sql/install.sql
 psql -d kldb -c '\password kl_admin'
@@ -222,10 +224,11 @@ psql -d kldb -c '\password kl_writer'
 psql -d kldb -c '\password kl_monitor'
 psql -d kldb -c '\password kl_analyzer'
 ```
-database `kldb` は先に作っておきます (`createdb kldb`). passwordは, 使うroleにだけ設定します.
-接続したdatabaseにinstallされます. database名は自由です (この文書の例では `kldb`).
+passwordは, 使うroleにだけ設定します.
+接続したdatabaseにinstallされます. 
 `install.sql` は冪等です.
-`postgresql.conf` の `max_locks_per_transaction` は大きめ (例えば 512) にしてください (後述の「ロック表」). 変更にはserverの再起動が必要です.
+`postgresql.conf` の `max_locks_per_transaction` は大きめ (例えば 512) にしてください (後述の「ロック表」). 
+変更にはserverの再起動が必要です.
 `postgresql.conf` の場所は, installの方法によって違います. `psql -c 'SHOW config_file'` で分かります.
 dockerのDBでは `postgresql.conf` を編集せず, `docker-compose.yaml` の `command` に `-c max_locks_per_transaction=512` のように渡しています.
 
@@ -654,10 +657,10 @@ slowtaskは失敗したmessageをspoolに残すので, 再投入すれば失わ�
  - `kl_monitor` には `search_path` が設定されているので, schema名を付けずに `records` と書けます.
  - `@toolbox/kl_style_store` は, Slowdashのinstall先の `toolbox/tasks/kl_style_store/` のslowtaskを指します. Slowdashをdockerで動かす場合は, imageに `toolbox/` が含まれていなければ, このrepositoryの `toolbox/` を `/slowdash/toolbox` にmountします. 手順は次の「Slowdashをdockerで動かす」にあります.
  - slowtaskは `asyncpg` を使います. Slowdashのinstall時に `pg_config` があれば, `requirements.txt` に含まれます.
- - DBの接続先は, 環境変数 `KL_WRITER_DB`, `KL_MONITOR_DB` (PostgreSQLのURL) で変えられます.
+ - DBの接続先は, 環境変数 `KL_WRITER_DB`, `KL_MONITOR_DB` (PostgreSQLのURL) で与えます.
 
 ### Slowdashをdockerで動かす
-DBはportを公開しているので, Slowdashのcontainerからも, 他のclientと同じくhost名 (またはIP address) と `15432` で接続します.
+DBはportを公開しているので, Slowdashのcontainerからも, 他のclientと同じくhost名 (またはIP address) と 設定したPORT, (例)`15432` で接続します.
 containerの中の `localhost` はcontainer自身なので, `localhost:15432` は使えません.
 
 自分のprojectのdirectory (`SlowdashProject.yaml` のあるところ) に, 以下の `docker-compose.yaml` を置きます.
@@ -671,8 +674,8 @@ services:
       - .:/project
       - /path/to/slowdash/toolbox:/slowdash/toolbox:ro   # このrepositoryの toolbox/
     environment:
-      - KL_WRITER_DB=postgresql://kl_writer:writer@dbhost:15432/kldb
-      - KL_MONITOR_DB=postgresql://kl_monitor:monitor@dbhost:15432/kldb
+      - KL_WRITER_DB=postgresql://kl_writer:PASSWORD@dbhost:15432/kldb
+      - KL_MONITOR_DB=postgresql://kl_monitor:PASSWORD@dbhost:15432/kldb
 ```
 ```bash
 docker compose up -d
@@ -680,14 +683,26 @@ docker compose up -d
 
  - `dbhost` はDBのhost名にします. DBが同じhostにある場合は, `host.docker.internal` を使い, Linuxでは `extra_hosts: ["host.docker.internal:host-gateway"]` も加えます.
  - imageには `toolbox/` が含まれていないので, このrepositoryの `toolbox/` をmountします. `/path/to/slowdash` は自分の環境のpathにします.
- - `KL_WRITER_DB`, `KL_MONITOR_DB` は, `SlowdashProject.yaml` の `environment` のdefault (`localhost:15432`) を上書きします. passwordを変えた場合は, ここも変えます.
+ - `KL_WRITER_DB`, `KL_MONITOR_DB` は, Quick startの2と同じです. `PASSWORD` は `\password` で設定したものにします.
  - spoolのファイル (`./kl_style_store-spool.jsonl`) は, mountしたprojectのdirectoryに書かれます.
+
+手元のSlowdash (このrepositoryのcheckout) を使う場合は, repositoryのtopの `Dockerfile` でimageを作り, `image` をそれに替えます.
+```bash
+cd /path/to/slowdash
+docker build -t slowdash:local .
+```
+```yaml
+    image: slowdash:local
+```
+
+ - imageには, build時の `app/`, `lib/` などが入ります. Slowdash本体を変更した時は, buildし直して `docker compose up -d` で作り直します.
+ - `toolbox/` はimageに入らず, 上のようにmountしたものを使います. slowtask (`toolbox/tasks/kl_style_store/`) の変更は, buildし直さずに, Slowdashの再起動 (`docker compose restart`) で反映されます.
 
 ### channelのページ
 slowtask `kl_style_store` は, HTML panel `kl_channels` を提供します.
 以下の手順で表示します.
 
- 1. Slowdashのhome (`http://localhost:18881`) で, 新しいplot layoutを作ります (`New Plot Layout`).
+ 1. Slowdashのhomeで, 新しいplot layoutを作ります (`New Plot Layout`).
  2. layoutの空いたところにmouseを置くと出る `Add a New Panel` から, `HTML Form` を選びます.
  3. HTML Fileに `kl_channels` を選び, `On Update` の `reload HTML` をonにします. ボタンを押した後に, ページが読み直されて結果が表示されます.
  4. layoutを保存しておくと, 次からはhomeの一覧から開けます.

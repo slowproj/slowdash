@@ -1,7 +1,7 @@
 # PostgreSQL with kl_style_store installed. See "Quick start" in ../README_ja.md.
-#   docker compose up -d
-# The variables (e.g. KL_WRITER_PASSWORD=... docker compose up -d) are used
-# only when the database is created, except KL_DB_PORT and KL_DATA.
+#   docker compose up -d       (POSTGRES_PASSWORD in .env)
+# The variables are used only when the database is created, except KL_DB_PORT
+# and KL_DATA. The passwords of the kl_ roles are set with \password.
 
 services:
   db:
@@ -9,18 +9,14 @@ services:
     restart: always
     command: postgres -c max_locks_per_transaction=512
     environment:
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD, e.g. in .env}
       - POSTGRES_DB=${KL_DB_NAME:-kldb}
-      - KL_ADMIN_PASSWORD=${KL_ADMIN_PASSWORD:-}
-      - KL_WRITER_PASSWORD=${KL_WRITER_PASSWORD:-writer}
-      - KL_MONITOR_PASSWORD=${KL_MONITOR_PASSWORD:-monitor}
-      - KL_ANALYZER_PASSWORD=${KL_ANALYZER_PASSWORD:-analyzer}
     volumes:
       - ../sql:/kl_style_store/sql:ro
       - ./initdb:/docker-entrypoint-initdb.d:ro
       # the data: a docker volume by default; for real use, a directory on the host (KL_DATA=/path/to/dir)
       - ${KL_DATA:-kl_data}:/var/lib/postgresql/data
-    # open to the network: for a closed network only; change the passwords
+    # open to the network: for a closed network only
     ports:
       - "${KL_DB_PORT:-15432}:5432"
     healthcheck:
