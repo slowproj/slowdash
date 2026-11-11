@@ -1,5 +1,7 @@
 # `kl_pg_store`
 
+[English](README.md)
+
 `kl_pg_store` は, 長期間の実験の時系列データを想定して, `data.store.>` の `DataPacket` を, PostgreSQLに保存するslowtaskです.
 PostgreSQLの基本機能を活用し, コア機能はextensionや, 外部ツールに依存しません.
 コア概念は他のRDBでの設計にも流用可能です.
