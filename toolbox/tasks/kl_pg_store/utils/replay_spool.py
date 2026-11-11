@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-# Writes the messages spooled by slowtask-kl_style_store.py into the DB.
+# Writes the messages spooled by slowtask-kl_pg_store.py into the DB.
 #
-#   python3 replay_spool.py postgresql://kl_writer:PASSWORD@localhost:15432/kldb kl_style_store-spool.jsonl
+#   python3 replay_spool.py postgresql://kl_writer:PASSWORD@localhost:15432/kldb kl_pg_store-spool.jsonl
 #
 # The spool file is first renamed, so the slowtask can keep spooling while
 # this runs. Lines that still fail are appended back to the spool file.
@@ -58,7 +58,7 @@ async def replay(dsn, spool, schema):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Replay the kl_style_store spool file')
+    parser = argparse.ArgumentParser(description='Replay the kl_pg_store spool file')
     parser.add_argument('dsn', help='PostgreSQL URL of the writer role')
     parser.add_argument('spool', help='spool file (JSON Lines)')
     parser.add_argument('--schema', default='kl_store')

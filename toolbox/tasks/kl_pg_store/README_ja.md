@@ -1,6 +1,6 @@
-# `kl_style_store`
+# `kl_pg_store`
 
-`kl_style_store` は, 長期間の実験の時系列データを想定して, `data.store.>` の `DataPacket`を, PostgreSQLに保存するSlowtaskです.
+`kl_pg_store` は, 長期間の実験の時系列データを想定して, `data.store.>` の `DataPacket`を, PostgreSQLに保存するSlowtaskです.
 PostgreSQLの基本機能を活用し, コア機能はextensionや, 外部ツールに依存しません.
 コア概念は他のRDBでの設計にも流用可能です.
 KamLAND2 実験のSlow control データの収集のために構築されましたが, **KamLAND実験特有のものはない, 汎用の構成です**.
@@ -27,7 +27,7 @@ DBの起動 -> Slowdashの設定 -> データを送る/見る -> channel情報�
 
 ### 1. DBを起動する
 ```bash
-cd toolbox/tasks/kl_style_store/docker
+cd toolbox/tasks/kl_pg_store/docker
 echo 'POSTGRES_PASSWORD=<your_password>' > .env     # superuser postgres のpassword
 docker compose up -d
 docker compose exec db psql -U postgres -d kldb -c '\password kl_writer'
@@ -38,7 +38,7 @@ roleのpasswordは, 自分で決めて `\password` で手動で設定します (
 
 環境変数 (`docker/.env` に書きます) は以下です. `KL_DB_PORT` と `KL_DATA` 以外は, 初回の起動時 (databaseの作成時) だけ使われます.
 
-| 変数                 | default   | 内容                                                  |
+| 変数                | default   | 内容                                                  |
 | ------------------- | --------- | ----------------------------------------------------- |
 | `POSTGRES_PASSWORD` | (必須)    | superuser `postgres` のpassword                       |
 | `KL_DB_PORT`        | `15432`   | 公開するport. 他のhostからも接続できます              |
@@ -77,11 +77,11 @@ slowdash_project:
         sql: SELECT DISTINCT name FROM channels WHERE type = 'json'
 
   task:
-    - name: "@toolbox/kl_style_store"
+    - name: "@toolbox/kl_pg_store"
       auto_start: true
       parameters:
         dsn: ${KL_WRITER_DB}
-        spool: ./kl_style_store-spool.jsonl
+        spool: ./kl_pg_store-spool.jsonl
 ```
 
  - `name`, `title` などは自分のprojectのものです. 
@@ -91,7 +91,7 @@ slowdash_project:
    export KL_MONITOR_DB=postgresql://kl_monitor:PASSWORD@localhost:15432/kldb
    ```
  - `data_source`: Slowdashのplotは, `kl_monitor` で `records` Viewを読みます. 数値は `value` を, histogramなどのobjectは `value_jsonb` を読みます.
- - `task`: slowtask `kl_style_store` が, `data.store.>` のmessageを受け取って, `kl_writer` でDBに書き込みます. DBに書き込めなかったmessageは `spool` のファイルに残ります (後述の「slowtaskの動作」).
+ - `task`: slowtask `kl_pg_store` が, `data.store.>` のmessageを受け取って, `kl_writer` でDBに書き込みます. DBに書き込めなかったmessageは `spool` のファイルに残ります (後述の「slowtaskの動作」).
 
 Slowdashはいつも通りに起動します. Slowdashをdockerで動かす場合は, 後述の「Slowdashをdockerで動かす」の手順で, DBに接続します.
 
@@ -139,9 +139,9 @@ SELECT create_channel('env.laboratory.pressure', 'double', 'hPa', 'Laboratory ro
 ```
 こちらは `kl_writer` (または `kl_admin`) で実行します (`docker compose exec db psql -U kl_writer -d kldb`).
 
-多くのchannelをまとめて書く時は, 管理スクリプト `scripts/kl_admin.py` でCSVから書けます (後述の「管理スクリプト」).
+多くのchannelをまとめて書く時は, 管理スクリプト `utils/kl_admin.py` でCSVから書けます (後述の「管理スクリプト」).
 
-Slowdashの画面からも書けます. slowtask `kl_style_store` は, channelの一覧と, unit, descriptionの入力欄, channelの作成欄を持つHTML panel `kl_channels` を提供します (後述の「channelのページ」).
+Slowdashの画面からも書けます. slowtask `kl_pg_store` は, channelの一覧と, unit, descriptionの入力欄, channelの作成欄を持つHTML panel `kl_channels` を提供します (後述の「channelのページ」).
 
 とりあえずこれで運用を始められます.
 
@@ -436,7 +436,7 @@ channelの期間は重ならないので, 同じnameで同じ `ts` の行が2つ
 `raw_records` を直接変更した場合は記録されません.
 
 #### 管理スクリプト
-`scripts/kl_admin.py` は, 日常の管理をコマンドラインで行うscriptです. SQLの全ての機能は網羅しません. それ以外の操作はSQLで行います.
+`utils/kl_admin.py` は, 日常の管理をコマンドラインで行うscriptです. SQLの全ての機能は網羅しません. それ以外の操作はSQLで行います.
 `asyncpg` が必要です (Slowdashの環境に含まれます).
 
 接続先は `--dsn` か, 環境変数 `KL_ADMIN_DB` (無ければ `KL_WRITER_DB`) で指定します.
@@ -455,10 +455,10 @@ export KL_ADMIN_DB=postgresql://kl_admin:PASSWORD@localhost:15432/kldb
 
 unit, descriptionをまとめて書く時は, CSVに書き出して, 表計算ソフトやeditorで埋めてから取り込みます.
 ```bash
-python3 scripts/kl_admin.py export --unfilled > channels.csv
+python3 utils/kl_admin.py export --unfilled > channels.csv
 # channels.csv を編集する
-python3 scripts/kl_admin.py import channels.csv          # 変更点を表示するだけ
-python3 scripts/kl_admin.py import channels.csv --yes    # 書き込む
+python3 utils/kl_admin.py import channels.csv          # 変更点を表示するだけ
+python3 utils/kl_admin.py import channels.csv --yes    # 書き込む
 ```
 
  - `import` は, `--yes` を付けないと変更点を表示するだけで, 書き込みません. `--yes` の時は, 全ての変更を1つのtransactionで書き込みます.
@@ -655,7 +655,7 @@ slowtaskは失敗したmessageをspoolに残すので, 再投入すれば失わ�
  - 数値のchannelは `records` の `value` を, json型のchannel (histogramなど) は `value_jsonb` を読みます.
  - `tags` を指定しないと, Slowdashはchannelの一覧を得るためにデータ全体を走査します. 必ず指定してください.
  - `kl_monitor` には `search_path` が設定されているので, schema名を付けずに `records` と書けます.
- - `@toolbox/kl_style_store` は, Slowdashのinstall先の `toolbox/tasks/kl_style_store/` のslowtaskを指します. Slowdashをdockerで動かす場合は, imageに `toolbox/` が含まれていなければ, このrepositoryの `toolbox/` を `/slowdash/toolbox` にmountします. 手順は次の「Slowdashをdockerで動かす」にあります.
+ - `@toolbox/kl_pg_store` は, Slowdashのinstall先の `toolbox/tasks/kl_pg_store/` のslowtaskを指します. Slowdashをdockerで動かす場合は, imageに `toolbox/` が含まれていなければ, このrepositoryの `toolbox/` を `/slowdash/toolbox` にmountします. 手順は次の「Slowdashをdockerで動かす」にあります.
  - slowtaskは `asyncpg` を使います. Slowdashのinstall時に `pg_config` があれば, `requirements.txt` に含まれます.
  - DBの接続先は, 環境変数 `KL_WRITER_DB`, `KL_MONITOR_DB` (PostgreSQLのURL) で与えます.
 
@@ -684,7 +684,7 @@ docker compose up -d
  - `dbhost` はDBのhost名にします. DBが同じhostにある場合は, `host.docker.internal` を使い, Linuxでは `extra_hosts: ["host.docker.internal:host-gateway"]` も加えます.
  - imageには `toolbox/` が含まれていないので, このrepositoryの `toolbox/` をmountします. `/path/to/slowdash` は自分の環境のpathにします.
  - `KL_WRITER_DB`, `KL_MONITOR_DB` は, Quick startの2と同じです. `PASSWORD` は `\password` で設定したものにします.
- - spoolのファイル (`./kl_style_store-spool.jsonl`) は, mountしたprojectのdirectoryに書かれます.
+ - spoolのファイル (`./kl_pg_store-spool.jsonl`) は, mountしたprojectのdirectoryに書かれます.
 
 手元のSlowdash (このrepositoryのcheckout) を使う場合は, repositoryのtopの `Dockerfile` でimageを作り, `image` をそれに替えます.
 ```bash
@@ -696,10 +696,10 @@ docker build -t slowdash:local .
 ```
 
  - imageには, build時の `app/`, `lib/` などが入ります. Slowdash本体を変更した時は, buildし直して `docker compose up -d` で作り直します.
- - `toolbox/` はimageに入らず, 上のようにmountしたものを使います. slowtask (`toolbox/tasks/kl_style_store/`) の変更は, buildし直さずに, Slowdashの再起動 (`docker compose restart`) で反映されます.
+ - `toolbox/` はimageに入らず, 上のようにmountしたものを使います. slowtask (`toolbox/tasks/kl_pg_store/`) の変更は, buildし直さずに, Slowdashの再起動 (`docker compose restart`) で反映されます.
 
 ### channelのページ
-slowtask `kl_style_store` は, HTML panel `kl_channels` を提供します.
+slowtask `kl_pg_store` は, HTML panel `kl_channels` を提供します.
 以下の手順で表示します.
 
  1. Slowdashのhomeで, 新しいplot layoutを作ります (`New Plot Layout`).
@@ -727,11 +727,11 @@ descriptionに `1.50` と入れると `1.5`に, unitに`null` と入れると`No
 
 slowtaskの `parameters` は以下です.
 
-| parameter | default                      | 内容                                  |
-| --------- | ---------------------------- | ------------------------------------- |
-| `dsn`     | (必須)                       | `kl_writer` で接続するPostgreSQLのURL |
-| `schema`  | `kl_store`                   | `install.sql` に指定したschema        |
-| `spool`   | `kl_style_store-spool.jsonl` | DBに書き込めなかったmessageの保存先   |
+| parameter | default                   | 内容                                  |
+| --------- | ------------------------- | ------------------------------------- |
+| `dsn`     | (必須)                    | `kl_writer` で接続するPostgreSQLのURL |
+| `schema`  | `kl_store`                | `install.sql` に指定したschema        |
+| `spool`   | `kl_pg_store-spool.jsonl` | DBに書き込めなかったmessageの保存先   |
 
 ### slowtaskの動作
 1つのSlowMesh messageにつき, `insert_records()` を1回呼びます.
@@ -747,7 +747,7 @@ DBに書き込めなかった場合 (DBの停止など), messageを `spool` に�
 `t` の無い値は, spoolに書く時に受信時刻を `ts` として補います (補わないと, 再投入した時刻で保存されるためです).
 DBの復旧後, 以下で再投入します.
 ```bash
-python3 scripts/replay_spool.py postgresql://kl_writer:PASSWORD@localhost:15432/kldb kl_style_store-spool.jsonl
+python3 utils/replay_spool.py postgresql://kl_writer:PASSWORD@localhost:15432/kldb kl_pg_store-spool.jsonl
 ```
 再投入中もslowtaskはspoolへの追記を続けられます. 再投入に失敗したmessageはspoolに戻されます.
 再投入が途中で止まった場合に残るファイル (`<spool>.replaying-*`) は, 次の再投入で先に処理されます.

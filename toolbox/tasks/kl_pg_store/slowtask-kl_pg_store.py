@@ -1,9 +1,9 @@
-# kl_style_store: stores "data.store.>" DataPackets into PostgreSQL. See README_ja.md.
+# kl_pg_store: stores "data.store.>" DataPackets into PostgreSQL. See README_ja.md.
 #
 # Parameters:
 #   dsn: PostgreSQL URL of the writer role (required)
 #   schema: schema given to install.sql (default: kl_store)
-#   spool: JSON Lines file for messages that could not be written (default: kl_style_store-spool.jsonl)
+#   spool: JSON Lines file for messages that could not be written (default: kl_pg_store-spool.jsonl)
 
 import json
 import logging
@@ -77,7 +77,7 @@ async def initialize(params):
     global pool, schema, insert_sql, spool_path
     schema = '"%s"' % params.get('schema', 'kl_store').replace('"', '""')
     insert_sql = f'SELECT input_index, status, cid, detail FROM {schema}.insert_records($1::jsonb)'
-    spool_path = params.get('spool', 'kl_style_store-spool.jsonl')
+    spool_path = params.get('spool', 'kl_pg_store-spool.jsonl')
 
     # min_size=0: starts even if the DB is down; connects on the first write
     pool = await asyncpg.create_pool(dsn=params['dsn'], min_size=0, max_size=1, command_timeout=15)
@@ -90,7 +90,7 @@ async def store(headers, body):
         records = to_records(body)
     except Exception as e:
         # not a DataPacket; kept in rejections as invalid_record
-        logging.error(f'kl_style_store: invalid message: {e}')
+        logging.error(f'kl_pg_store: invalid message: {e}')
         records = [ { 'packet': to_json_value(body) } ]
     if len(records) == 0:
         return
@@ -99,7 +99,7 @@ async def store(headers, body):
     try:
         rejected = await pool.fetch(insert_sql, payload)
     except Exception as e:
-        logging.error(f'kl_style_store: DB write failed, the message is spooled to {spool_path}: {e}')
+        logging.error(f'kl_pg_store: DB write failed, the message is spooled to {spool_path}: {e}')
         # the DB would use the replay time for a missing ts
         for record in records:
             if record.get('ts') is None and 'value' in record:
@@ -109,7 +109,7 @@ async def store(headers, body):
 
     for row in rejected:
         record = records[row['input_index']]
-        logging.warning(f'kl_style_store: rejected ({row["status"]}): {record.get("name")}: {row["detail"]}')
+        logging.warning(f'kl_pg_store: rejected ({row["status"]}): {record.get("name")}: {row["detail"]}')
 
 
 @tasklet.finalize()

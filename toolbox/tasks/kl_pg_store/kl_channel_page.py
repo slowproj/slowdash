@@ -1,4 +1,4 @@
-# The Slowdash HTML panel "kl_channels" of slowtask-kl_style_store.py: lists
+# The Slowdash HTML panel "kl_channels" of slowtask-kl_pg_store.py: lists
 # the channels with the latest values, and writes unit and description.
 # See "channelのページ" in README_ja.md.
 #
@@ -79,7 +79,7 @@ def setup(tasklet, get_db):
         try:
             return await render(pool, schema)
         except Exception as e:
-            return f'<p>kl_style_store: DB error: {html.escape(str(e))}</p>'
+            return f'<p>kl_pg_store: DB error: {html.escape(str(e))}</p>'
 
 
 async def render(pool, schema):
@@ -125,13 +125,13 @@ async def render(pool, schema):
         f'  <select name="type">{types}</select>',
         '  <input name="unit" placeholder="unit" size="6">',
         '  <input name="description" placeholder="description" size="30">',
-        '  <input type="submit" name="kl_style_store.create_channel()" value="Create">',
+        '  <input type="submit" name="kl_pg_store.create_channel()" value="Create">',
         '</form><br>',
         '<form class="box"><b>Filter</b>',
         f'  name contains <input name="name" value="{attr(name)}" size="24">',
         f'  <select name="show">{options(SHOWS.items(), show)}</select>',
         f'  sort by <select name="sort">{options(((v, s[0]) for v, s in SORTS.items()), sort)}</select>',
-        '  <input type="submit" name="kl_style_store.filter_channels()" value="Apply">',
+        '  <input type="submit" name="kl_pg_store.filter_channels()" value="Apply">',
         '</form>',
         f'<p>Showing: {SHOWS[show]}' + (f', name contains "{attr(name)}"' if name else '')
         + f', sorted by {SORTS[sort][0]}. {matched} of {total} channels, page {page} of {pages}. Times in {attr(timezone)}.</p>',
@@ -160,7 +160,7 @@ async def render(pool, schema):
             f'<span class="num">{r["cid"]}<input type="hidden" name="cid" value="{r["cid"]}"></span>',
             f'<span>{attr(r["name"])}</span><span class="dim">{valid_from}</span><span>{r["type"]}</span>',
             cell_input('unit', r['unit'], 6), cell_input('description', r['description'], 36),
-            '<span><input type="submit" name="kl_style_store.describe_channel()" value="Set"></span>',
+            '<span><input type="submit" name="kl_pg_store.describe_channel()" value="Set"></span>',
             f'<span class="num">{attr(last_value)}</span>',
             f'<span class="dim">{attr(r["last_ts"])}</span><span class="dim">{attr(r["last_inserted_at"])}</span>',
             f'<span>{plot}</span>',
@@ -171,7 +171,7 @@ async def render(pool, schema):
     if pages > 1:
         links = [
             f'<b>{p}</b>' if p == page else
-            f'<form><input type="hidden" name="page" value="{p}"><input type="submit" name="kl_style_store.show_page()" value="{p}"></form>'
+            f'<form><input type="hidden" name="page" value="{p}"><input type="submit" name="kl_pg_store.show_page()" value="{p}"></form>'
             for p in range(1, pages + 1)
         ]
         lines.append('<div class="pages">Page ' + ' '.join(links) + '</div>')

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Daily administration of kl_style_store: channel list, unit and description,
+# Daily administration of kl_pg_store: channel list, unit and description,
 # rejections. For everything else, use SQL.
 #
 #   export KL_ADMIN_DB=postgresql://kl_admin:PASSWORD@localhost:15432/kldb
@@ -168,7 +168,7 @@ async def main(args):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='kl_style_store administration (see README_ja.md)')
+    parser = argparse.ArgumentParser(description='kl_pg_store administration (see README_ja.md)')
     parser.add_argument('--dsn', help='PostgreSQL URL (default: $KL_ADMIN_DB, $KL_WRITER_DB)')
     parser.add_argument('--schema', default='kl_store')
     sub = parser.add_subparsers(required=True)
