@@ -1,6 +1,5 @@
 # The Slowdash HTML panel "kl_channels" of slowtask-kl_pg_store.py: lists
 # the channels with the latest values, and writes unit and description.
-# See "channelのページ" in README_ja.md.
 #
 # An HTML panel cannot keep a state (no JavaScript), so the filter, the sort
 # and the page are kept here, shared by all the viewers.

@@ -4,13 +4,16 @@
 #   python3 replay_spool.py postgresql://kl_writer:PASSWORD@localhost:15432/kldb kl_pg_store-spool.jsonl
 #
 # The spool file is first renamed, so the slowtask can keep spooling while
-# this runs. Lines that still fail are appended back to the spool file.
+# this runs. The rename and the slowtask's appends are serialized by a lock
+# on <spool>.lock (flock; local filesystems only, not NFS). Lines that still
+# fail are appended back to the spool file.
 # Files left by an interrupted run (<spool>.replaying-*) are replayed first.
 # Replaying a line twice is harmless: the second time, the records are
 # rejected as duplicate.
 
 import argparse
 import asyncio
+import fcntl
 import glob
 import os
 import sys
@@ -19,12 +22,31 @@ import time
 import asyncpg
 
 
+def append_spool(spool, lines):
+    with open(spool + '.lock', 'a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        created = not os.path.exists(spool)
+        with open(spool, 'a') as out:
+            out.writelines(line + '\n' for line in lines)
+            out.flush()
+            os.fsync(out.fileno())
+        if created:
+            fd = os.open(os.path.dirname(os.path.abspath(spool)), os.O_RDONLY)
+            try:
+                os.fsync(fd)
+            finally:
+                os.close(fd)
+
+
 async def replay(dsn, spool, schema):
     files = sorted(glob.glob(glob.escape(spool) + '.replaying-*'))
-    if os.path.exists(spool):
-        replaying = f'{spool}.replaying-{time.time_ns()}'
-        os.rename(spool, replaying)
-        files.append(replaying)
+    with open(spool + '.lock', 'a') as lock:
+        # waits for an append of the slowtask in progress
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        if os.path.exists(spool):
+            replaying = f'{spool}.replaying-{time.time_ns()}'
+            os.rename(spool, replaying)
+            files.append(replaying)
     if len(files) == 0:
         print(f'{spool}: no spool file')
         return 0
@@ -36,6 +58,7 @@ async def replay(dsn, spool, schema):
     conn = await asyncpg.connect(dsn)
     try:
         for replaying in files:
+            failed = []
             with open(replaying) as f:
                 for line in f:
                     line = line.strip()
@@ -47,9 +70,11 @@ async def replay(dsn, spool, schema):
                         n_rejected += len(rejected)
                     except Exception as e:
                         print(f'{replaying}: {e}', file=sys.stderr)
-                        n_failed += 1
-                        with open(spool, 'a') as out:
-                            out.write(line + '\n')
+                        failed.append(line)
+            # the failed lines must be on the disk before the file is removed
+            if len(failed) > 0:
+                append_spool(spool, failed)
+                n_failed += len(failed)
             os.remove(replaying)
     finally:
         await conn.close()

@@ -30,6 +30,7 @@ slowtaskを使わずに, 他のアプリケーションから直接 `insert_reco
     - [INSERT用の関数](#insert用の関数)
     - [値の型](#値の型)
     - [拒否と `rejections`](#拒否と-rejections)
+    - [過去データの一括投入](#過去データの一括投入)
     - [channelの管理](#channelの管理)
     - [Partition](#partition)
     - [最新値](#最新値)
@@ -392,6 +393,46 @@ GROUP BY 1, 2 ORDER BY 3 DESC;
 defaultは過去, 未来とも100年で, 実質的に制限しません.
 時計のずれた機器 (時計が1970年に戻った, など) からのデータが, 誰も見ない時期に散らばるのを防ぎたい場合は, 短く設定します (例: `UPDATE settings SET max_past = '2 months', max_future = '1 day';`). 負の値は指定できません.
 
+### 過去データの一括投入
+他のsystemからの移行など, 過去のデータを大量に入れる場合も, `insert_records()` で入れます.
+1回の呼び出しに1000 record程度をまとめると速くなります.
+CSV (列は `name`, `ts`, `value`) を入れるscriptの例です.
+
+```python
+import asyncio, csv, json, sys
+import asyncpg
+
+async def main(path, dsn):
+    conn = await asyncpg.connect(dsn)
+    with open(path, newline='') as f:
+        rows = list(csv.DictReader(f))
+    for i in range(0, len(rows), 1000):
+        batch = [{'name': r['name'], 'ts': r['ts'], 'value': float(r['value'])} for r in rows[i:i + 1000]]
+        rejected = await conn.fetch('SELECT * FROM insert_records($1::jsonb, update_latest => false)', json.dumps(batch))
+        for r in rejected:
+            print(i + r['input_index'], r['status'], r['detail'], file=sys.stderr)
+    await conn.close()
+
+asyncio.run(main(sys.argv[1], 'postgresql://kl_writer:PASSWORD@localhost:15432/kldb'))
+```
+
+ - 速さ: 1接続で 約4万行/秒, 8接続で並列に呼ぶと 約30万行/秒でした (batch 1000. 2年分 60億行の入ったDB, Apple M4 Max). 1 秒周期のchannelの1年分 (3150万行) は, 1接続で 約13分です.
+ - 容量: 1行あたり, table と index で 約100 B, WALが 約170 B です. WALをarchiveしている場合や, standbyがある場合は, その分の容量と転送も必要です.
+ - 行は `ts` の順に入れてください. 1回の呼び出しが触るpartitionが少なくなり, BRIN indexも効きます.
+ - 古い週のpartitionは `insert_records()` が作ります. `max_past` を短くしている場合は, 投入の間だけ戻します.
+ - 通常の書き込み (slowtask) と同時に行えます. 試験では, 8接続で上限まで書いている間も, 通常の書き込みの応答時間は変わりませんでした.
+   ただし, 投入の最中に `replace_channel()` などを実行すると, 投入の呼び出しが終わるのを待つ間, 全ての書き込みが止まります (後述の[ロック](#ロック)).
+ - `update_latest => false` の時は最新値を更新しないので, 新しく作られたchannelは `latest` に出ません. 投入の後に admin で `SELECT rebuild_latest();` を実行します.
+ - 投入の後に, 他に長いtransactionが無い状態で, admin でvacuumします.
+   ```sql
+   VACUUM (ANALYZE) raw_records;
+   ```
+   vacuumは, 行が全ての接続から見えることを visibility map に記録します.
+   記録が無いと, Slowdashのplotのqueryがindexだけで答えられずにheapを読むので, 10倍以上遅くなります (1 秒周期のchannelの30日分で, 0.57秒が5.2秒).
+   autovacuumも後で行いますが, その時に長いtransaction (psqlで `BEGIN` したままの接続, `insert_records()` を通さない大きなINSERTなど) があると記録できません.
+   `pg_stat_activity` の `xact_start` で確認できます.
+   2年分 (554 GB) で 約15分 (`vacuumdb -j 8`) でした.
+
 ### channelの管理
 
 #### 期間とcid
@@ -460,6 +501,19 @@ channelの期間は重ならないので, 同じnameで同じ `ts` の行が2つ
 どのchannelにデータが入るかを変える操作なので, 途中の書き込みが古い定義で振り分けられないようにするためです.
 データを移さない場合は一瞬ですが, 大量のデータを移す場合や, 長い一括投入の最中に実行した場合は, その間, 通常の書き込みも止まるので注意してください.
 `create_channel()` と `describe_channel()` は書き込みを止めません.
+
+過去のデータを移す操作は, 移す行数に比例して時間がかかります.
+1 秒周期のchannelでの目安です (2年分 60億行の入ったDB, Apple M4 Max).
+
+| 操作                                       | 速さ         | 30日分 (260万行) | 1年分 (3150万行) |
+| ------------------------------------------ | ------------ | ---------------- | ---------------- |
+| `replace_channel()` (過去の `valid_from`)  | 約5万行/秒   | 43 ~ 53 秒       | 約10分 (見込み)  |
+| `merge_channel()`                          | 約15万行/秒  | 17 秒            | 約4分 (見込み)   |
+
+ - 止まっている間の書き込みは待たされ, 終わった後に書き込まれます. 試験では失われませんでした.
+ - WALも多く出ます (`replace_channel()` の30日分で 約13 GB).
+ - `drop_channel()` は測っていませんが, 行を `rejections` に移すので, `replace_channel()` と同じかそれ以上かかります.
+ - 大きな移動は, DAQを止められる時に行ってください.
 
 #### 変更履歴
 `channels` の変更は, triggerで全て `channel_log` に記録されます (関数を通さない直接のSQLによる変更も含みます).
@@ -541,7 +595,7 @@ SELECT name, ts FROM latest WHERE ts < now() - interval '10 minutes';
 
 `raw_records` から最新値を直接求めると, partitionごとにindexが分かれているため, 更新の止まったchannelでは全てのpartitionを遡ることになり, 遅くなります.
 `raw_latest` はこれを避けるためのものです.
-`raw_latest` は派生データなので, `rebuild_latest(cid)` で `raw_records` から作り直せます. cidを省略すると全てのchannelを作り直します (数秒かかり, その間は書き込みが止まります).
+`raw_latest` は派生データなので, `rebuild_latest(cid)` で `raw_records` から作り直せます. cidを省略すると全てのchannelを作り直します (1万channelで 約0.2秒. その間は書き込みが止まります).
 データを移す関数は, 関係するcidの `raw_latest` を自動で作り直します.
 
 ### Role
@@ -611,9 +665,24 @@ COMMIT;
  - `(cid, ts)` のunique index (B-tree). channelを指定するquery用. 重複の検出にも使います.
  - `ts` のBRIN index. 全channelを時間範囲で読むquery用. データはほぼ `ts` の順に入るのでよく効き, 大きさは1 partitionあたり数十kBです.
 
-1行あたり, heap 約 60 B, B-tree index 約 35 B です.
+1行あたり, heap 約 60 B, index 約 37 B です (2年分 60億行で 554 GB).
 `rejections` は `received_at` のBRIN indexを持ちます (最近の拒否を見るquery用).
 `raw_records` から `channels` へのforeign keyは持ちません. cidの整合性は入り口の関数が保証します. (foreign keyがあると, partitionの作成時に `channels` がロックされ, channelの自動作成とdeadlockする可能性があります.)
+
+#### 性能の目安
+想定の規模 (1000 channel, 100 行/秒) の2年分 (60億行) を入れたDB (PostgreSQL 16, Apple M4 Max, memory 128 GB, SSD) で測りました.
+
+ - 書き込み: 想定の負荷で, `insert_records()` の1回 (10 record) が 2.5 ~ 4 ms です. 上限は, 1接続で 約1.6万行/秒 (batch 10) ~ 4.4万行/秒 (batch 1000), 8接続で 約32万行/秒です.
+ - Slowdashのplot (600点にresample. cacheが温まった状態):
+
+   | channel         | 30日    | 1年    | 2年    |
+   | --------------- | ------- | ------ | ------ |
+   | 19 秒周期, 1つ  | 0.03 秒 | 0.4 秒 | 0.8 秒 |
+   | 19 秒周期, 10個 | 0.35 秒 | 4 秒   | 8 秒   |
+   | 1 秒周期, 1つ   | 0.6 秒  | 7 秒   | 14 秒  |
+
+   cacheが冷えた状態では数倍かかります (1 秒周期の1年分で 約30秒).
+   期間の全ての行を読んでresampleするので, 時間は期間の行数に比例します. 1 秒周期のchannelの長い期間は, monitorの `statement_timeout` (30秒) に近づきます.
 
 #### viewを読む時の注意
 viewはqueryの中に展開されるので, `name` と `ts` の条件はそのまま `raw_records` のindexとpartitionの選択に使われます.
@@ -646,13 +715,20 @@ queryは `SELECT * FROM` に続く部分です.
    Slowdashのqueryは常に `ts` の範囲を付けるので, この問題は起きません.
 
  - 現在値だけが欲しい場合は `latest` を使います.
+ - 範囲の無いqueryは, 履歴が長いほど遅くなります. 2年分の試験では, 1 秒周期のchannel (6300万行) の範囲の無い最新1件は, monitorの `statement_timeout` (30秒) を超えました. その間heap全体を読むので, 通常の書き込みも数秒遅れました.
+ - `ts` の範囲は, 時刻の値で書いてください (`ts > '2026-11-01 00:00+09'` など). `now()` を使う条件 (`ts > now() - interval '1 day'`) は, 実行時まで値が決まらないので, 計画時にはpartitionを絞れず, 範囲の無いqueryと同じく全てのpartitionを開いてロックします (30年分のpartitionで, 計画に 約0.25秒). Slowdashのqueryは時刻の値を埋め込むので, 問題ありません.
 
 検討して採らなかった方法は, 後述の[採用しなかったこと](#採用しなかったこと)にあります.
 
 #### ロック表
 30年分のpartitionは約1560個になります.
-`ts` の範囲を指定しないqueryは, 計画時に全てのpartitionと, そのindexをロックします. 30年分では1回のqueryで約4700個です.
-PostgreSQLのロック表の大きさは, おおよそ `max_locks_per_transaction × max_connections` です. default (64 × 100 = 6400) では, このようなqueryが2本同時に走ると足りなくなるので, `max_locks_per_transaction` を大きめ (例えば 512) に設定してください.
+計画時に `ts` の範囲が決まらないquery (範囲の無いquery, `now()` を使う条件) は, 全てのpartitionと, そのindexをロックします. 1回のqueryで partitionの数の約3倍で, 30年分では約4700個です.
+ロックはtransactionの終わりまで持つので, psqlで `BEGIN` したままの接続は, ロックを持ち続けます.
+PostgreSQLのロック表の大きさは, おおよそ `max_locks_per_transaction × max_connections` です. 足りなくなると, queryは `out of shared memory` で失敗します.
+default (64 × 100 = 6400) では, このようなqueryが2本同時に走ると足りなくなるので, `max_locks_per_transaction` を大きめ (例えば 512) に設定してください (変更にはserverの再起動が必要です).
+
+ - 512 で, 30年分のpartitionの状態で試すと, このようなqueryを同時に40本まで実行できました. 80本では半数が失敗しました. 30年の運用では, 1024 ~ 2048 にしてください.
+ - `insert_records()` は, 接続ごとのロックの枠 (fast-path) に収まるので, ロック表が埋まっても通常の書き込みは失敗しませんでした. ただし, 新しいpartitionを作る時は, 共有のロック表を使います.
 
 #### Queryの統計 (オマケ)
 storeの動作には不要ですが, 遅いqueryを探す時に便利です.
@@ -772,8 +848,9 @@ slowtaskの `parameters` は以下です.
 `DataPacket` の値は, そのままJSONの値として送ります. 型の推定と変換はDB側が行います.
 numpyの値は, scalarはPythonの数値やboolに, 配列はlistに変換してから送ります (`np.float32(1.5)` は `1.5`, `np.array([1, 2])` は `[1, 2]`).
 TimeSeries形式の `DataPacket` は, 時刻ごとのrecordに展開して送ります. channelのnameは, fieldが `x` ならtagそのもの, それ以外なら `<tag>.<field>` です.
+これは文書の形 (`t` が配列) のmessageの場合です. 今のslowpyの `DataPacket(TimeSeries)` は `t` と `start` を落とすので, 時刻ごとには展開できません. fieldが `x` なら, 受信時刻に配列の値を持つ1つのrecordとして保存されます. それ以外のfieldだけなら, 次の `DataPacket` の形でないmessageとして扱います.
 
-`DataPacket` の形でないmessage (例えば `{"env.temp": 24.2}`. 正しくは `{"env.temp": {"t": ..., "x": 24.2}}`) も捨てずに, `value` を持たないrecordとして送り, `invalid_record` として `rejections` に元の形のまま残します.
+`DataPacket` の形でないmessage (例えば `{"env.temp": 24.2}`. 正しくは `{"env.temp": {"t": ..., "x": 24.2}}`. dictでも, `x` も配列の `t` も無いもの) も捨てずに, `value` を持たないrecordとして送り, `invalid_record` として `rejections` に元の形のまま残します.
 
 拒否されたrecordは, (とりあえず今は) slowtaskのlogに出力します (DBの `rejections` にも保存されています).
 
@@ -784,6 +861,8 @@ DBの復旧後, 以下で再投入します.
 python3 utils/replay_spool.py postgresql://kl_writer:PASSWORD@localhost:15432/kldb kl_pg_store-spool.jsonl
 ```
 再投入中もslowtaskはspoolへの追記を続けられます. 再投入に失敗したmessageはspoolに戻されます.
+slowtaskの追記と再投入の開始 (spoolのrename) は, `<spool>.lock` のファイルのロック (`flock`) で順番に行うので, 再投入の途中に追記されたmessageも失われません. このロックはlocalのfilesystem (dockerのbind mountを含む) で効きます. NFS上にspoolを置かないでください.
+spoolへの書き込み (再投入に失敗したmessageを戻す時も) は, `fsync` してから次に進むので, 電源断でも失われません.
 再投入が途中で止まった場合に残るファイル (`<spool>.replaying-*`) は, 次の再投入で先に処理されます.
 同じデータを重複して再投入しても, `duplicate` として拒否されるだけで, 二重には保存されません.
 spoolの1行は `insert_records()` の入力そのもの (recordのJSON配列) なので, 必要なら直接編集してから再投入できます. DBが受け付けない行は, spoolに残り続けます.

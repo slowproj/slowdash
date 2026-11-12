@@ -1,7 +1,5 @@
 -- kl_pg_store installer. Run as a superuser:
 --   psql -d kldb -v schema=kl_store -v role_prefix=kl -f sql/install.sql
--- It installs into the connected database. All the variables are optional
--- (see README_ja.md). Running this again is safe.
 
 \set ON_ERROR_STOP on
 

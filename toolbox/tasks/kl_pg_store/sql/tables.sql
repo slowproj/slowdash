@@ -1,5 +1,3 @@
--- Single row. Everything that changes the behavior of the store functions
--- is a column here. See "設定" in README_ja.md for the other settings.
 CREATE TABLE IF NOT EXISTS settings (
   id boolean PRIMARY KEY DEFAULT true CHECK (id),
   schema_version integer NOT NULL DEFAULT 1,

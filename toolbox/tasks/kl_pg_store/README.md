@@ -30,6 +30,7 @@ Other applications can write without the slowtask, by calling SQL functions such
     - [The insert function](#the-insert-function)
     - [Value types](#value-types)
     - [Rejections](#rejections)
+    - [Bulk loading past data](#bulk-loading-past-data)
     - [Managing channels](#managing-channels)
     - [Partitions](#partitions)
     - [Latest values](#latest-values)
@@ -392,6 +393,46 @@ The accepted time range is given by `max_past` and `max_future` in the `settings
 The default is 100 years both into the past and the future, which effectively means no limit.
 To keep data from devices with a wrong clock (a clock that went back to 1970, etc.) from scattering over periods nobody looks at, make it shorter (e.g. `UPDATE settings SET max_past = '2 months', max_future = '1 day';`). Negative values are not allowed.
 
+### Bulk loading past data
+A large amount of past data (a migration from another system, etc.) is also loaded with `insert_records()`.
+Putting about 1000 records in one call makes it fast.
+An example script that loads a CSV (columns `name`, `ts`, `value`):
+
+```python
+import asyncio, csv, json, sys
+import asyncpg
+
+async def main(path, dsn):
+    conn = await asyncpg.connect(dsn)
+    with open(path, newline='') as f:
+        rows = list(csv.DictReader(f))
+    for i in range(0, len(rows), 1000):
+        batch = [{'name': r['name'], 'ts': r['ts'], 'value': float(r['value'])} for r in rows[i:i + 1000]]
+        rejected = await conn.fetch('SELECT * FROM insert_records($1::jsonb, update_latest => false)', json.dumps(batch))
+        for r in rejected:
+            print(i + r['input_index'], r['status'], r['detail'], file=sys.stderr)
+    await conn.close()
+
+asyncio.run(main(sys.argv[1], 'postgresql://kl_writer:PASSWORD@localhost:15432/kldb'))
+```
+
+ - Speed: about 40,000 rows/s with one connection, and about 300,000 rows/s with 8 connections in parallel (batch 1000; a DB holding 2 years, 6 billion rows; Apple M4 Max). One year of a 1-second channel (31.5 M rows) takes about 13 minutes with one connection.
+ - Space: per row, about 100 B for the table and indexes, and about 170 B of WAL. If WAL is archived, or there is a standby, that space and transfer are also needed.
+ - Load the rows in `ts` order. Each call then touches fewer partitions, and the BRIN index works.
+ - `insert_records()` creates the partitions of old weeks. If `max_past` has been made short, set it back during the load.
+ - It can run together with the normal writes (the slowtask). In the test, the response time of the normal writes did not change while 8 connections wrote at full speed.
+   However, `replace_channel()` and the like, run during the load, wait for the calls of the load to finish, and all writes stop meanwhile (see [Locking](#locking) below).
+ - With `update_latest => false`, the latest values are not updated, so newly created channels do not appear in `latest`. After the load, run `SELECT rebuild_latest();` as admin.
+ - After the load, vacuum as admin, with no other long transaction running.
+   ```sql
+   VACUUM (ANALYZE) raw_records;
+   ```
+   Vacuum records in the visibility map that the rows are visible to all connections.
+   Without it, the queries of Slowdash plots cannot be answered from the index alone and read the heap, which is more than 10 times slower (30 days of a 1-second channel: 0.57 s became 5.2 s).
+   Autovacuum also does this later, but cannot if a long transaction is running at that time (a psql connection left in `BEGIN`, a large INSERT that does not go through `insert_records()`, etc.).
+   Check with `xact_start` in `pg_stat_activity`.
+   For 2 years (554 GB), it took about 15 minutes (`vacuumdb -j 8`).
+
 ### Managing channels
 
 #### Periods and cids
@@ -460,6 +501,19 @@ Channel periods never overlap, so a name never returns two rows with the same `t
 They change which channel data goes to, so writes in progress must not be routed by the old definitions.
 Without moving data, this takes a moment; but when moving a lot of data, or when run during a long bulk load, normal writes also stop meanwhile.
 `create_channel()` and `describe_channel()` do not block writes.
+
+Operations that move past data take time in proportion to the number of rows moved.
+Estimates for a 1-second channel (a DB holding 2 years, 6 billion rows; Apple M4 Max):
+
+| Operation                               | Speed                | 30 days (2.6 M rows) | 1 year (31.5 M rows)     |
+| --------------------------------------- | -------------------- | -------------------- | ------------------------ |
+| `replace_channel()` (past `valid_from`) | about 50,000 rows/s  | 43 to 53 s           | about 10 min (estimated) |
+| `merge_channel()`                       | about 150,000 rows/s | 17 s                 | about 4 min (estimated)  |
+
+ - Writes arriving meanwhile wait, and are written after it finishes. Nothing was lost in the test.
+ - A lot of WAL is also written (about 13 GB for 30 days with `replace_channel()`).
+ - `drop_channel()` was not measured; it moves the rows to `rejections`, so it takes as long as `replace_channel()` or longer.
+ - Do large moves when the DAQ can be stopped.
 
 #### Change history
 All changes to `channels` are recorded in `channel_log` by a trigger (including changes by direct SQL, not through the functions).
@@ -541,7 +595,7 @@ It is not updated if the `ts` is older than the current latest value.
 
 Finding the latest value from `raw_records` directly is slow for a channel that stopped updating, because the indexes are split by partition and all partitions are scanned back.
 `raw_latest` avoids this.
-`raw_latest` is derived data and can be rebuilt from `raw_records` with `rebuild_latest(cid)`. Without a cid, all channels are rebuilt (it takes a few seconds, and writes are blocked meanwhile).
+`raw_latest` is derived data and can be rebuilt from `raw_records` with `rebuild_latest(cid)`. Without a cid, all channels are rebuilt (about 0.2 s for 10,000 channels; writes are blocked meanwhile).
 The functions that move data rebuild the `raw_latest` of the affected cids automatically.
 
 ### Roles
@@ -611,9 +665,24 @@ Changes to `channels` are recorded in `channel_log`, but direct changes to `raw_
  - A unique index on `(cid, ts)` (B-tree). For queries that give the channel. Also used to detect duplicates.
  - A BRIN index on `ts`. For queries that read all channels over a time range. Data arrives almost in `ts` order, so it works well, and its size is a few tens of kB per partition.
 
-Per row, the heap is about 60 B and the B-tree index about 35 B.
+Per row, the heap is about 60 B and the indexes about 37 B (554 GB for 2 years, 6 billion rows).
 `rejections` has a BRIN index on `received_at` (for queries on recent rejections).
 There is no foreign key from `raw_records` to `channels`; the entry functions guarantee the consistency of cids. (With a foreign key, creating a partition would lock `channels`, and could deadlock with automatic channel creation.)
+
+#### Performance figures
+Measured on a DB holding 2 years (6 billion rows) at the assumed scale (1000 channels, 100 rows/s), with PostgreSQL 16 on an Apple M4 Max (128 GB memory, SSD).
+
+ - Writes: at the assumed load, one `insert_records()` call (10 records) takes 2.5 to 4 ms. The maximum is about 16,000 rows/s (batch 10) to 44,000 rows/s (batch 1000) with one connection, and about 320,000 rows/s with 8 connections.
+ - Slowdash plots (resampled to 600 points; warm cache):
+
+   | Channels               | 30 days | 1 year | 2 years |
+   | ---------------------- | ------- | ------ | ------- |
+   | 1 channel, 19 s period | 0.03 s  | 0.4 s  | 0.8 s   |
+   | 10 channels, 19 s      | 0.35 s  | 4 s    | 8 s     |
+   | 1 channel, 1 s period  | 0.6 s   | 7 s    | 14 s    |
+
+   With a cold cache, it takes several times longer (about 30 s for 1 year of a 1-second channel).
+   All rows of the period are read and resampled, so the time is proportional to the number of rows in the period. Long periods of 1-second channels approach the `statement_timeout` of monitor (30 s).
 
 #### Reading the views
 Views are expanded into the query, so the conditions on `name` and `ts` are used directly to choose the indexes and the partitions of `raw_records`.
@@ -646,13 +715,20 @@ Each query follows `SELECT * FROM`.
    Queries from Slowdash always give a `ts` range, so this problem does not occur there.
 
  - If you need only the current values, use `latest`.
+ - A query without a range gets slower as the history gets longer. In the 2-year test, the latest row of a 1-second channel (63 M rows) without a range exceeded the `statement_timeout` of monitor (30 s). It reads the whole heap meanwhile, so the normal writes were also delayed by a few seconds.
+ - Write the `ts` range as time values (`ts > '2026-11-01 00:00+09'`, etc.). A condition with `now()` (`ts > now() - interval '1 day'`) has no value until execution, so partitions cannot be pruned at planning, and like a query without a range, it opens and locks all partitions (about 0.25 s of planning with 30 years of partitions). Slowdash embeds the time values in its queries, so it is not affected.
 
 The approaches considered and not adopted are in [Not adopted](#not-adopted).
 
 #### The lock table
 30 years of partitions is about 1560 partitions.
-A query without a `ts` range locks all partitions and their indexes at planning; for 30 years, that is about 4700 locks per query.
-The size of the PostgreSQL lock table is roughly `max_locks_per_transaction × max_connections`. With the default (64 × 100 = 6400), two such queries running at the same time run out, so set `max_locks_per_transaction` large enough (e.g. 512).
+A query whose `ts` range is not known at planning (a query without a range, or a condition with `now()`) locks all partitions and their indexes: about 3 times the number of partitions per query, which is about 4700 for 30 years.
+Locks are held until the end of the transaction, so a psql connection left in `BEGIN` keeps holding them.
+The size of the PostgreSQL lock table is roughly `max_locks_per_transaction × max_connections`. When it runs out, queries fail with `out of shared memory`.
+With the default (64 × 100 = 6400), two such queries running at the same time run out, so set `max_locks_per_transaction` large enough (e.g. 512; changing it needs a server restart).
+
+ - With 512 and 30 years of partitions, up to 40 such queries ran at the same time. With 80, half of them failed. For 30 years of operation, use 1024 to 2048.
+ - `insert_records()` fits in the per-connection lock slots (fast-path), so the normal writes did not fail even when the lock table was full. However, creating a new partition uses the shared lock table.
 
 #### Query statistics (optional)
 Not needed for the store to work, but useful for finding slow queries.
@@ -772,8 +848,9 @@ It calls `insert_records()` once per SlowMesh message.
 The values of a `DataPacket` are sent as they are, as JSON values. The DB does the type inference and the conversion.
 numpy values are converted before sending: scalars to Python numbers or bools, and arrays to lists (`np.float32(1.5)` to `1.5`, `np.array([1, 2])` to `[1, 2]`).
 A `DataPacket` in the TimeSeries format is expanded into one record per time. The channel name is the tag itself if the field is `x`, otherwise `<tag>.<field>`.
+This applies to messages in the documented form (`t` is an array). Currently, `DataPacket(TimeSeries)` of slowpy drops `t` and `start`, so it cannot be expanded per time. A field `x` is stored as one record with an array value at the receive time. A message with only other fields is treated as a message not in the form of a `DataPacket`, below.
 
-A message not in the form of a `DataPacket` (e.g. `{"env.temp": 24.2}`; it should be `{"env.temp": {"t": ..., "x": 24.2}}`) is not discarded either: it is sent as a record without `value`, and kept in `rejections` in its original form as `invalid_record`.
+A message not in the form of a `DataPacket` (e.g. `{"env.temp": 24.2}`; it should be `{"env.temp": {"t": ..., "x": 24.2}}`; also a dict with neither `x` nor an array `t`) is not discarded either: it is sent as a record without `value`, and kept in `rejections` in its original form as `invalid_record`.
 
 Rejected records are (for now) written to the log of the slowtask (they are also kept in `rejections` in the DB).
 
@@ -784,6 +861,8 @@ After the DB recovers, replay them with:
 python3 utils/replay_spool.py postgresql://kl_writer:PASSWORD@localhost:15432/kldb kl_pg_store-spool.jsonl
 ```
 The slowtask can keep appending to the spool during a replay. Messages that fail to replay are put back into the spool.
+The appends of the slowtask and the start of a replay (the rename of the spool) are serialized by a file lock (`flock`) on `<spool>.lock`, so messages appended during a replay are not lost. The lock works on local filesystems (including docker bind mounts). Do not put the spool on NFS.
+Every write to the spool (including putting back the messages that failed to replay) is `fsync`ed before going on, so it survives a power loss.
 Files left by an interrupted replay (`<spool>.replaying-*`) are processed first by the next replay.
 Replaying the same data more than once only rejects them as `duplicate`; nothing is stored twice.
 Each line of the spool is exactly an input of `insert_records()` (a JSON array of records), so it can be edited directly before replaying if needed. Lines the DB does not accept stay in the spool.

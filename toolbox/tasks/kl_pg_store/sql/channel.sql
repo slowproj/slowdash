@@ -57,10 +57,23 @@ DECLARE
   v_ts timestamptz;
   v_detail text;
 BEGIN
+  -- Narrows the range to the records actually there, so that the statements
+  -- below (planned with these values) scan only their partitions; the range
+  -- on t is not implied by t.ts = r.ts, and the duplicate check would read
+  -- the whole history of p_to (e.g. merge_channel() over all time).
+  SELECT min(ts), max(ts) + interval '1 microsecond' INTO p_ts_from, p_ts_to
+    FROM raw_records WHERE cid = p_from.cid AND ts >= p_ts_from AND ts < p_ts_to;
+  IF p_ts_from IS NULL THEN
+    moved := 0;
+    duplicates := 0;
+    RETURN;
+  END IF;
+
   WITH d AS (
     DELETE FROM raw_records r
     WHERE r.cid = p_from.cid AND r.ts >= p_ts_from AND r.ts < p_ts_to
-      AND EXISTS (SELECT 1 FROM raw_records t WHERE t.cid = p_to.cid AND t.ts = r.ts)
+      AND EXISTS (SELECT 1 FROM raw_records t
+                  WHERE t.cid = p_to.cid AND t.ts = r.ts AND t.ts >= p_ts_from AND t.ts < p_ts_to)
     RETURNING r.*
   )
   INSERT INTO rejections (status, cid, detail, record)

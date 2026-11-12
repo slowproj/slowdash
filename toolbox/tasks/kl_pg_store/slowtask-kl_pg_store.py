@@ -5,6 +5,7 @@
 #   schema: schema given to install.sql (default: kl_store)
 #   spool: JSON Lines file for messages that could not be written (default: kl_pg_store-spool.jsonl)
 
+import fcntl
 import json
 import logging
 import math
@@ -45,11 +46,12 @@ def to_json_value(x):
 def to_records(body):
     records = []
     for name, data in body.items():
-        if not isinstance(data, dict):
-            # not a DataPacket; without "value", the DB keeps it in rejections as invalid_record
+        t = to_json_value(data.get('t')) if isinstance(data, dict) else None   # numpy numbers as UNIX time
+        if not isinstance(data, dict) or ('x' not in data and not isinstance(t, list)):
+            # not a DataPacket (e.g. a TimeSeries without "t" from slowpy); without
+            # "value", the DB keeps it in rejections as invalid_record
             records.append({ 'name': name, 'packet': to_json_value(data) })
             continue
-        t = to_json_value(data.get('t'))   # numpy numbers as UNIX time
         if isinstance(t, list):
             # time-series: { 't': [...], 'start': t0, field: [...], ... }
             start = to_json_value(data.get('start', 0))
@@ -66,10 +68,22 @@ def to_records(body):
 
 
 def write_spool(payload):
-    with open(spool_path, 'a') as f:
-        f.write(payload + '\n')
-        f.flush()
-        os.fsync(f.fileno())
+    # utils/replay_spool.py renames the spool file while holding the same lock,
+    # so a line is never written to a file that is already being replayed
+    with open(spool_path + '.lock', 'a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        created = not os.path.exists(spool_path)
+        with open(spool_path, 'a') as f:
+            f.write(payload + '\n')
+            f.flush()
+            os.fsync(f.fileno())
+        if created:
+            # without this, a new file can disappear on a power loss
+            fd = os.open(os.path.dirname(os.path.abspath(spool_path)), os.O_RDONLY)
+            try:
+                os.fsync(fd)
+            finally:
+                os.close(fd)
 
 
 @tasklet.initialize()
