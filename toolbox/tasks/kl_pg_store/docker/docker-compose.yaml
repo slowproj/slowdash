@@ -1,0 +1,29 @@
+# PostgreSQL with kl_pg_store installed. See "Quick start" in ../README_ja.md.
+#   docker compose up -d       (POSTGRES_PASSWORD in .env)
+# The variables are used only when the database is created, except KL_DB_PORT
+# and KL_DATA. The passwords of the kl_ roles are set with \password.
+
+services:
+  db:
+    image: postgres:16
+    restart: always
+    command: postgres -c max_locks_per_transaction=512
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD, e.g. in .env}
+      - POSTGRES_DB=${KL_DB_NAME:-kldb}
+    volumes:
+      - ../sql:/kl_pg_store/sql:ro
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      # the data: a docker volume by default; for real use, a directory on the host (KL_DATA=/path/to/dir)
+      - ${KL_DATA:-kl_data}:/var/lib/postgresql/data
+    # open to the network: for a closed network only
+    ports:
+      - "${KL_DB_PORT:-15432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  kl_data:

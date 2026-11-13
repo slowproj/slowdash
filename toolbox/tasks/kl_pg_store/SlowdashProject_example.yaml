@@ -1,0 +1,22 @@
+# The parts to add to SlowdashProject.yaml of your project. See "Quick start" in README_ja.md.
+slowdash_project:
+  # name, title, etc. of your project
+
+  # KL_WRITER_DB, KL_MONITOR_DB: PostgreSQL URLs, given as environment variables
+  data_source:
+    url: ${KL_MONITOR_DB}
+    time_series:
+      schema: records[name]@ts(with timezone)=value
+      tags:
+        sql: SELECT DISTINCT name FROM channels WHERE type IN ('double', 'integer', 'boolean')
+    object_time_series:
+      schema: records[name]@ts(with timezone)=value_jsonb
+      tags:
+        sql: SELECT DISTINCT name FROM channels WHERE type IN ('json', 'text')
+
+  task:
+    - name: "@toolbox/kl_pg_store"
+      auto_start: true
+      parameters:
+        dsn: ${KL_WRITER_DB}
+        spool: ./kl_pg_store-spool.jsonl
