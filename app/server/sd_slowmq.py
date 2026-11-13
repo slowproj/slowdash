@@ -39,6 +39,8 @@ class SlowMQComponent(Component):
         
         return { 'slowmq': {
             'enabled': self.enabled,
+            'n_connections': len(self._clients),
+            'topics': { topic:len(clients) for topic,clients in self._subscribers.items() },
             'statistics': {
                 'up_time': int(up_time),
                 'received': self._receive_count,
@@ -46,7 +48,6 @@ class SlowMQComponent(Component):
                 'failed': self._failure_count,
                 'message_rate': float(rate),
             },
-            'attached': { topic:len(clients) for topic,clients in self._subscribers.items() },
         }}
 
     

@@ -167,7 +167,8 @@ class WebMeshComponent(Component):
     def public_config(self):
         return { 'webmesh': {
             'enabled': self.enabled,
-            'attached': {
+            'n_connections': len(self._client_queue_table),
+            'subscribers': {
                 topic: [ client_id[0:4] for client_id in clients ]
                 for topic, clients in self._topic_client_table.items()
             },
@@ -259,7 +260,7 @@ class WebMeshComponent(Component):
         except Exception as e:
             logging.warning(f'EventStream Accept Failed: {e}')
             return
-        logging.info(f'Browser EventStream Connected: {client_id}')
+        logging.debug(f'Browser EventStream Connected: {client_id}')
 
         queue = asyncio.Queue(maxsize=self._max_queue_size)
         stop_event = asyncio.Event()
@@ -355,7 +356,7 @@ class WebMeshComponent(Component):
                 pass
 
             await eventstream.close()
-            logging.info(f'Browser EventStream Closed: {client_id}')
+            logging.debug(f'Browser EventStream Closed: {client_id}')
             
             
     @slowlette.post('/api/webmesh/subscribe')

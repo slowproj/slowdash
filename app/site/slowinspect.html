@@ -26,12 +26,19 @@
             title: 'System Inspector',
         },
         control: {
+            reload: 10,
             grid: { 'rows': 2, 'columns': 2 },
             inactive: true,
         },
         panels: [
             { type: 'task', short_form: false, title: 'Tasks', style: { 'border': '' } },
             { type: 'log',  max_lines: 1000 },
+            { type: 'singles', "item_type": "square", 'title': 'Thoughputs', "items": [
+                { "channel": "@api:config['slowmq/n_connections']", format: '%d Mesh Subscribers', 'label': 'SlowMQ Connections' },
+                { "channel": "@api:config['webmesh/n_connections']", format: '%d Web Streamings', 'label': 'WebMesh Connections' },
+                { "channel": "@api:config['slowmq/statistics/message_rate']", 'format': '%.1f /s', 'label': 'SlowMQ Message Rate' },
+                { "channel": "@api:config['slowlette/statistics/request_rate']", 'format': '%.1f /s', 'label': 'Slowlette Message Rate' },
+            ]},
             { type: 'tree', channel: '@registry:.>', title: 'Mesh Registry (incl. PubSub Cache)'},
             { type: 'tree', channel: '@api:config', title: 'Server Component Config and Stats' },
         ]
