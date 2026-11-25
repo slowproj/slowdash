@@ -143,7 +143,7 @@ class ModuleNode(spc.ControlVariableNode):
         """
 
         if self.camac_node._dummy is not None:
-            return self.camac_node._dummy.wait()
+            return self.camac_node._dummy.wait(timeout)
         
         self.camac_node.open()
         if not self._is_lam_enabled:
@@ -159,12 +159,12 @@ class ModuleNode(spc.ControlVariableNode):
         lam_mask = 0x01 << (self.station-1)
         while True:
             try:
-                result = CWLAM2(timeout=1)
+                result = CWLAM2(timeout=0.1)
             except OSError as e:
                 logging.error(f"CAMAC.wait(): CWLAM2(): {e}")
                 
             if result is None: # timeout
-                continue
+                pass
             elif result & lam_mask:
                 return True
             
@@ -292,7 +292,7 @@ class DummyDevice:
         self.sn = sn
 
 
-    def wait(self):
+    def wait(self, timeout):
         dt = self.exponential(1/self.rate)
         time.sleep(dt)
         return True

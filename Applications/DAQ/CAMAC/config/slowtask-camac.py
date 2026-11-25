@@ -236,7 +236,7 @@ async def do_run_stop():
         
 async def do_run_loop():
     if camac_config.lam_station > 0:
-        has_data = await asyncio.to_thread(camac.module(camac_config.lam_station).wait, 0.1)
+        has_data = await asyncio.to_thread(camac.module(camac_config.lam_station).wait, timeout=0.1)
     else:
         await asyncio.sleep(0.1)
         has_data = False

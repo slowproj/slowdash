@@ -127,7 +127,7 @@ class ControlNode:
 
     
     # to be used in subclasses
-    def wait(self, condition_lambda=None, poll_interval=0.1, timeout=0):
+    def wait(self, *, condition_lambda=None, poll_interval=0.1, timeout=0):
         """stoppable-wait: to be used in subclasses
         Args:
             condition_lambda (lambda x): a function that takes a value from self.get() and returns True or False.
@@ -154,7 +154,7 @@ class ControlNode:
         
             
     # to be used in subclasses (async version)
-    async def aio_wait(self, condition_lambda=None, poll_interval=0.1, timeout=0):
+    async def aio_wait(self, *, condition_lambda=None, poll_interval=0.1, timeout=0):
         """stoppable-wait: to be used in subclasses, async version
         Args:
             condition_lambda (lambda x): a function that takes a value from self.get() and returns True or False.
