@@ -29,53 +29,9 @@ class RunStatus:
 run_status = RunStatus()
 
 
-def save_settings(name:str, settings):
-    with open(f'{name}.json', 'w') as f:
-        if is_dataclass(settings):
-            json.dump(asdict(settings), f)
-        else:
-            try:
-                json.dump(settings, f)
-            except Exception as e:
-                logging.error(f'unable to save settings: {name}: {e}')
-
-        
-def load_settings(name:str, settings=None):
-    if not os.path.isfile(f'{name}.json'):
-        return None
-    try:
-        with open(f'{name}.json') as f:
-            doc = json.load(f)
-    except Exception as e:
-        logging.error(f'unable to load settings: {name}: {e}')
-        return None
-
-    if settings is None:
-        return doc
-    
-    if isinstance(settings, dict):
-        settings.clear()
-        for k,v in doc.items():
-            settings[k] = copy.deepcopy(v)
-        
-    else:
-        # dataclass or class instance
-        try:
-            for k,v in doc.items():
-                setattr(settings, k, v)
-        except Exception as e:
-            logging.error(f'unable to load settings: {name}: {e}')
-        
-    return settings
-
-
 async def _initialize():
-    load_settings('run_settings', run_settings)
-    await do_initialize()
-
     now = time.time()
     run_status.timestamp = now
-    await ctrl.aio_stream('run_settings', run_settings)
     await ctrl.aio_stream('run_status', run_status)
     
 
@@ -95,8 +51,7 @@ async def _loop():
         if run_settings.repeat:
             if not run_settings.offline and run_settings.run_number > 0:
                 run_settings.run_number = run_settings.run_number + 1
-                save_settings('run_settings', run_settings)
-                await ctrl.aio_stream('run_settings', run_settings)
+                await ctrl.form('camac_settings').element('run_number').aio_set(run_settings.run_number)
             await start_run()
     elif now >= run_status.timestamp + 1:
         run_status.timestamp = now
@@ -116,9 +71,6 @@ async def start(measurement:str, run_number:int, run_length:float, repeat:bool, 
     run_settings.repeat = repeat
     run_settings.offline = offline
 
-    save_settings('run_settings', run_settings)
-    await ctrl.aio_stream('run_settings', run_settings)
-    
     try:
         await do_configure(**kwargs)
     except Exception as e:
@@ -131,24 +83,16 @@ async def start(measurement:str, run_number:int, run_length:float, repeat:bool, 
     return True
 
 
-async def stop(measurement:str, run_number:int, run_length:float, repeat:bool, offline:bool, **kwargs):
+async def stop(run_number:int, offline:bool, **kwargs):
     if not run_status.running:
         return False
     
     result = await stop_run()
 
-    run_settings.measurement = measurement
-    run_settings.run_number = int(run_number)
-    run_settings.run_length = float(run_length)
-    run_settings.repeat = repeat
-
-    if not run_settings.offline and run_settings.run_number > 0:   # use the offline setting of the current run
-        run_settings.run_number = run_settings.run_number + 1
-    run_settings.offline = offline    
+    if not offline and run_number > 0:
+        run_settings.run_number = run_number + 1
+        await ctrl.form('camac_settings').element('run_number').aio_set(run_settings.run_number)
         
-    save_settings('run_settings', run_settings)
-    await ctrl.aio_stream('run_settings', run_settings)
-
     # update the CAMAC settings stored in the stream cache
     try:
         await do_configure(**kwargs)
@@ -223,10 +167,6 @@ camac_config = CamacConfig(0, [], -1)
 last_stream_time = 0
 
 
-async def do_initialize():
-    pass
-        
-
 async def do_configure(**args):
     camac_config.crate = int(args.get('crate', 1))
     camac_config.modules = []
@@ -296,31 +236,36 @@ async def do_run_stop():
         
 async def do_run_loop():
     if camac_config.lam_station > 0:
-        await asyncio.to_thread(camac.module(camac_config.lam_station).wait)
+        has_data = await asyncio.to_thread(camac.module(camac_config.lam_station).wait, 0.1)
     else:
-        await asyncio.sleep(0.01)
+        await asyncio.sleep(0.1)
+        has_data = False
         
     timestamp = time.time()
-    rate_trend.fill(timestamp)
 
-    for module in camac_config.modules:
-        for address in module.channels:
-            tag = f'{module.name}.ch{address:02}'
+    if has_data:
+        rate_trend.fill(timestamp)
+
+        for module in camac_config.modules:
+            for address in module.channels:
+                tag = f'{module.name}.ch{address:02}'
+                try:
+                    value = camac.module(module.station).channel(address).get()
+                except Exception as e:
+                    logging.error(f'ERROR: CAMAC: {e}')
+                    continue
+            
+                hist = histograms.get(f'hist_{tag}')
+                if hist:
+                    hist.fill(value)
+                if data_store is not None:
+                    data_store.append({tag: value}, timestamp=timestamp)
+
+        for module in camac_config.modules:
             try:
-                value = camac.module(module.station).channel(address).get()
+                camac.module(module.station).clear()
             except Exception as e:
                 logging.error(f'ERROR: CAMAC: {e}')
-                continue
-            
-            histograms[f'hist_{tag}'].fill(value)
-            if data_store is not None:
-                data_store.append({tag: value}, timestamp=timestamp)
-
-    for module in camac_config.modules:
-        try:
-            camac.module(module.station).clear()
-        except Exception as e:
-            logging.error(f'ERROR: CAMAC: {e}')
         
     global last_stream_time
     if timestamp >= last_stream_time + 1:

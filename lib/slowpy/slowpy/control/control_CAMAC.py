@@ -295,6 +295,7 @@ class DummyDevice:
     def wait(self):
         dt = self.exponential(1/self.rate)
         time.sleep(dt)
+        return True
 
 
     def read(self):
