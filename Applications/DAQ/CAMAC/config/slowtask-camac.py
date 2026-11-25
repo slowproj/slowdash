@@ -224,15 +224,10 @@ last_stream_time = 0
 
 
 async def do_initialize():
-    camac_settings = {}
-    if load_settings('camac_settings', camac_settings) is not None:
-        await ctrl.aio_stream('camac_settings', camac_settings)
+    pass
         
 
 async def do_configure(**args):
-    save_settings('camac_settings', args)
-    await ctrl.aio_stream('camac_settings', args)
-    
     camac_config.crate = int(args.get('crate', 1))
     camac_config.modules = []
     camac_config.lam_station = 0
@@ -301,7 +296,9 @@ async def do_run_stop():
         
 async def do_run_loop():
     if camac_config.lam_station > 0:
-        camac.module(camac_config.lam_station).wait()
+        await asyncio.to_thread(camac.module(camac_config.lam_station).wait)
+    else:
+        await asyncio.sleep(0.01)
         
     timestamp = time.time()
     rate_trend.fill(timestamp)
@@ -329,8 +326,8 @@ async def do_run_loop():
     if timestamp >= last_stream_time + 1:
         last_stream_time = timestamp
         ts_store.append(rate_trend.timeseries(flush=True), tag='rate')
-        #for tag, hist in histograms.items():
-        #    await ctrl.aio_stream(tag, hist)
+        for tag, hist in histograms.items():
+            await ctrl.aio_stream(tag, hist)
 
 
     

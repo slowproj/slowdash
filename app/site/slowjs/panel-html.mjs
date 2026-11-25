@@ -432,7 +432,7 @@ class HtmlPanel extends Panel {
                     if (['INPUT', 'SELECT'].includes(tagName)) {
                         element.val(value);
                     }
-                    else {
+                    else if (['SPAN', 'P', 'DIV'].includes(tagName)) {
                         element.text(value);
                     }
                 }
