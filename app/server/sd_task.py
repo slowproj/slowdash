@@ -456,7 +456,7 @@ class TaskComponent(Component):
                     name = name[len('@toolbox/'):]
                     file_path = f'@toolbox/{name}'
                 else:
-                    file_path = f'config/slowtask-{name}.py'
+                    file_path = f'{self.project.contents_dir}/slowtask-{name}.py'
             if file_path.startswith('@toolbox/'):
                 if self.project.toolbox_dir is None:
                     logging.error(f'unable to find Toolbox')
@@ -482,17 +482,17 @@ class TaskComponent(Component):
             }
             
         # task entries from files
-        for file_path in glob.glob(os.path.join(self.project.project_dir, 'config', 'slowtask-*.py')):
+        for file_path in glob.glob(os.path.join(self.project.contents_dir, 'slowtask-*.py')):
             rootname, ext = os.path.splitext(os.path.basename(file_path))
             kind, file_name = rootname.split('-', 1)
             task_name = re.sub(r'[^a-zA-Z0-9]', '_', file_name)
             if task_name not in self._task_catalog:
-                command = f'slowdash-task config/slowtask-{file_name}.py'
+                command = f'slowdash-task {self.project.contents_dir}/slowtask-{file_name}.py'
                 if self.project.mesh_url is not None:
                     command += f' --mesh={self.project.mesh_url}'
                 self._task_catalog[task_name] = {
                     'name': task_name,
-                    'file_path': f'config/slowtask-{file_name}.py',
+                    'file_path': f'{self.project.contents_dir}/slowtask-{file_name}.py',
                     'command': command,
                     'auto_start': False,
                 }

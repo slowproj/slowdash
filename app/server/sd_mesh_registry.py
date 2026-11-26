@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 15 July 2026 #
 
-import time, json, numbers, glob, logging
+import os, time, json, numbers, glob, pathlib, logging
 from dataclasses import dataclass, field, asdict
 from collections import deque
 from typing import Any
@@ -45,13 +45,14 @@ class Registry:
         self.sep = '.'
         self.tail_wc = '>'
         self._records: dict[str, RegistryRecord] = {}
-        
+
+        self._persistent_dir = 'sd_management'
         self._persistent_nodes = set([
             'pubsub.form.'
         ])
         
-        for filename in glob.glob('registry-*.json'):
-            path = self._load_nodes(filename)
+        for filepath in glob.glob(os.path.join(self._persistent_dir, 'registry-*.json')):
+            path = self._load_nodes(filepath)
             if path is not None:
                 self._persistent_nodes.add(f'{path}{self.sep}')
                 logging.debug(f'Registry: persistent values loaded: {path}: {self.get_tree(path)}')
@@ -272,13 +273,14 @@ class Registry:
         return True
 
 
-    def _load_nodes(self, filename:str) -> str:
-        path = filename[len('registry-'):][:-len('.json')]
+    def _load_nodes(self, filepath:str) -> str:
+        filestem = pathlib.Path(filepath).stem
+        path = filestem[len('registry-'):]
         try:
-            with open(filename, 'r') as f:
+            with open(filepath, 'r') as f:
                 doc = json.load(f)
         except Exception as e:
-            logging.warning(f'Unable to load registry values from file: {filename}: {e}')
+            logging.warning(f'Unable to load registry values from file: {filepath}: {e}')
             return None
                 
         for subpath, value in doc.items():
@@ -293,6 +295,13 @@ class Registry:
             
         
     def _save_nodes(self, path:str) -> None:
+        if not os.path.isdir(self._persistent_dir):
+            try:
+                os.makedirs(self._persistent_dir)
+            except Exception as e:
+                logging.error(f'unable to create directory: {self._persistent_dir}: {e}')
+                return
+            
         doc = {}
         for key in self.keys(path):
             subpath = key[len(path):]
@@ -302,7 +311,7 @@ class Registry:
             value.pop('key')
             doc[subpath] = value
         try:
-            with open(f'registry-{path[:-1]}.json', 'w') as f:
+            with open(os.path.join(self._persistent_dir, f'registry-{path[:-1]}.json'), 'w') as f:
                 json.dump(doc, f)
         except Exception as e:
             logging.warning(f'Unable to save registry values to file: {path}: {e}')

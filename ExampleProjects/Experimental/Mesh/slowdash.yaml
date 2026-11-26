@@ -2,7 +2,7 @@ slowdash_project:
   name: SlowMesh_Test
   
   data_source:
-    - url: sqlite:///TestData
+    - url: sqlite:///SlowStore.db
       time_series:
         schema: slowdata [channel] @timestamp(unix) = value
     - url: sqlite:///TestData2
@@ -20,5 +20,5 @@ slowdash_project:
     - name: store
       auto_start: true
       parameters:
-        db_url: sqlite:///TestData
+        db_url: sqlite:///SlowStore.db
         table: slowdata

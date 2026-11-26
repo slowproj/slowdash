@@ -10,7 +10,7 @@ datastore = None
 
 @tasklet.initialize()
 def initialize(params:dict):
-    db_url = params.get('db_url', 'sqlite:///slowstore.db')
+    db_url = params.get('db_url', 'sqlite:///SlowStore.db')
     table = params.get('table', 'slowdata')
     print(f'DB={db_url}, table={table}')
 

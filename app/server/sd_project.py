@@ -25,6 +25,7 @@ class Project:
         if self.config_file is None:
             if self.project_dir is not None and os.path.isfile(os.path.join(self.project_dir, 'SlowdashProject.yaml')):
                 self.config_file = 'SlowdashProject.yaml'
+                logging.warning('"SlowdashProject.yaml" file is deprecated, rename to "slowdash.yaml"')
             else:
                 self.config_file = 'slowdash.yaml'
             
