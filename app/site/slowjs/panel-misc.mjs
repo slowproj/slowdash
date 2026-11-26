@@ -42,7 +42,7 @@ class WelcomePanel extends Panel {
                <li> The <tt>SlowdashConfig.yaml</tt> file must exist at the project directory.
                <li> The project directry must be specified to <tt>slowdash</tt>:
                <ul>
-                 <li> For standard installation (bare metal), do one of:
+                 <li> For standard installation (direct), do one of:
                  <ul>
                    <li> <tt>--project-dir=DIR</tt> option,
                    <li> <tt>SLOWDASH_PROJECT</tt> environmental variable, or

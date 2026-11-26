@@ -167,7 +167,7 @@ SlowPy は，データ型，制御の抽象化，ストレージへの書き込�
 2. `App(project_dir=..., project_file=..., port=..., is_cgi=..., is_command=..., is_async=...)` を生成する．
 3. `App` が `Project` を生成する．
 4. `Project` が SlowDash のシステムディレクトリとプロジェクトディレクトリを探す．
-5. `Project` が `SlowdashProject.yaml` を読み込む．設定によっては，環境変数から初期設定を生成する．
+5. `Project` が `slowdash.yaml` （または `SlowdashProject.yaml`）を読み込む．設定によっては，環境変数から初期設定を生成する．
 6. プロジェクトディレクトリが存在する場合，`App` はプロセスの作業ディレクトリをプロジェクトディレクトリに移す．
 7. `App` は，システムのプラグインディレクトリ，プロジェクトディレクトリ，プロジェクトの `sd_contents` ディレクトリを `sys.path` に追加する．
 8. `App` がすべての組み込みコンポーネントを，自身の Slowlette ルーターに組み込む．
@@ -289,7 +289,7 @@ SlowDash は，集約型のエンドポイントのためにこの仕組みを�
 
 1. 明示的に指定された `--project-dir` または `--project-file`．
 2. `SLOWDASH_PROJECT`．
-3. 親ディレクトリをたどっての `SlowdashProject.yaml` の探索．
+3. 親ディレクトリをたどっての `slowdash.yaml` （または `SlowdashProject.yaml`）の探索．
 4. `SLOWDASH_INIT_DATASOURCE_URL` による，環境変数ベースの初期データソース．
 
 プロジェクトファイルは `slowdash_project` 辞書を含む必要があります．読み込み時には，`Substitution` が次の形式を含む文字列の置換を処理します．

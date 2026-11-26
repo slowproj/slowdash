@@ -45,9 +45,9 @@
 - ユーザーレイアウト（slowdash/slowplot）一覧では，それぞれの見せる・見せないを role で選択（表示のみ・直接取得は可能）
 - スタートページも２種類用意？
 - コマンド実行では，role を確認（強制）
-- タスクコントロールは SlowdashProject.yaml で個別に実行権限を指定（強制）
+- タスクコントロールは slowdash.yaml で個別に実行権限を指定（強制）
 - スクリプト編集権限は？
-  - 登録タスクに関しては SlowdashProject.yaml で指定できる
+  - 登録タスクに関しては slowdash.yaml で指定できる
   - 自由作成スクリプトはあまり制限したくない（解析目的もある）
     - まずは一律の「作成許可」ロール（一律禁止，一律許可は利用者次第）
     - 将来的には:
@@ -67,7 +67,7 @@
   - ウェブ操作から直接引き起こされるメッセージには自動付加
   - SlowTask スクリプトからの publish は自己申告（偽装可）
     - デフォルトで `user=[task_name, "@slowtask"]`
-- Task 内一律なら SlowdashProject.yaml から許可設定
+- Task 内一律なら slowdash.yaml から許可設定
 - ハンドラごとなら `@mesh.on('control.HV.>', allowed='#operator')`, `@mesh.export(allowed='...')`
 - 拒否に例外を投げれば SlowMesh がエラーレスポンスを返す
 
@@ -84,7 +84,7 @@
 - 測定系サブネットを分離してファイアウォールを入れる
 - 権限奪取を止める（SlowTask の user 自己申告を変更できなくする）
   - SlowDash にバグがないなら：
-    - スクリプト編集機能を SlowdashProject.yaml で無効にする（デフォルト）
+    - スクリプト編集機能を slowdash.yaml で無効にする（デフォルト）
     - プロキシで WebSocket を通さないようにして，外部からの SlowMesh アクセス（外部の SlowTask からのアクセス）を止める（例ではそうなっている）
   - 完全にするなら:
     - SlowDash (Nginx) を外に見せない．サブネット内部へのアクセスは ssh のみ
@@ -99,7 +99,7 @@
 ---
 
 ### 現時点の構成
-- SlowDash の設定ファイル（SlowdashProject.yaml / docker-compose.yaml）はログインしないと編集できない
+- SlowDash の設定ファイル（slowdash.yaml / docker-compose.yaml）はログインしないと編集できない
 - SlowTask の「自己申告」を変えるにはスクリプトの編集が必要
   - SlowTask スクリプトの Web からの編集は権限管理とは独立に機能無効にできる（デフォルトでは無効になている）
   - 外の SlowTask から SlowMesh (SlowMQ) への直接接続は WebSocket 経由．プロキシで WebSocket を通さなくすれば，これができなくなる（例ではそうなっている）．データストリーミングは SSE なので影響されない
@@ -156,7 +156,7 @@
 - 測定系サブネットを分離してファイアウォールを入れる
 - 権限奪取を止める（SlowTask の user 自己申告を変更できなくする）
   - SlowDash にバグがないなら：
-    - スクリプト編集機能を SlowdashProject.yaml で無効にする（デフォルト）
+    - スクリプト編集機能を slowdash.yaml で無効にする（デフォルト）
     - プロキシで WebSocket を通さないようにして，外部からの SlowMesh アクセス（外部の SlowTask からのアクセス）を止める（例ではそうなっている）
   - 完全にするなら:
     - SlowDash (Nginx) を外に見せない．サブネット内部へのアクセスは ssh のみ

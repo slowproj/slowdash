@@ -1062,9 +1062,8 @@ sleeps are not needed. If a sleep is absolutely necessary, use
 <code>slowtask-{name}.py</code>, the SlowDash server recognizes it and
 can start and stop it.</p>
 <p>In addition, if a <code>task(s)</code> entry is created in
-<code>SlowdashProject.yaml</code> and <code>auto_start</code> is set,
-the SlowTask can automatically start when the SlowDash server
-starts.</p>
+<code>slowdash.yaml</code> and <code>auto_start</code> is set, the
+SlowTask can automatically start when the SlowDash server starts.</p>
 <div class="sourceCode" id="cb32"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">tasks</span><span class="kw">:</span></span>
 <span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at">name</span><span class="kw">}</span></span>
@@ -1131,18 +1130,18 @@ ways:</p>
 <li>The <code>--name</code> parameter of the <code>slowdash-task</code>
 command</li>
 <li>The <code>name</code> parameter in the <code>task</code> section of
-<code>SlowdashProject.yaml</code></li>
+<code>slowdash.yaml</code></li>
 </ul>
 <p>TaskName may contain only alphanumeric characters and <code>_</code>.
 Any other characters are replaced with <code>_</code>.</p>
 <p>To run multiple copies of the same script, multiple entries using the
 same script but different names can be created in
-<code>SlowdashProject.yaml</code>.</p>
+<code>slowdash.yaml</code>.</p>
 <p>To automatically run many tasks at once, another option is to create
 a Python script (a Spawn Script) that launches many
 <code>slowdash-task</code> commands with the <code>--name=NAME</code>
-option, and configure <code>SlowdashProject.yaml</code> to start only
-that script. With this configuration, initial values and distribution of
+option, and configure <code>slowdash.yaml</code> to start only that
+script. With this configuration, initial values and distribution of
 commands by PubSub and RPC can also be finely controlled from within the
 Spawn Script. The <code>slowdash-task</code> command automatically exits
 when the parent process that launched it exits, so when the Spawn Script
@@ -1404,8 +1403,8 @@ variable, which the browser displays as data</li>
 <h4
 id="automatically-start-and-stop-tasks-together-with-the-server">Automatically
 Start and Stop Tasks Together with the Server</h4>
-<p>In <code>SlowdashProject.yaml</code>, these SlowTasks are configured
-to start automatically with the server and stop automatically when it
+<p>In <code>slowdash.yaml</code>, these SlowTasks are configured to
+start automatically with the server and stop automatically when it
 terminates. Even if a task runs out of control, the server can forcibly
 terminate it with a signal. Even if the server crashes or is immediately
 force-killed externally (SIGKILL), the tasks automatically terminate at

@@ -6,7 +6,7 @@ title: Project Setup
 
 ## Project Directory
 - Every project has a dedicated project directory. 
-- The configuration file is `SlowdashProject.yaml`, placed at the project directory.
+- The configuration file is `slowdash.yaml`, placed at the project directory.
 
 - Project directory is specified at run time by one of the following:
   - `--project-dir` option
@@ -76,7 +76,7 @@ See [Security Considerations](#security-considerations) below.
 - Server-side user modules (user Python script). See the [User Module section](UserModule.html) for details.
 
 ## Substitutions
-Values in `SlowdashProject.yaml` can use variable and command substitutions. 
+Values in `slowdash.yaml` can use variable and command substitutions. 
 The syntax is basically the same as docker-compose:
 
 - `${VARIABLE}` for substitution with environmental variable
@@ -393,7 +393,7 @@ Replace `SLOWDASH_HOST` with your actual SlowDash host name.
 A full working example in Docker Compose with more features such as HTTPS, HTTP/2, and Basic Authentication can be found in `ExampleProjects/ReverseProxy/Apache`.
 
 # Jupyter Integration
-By providing Jupyter URL and token in `SlowdashProject.yaml`, SlowDash can export the displayed data to Jupyter Notebook so that users can continue analysis on Jupyter. Two examples, with and without a reverse proxy, can be found in `ExampleProjects/Jupyter`.
+By providing Jupyter URL and token in `slowdash.yaml`, SlowDash can export the displayed data to Jupyter Notebook so that users can continue analysis on Jupyter. Two examples, with and without a reverse proxy, can be found in `ExampleProjects/Jupyter`.
 
 ## Native (without containers)
 ```yaml
@@ -436,7 +436,7 @@ Include this image in the `docker-compose.yaml`, by adding environmental variabl
 ```
 Note that the Jupyter and SlowDash URLs are different when accessed within the container system.
 
-Edit the `SlowdashProject.yaml` file to include the Jupyter settings:
+Edit the `slowdash.yaml` file to include the Jupyter settings:
 ```yaml
   export:
     - type: jupyter
@@ -494,7 +494,7 @@ Rerun the `slowdash-setup-apache.py` command to update the Web Server configurat
 ```console
 $ PATH/TO/SLOWDASH/utils/slowdash-setup-apache.py --interface=CGI   (or --interface=WSGI)
 Project: MySlowSystem
-Project directory: /home/sanshiro/MySlowSystem/SlowdashProject
+Project directory: /home/sanshiro/MySlowSystem/slowdash
 Web-file directory: /home/sanshiro/public_html/SlowDash/MySlowSystem
 User: slow
 continue? [Y/n] y

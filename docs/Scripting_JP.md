@@ -638,7 +638,7 @@ if __name__ == '__main__':
 SlowTask のスクリプトファイル（例えば `slowtask-test.py`）をプロジェクトの `sd_contents` ディレクトリの下に置くと，SlowDash サーバーに認識され，SlowDash のホーム画面のタスク管理パネル（"SlowTask" セクション）に表示されます．
 デフォルトでは，タスクは「リスト」されるだけで，`start` ボタンがクリックされるまで実行されません．
 
-SlowDash の設定ファイル (`SlowdashProject.yaml`) にエントリを作ると，サーバーの開始時に自動でタスクを開始するように設定できます．
+SlowDash の設定ファイル (`slowdash.yaml`) にエントリを作ると，サーバーの開始時に自動でタスクを開始するように設定できます．
 ```yaml
 slowdash_project:
   ...
@@ -689,7 +689,7 @@ Python スクリプトは `system("rm -rf *")` など何でもできます．
 ### SlowDash サーバーからのタスク操作
 SlowDash のタスク管理パネルからは，以下のような SlowTask の操作を行えます：
 
-- **Start**: SlowTask を子プロセスとして開始する．開始コマンドは `SlowdashProject.yaml` ファイルの `command` で指定でき，デフォルトは `slowdash-task` コマンドによるローカル実行．
+- **Start**: SlowTask を子プロセスとして開始する．開始コマンドは `slowdash.yaml` ファイルの `command` で指定でき，デフォルトは `slowdash-task` コマンドによるローカル実行．
 - **Stop**: SlowMesh 経由でタスクに停止を要求する．Tasklet の停止処理が行われ，finalize コールバックが呼ばれる．
 - **Kill**: タスクをサーバーから子プロセスとして実行した場合，子プロセスに KILL シグナルを送る．
 - **Purge**: 応答がなくなったタスクを SlowMesh から抹消する．
@@ -726,7 +726,7 @@ $ python sd_contents/slowtask-mytask.py
 タスク名は，以下のいずれかで指定されます．
 
 - タスクスクリプトのファイル名から，先頭の `slowtask-` を除いたもの（デフォルト）
-- `SlowdashProject.yaml` の `task` エントリの `name` パラメータ
+- `slowdash.yaml` の `task` エントリの `name` パラメータ
 - `slowdash-task` コマンドの `--name` パラメータ
 - `Tasklet.run()` の `name` 引数
 
@@ -961,7 +961,7 @@ tasklet が提供するデコレーターにより，特定のタイミングや
 - `@tasklet.loop(interval:float, ticks=None)`: 指定秒数間隔で繰り返し呼ばれる
 
 #### 初期化と終了処理
-`@tasklet.initialize()` の関数が引数を一つ持つ場合，`SlowdashProject.yaml` の `parameters`（または `slowdash-task` コマンドの `--parameters`）で指定したタスクパラメータが dict として渡されます．
+`@tasklet.initialize()` の関数が引数を一つ持つ場合，`slowdash.yaml` の `parameters`（または `slowdash-task` コマンドの `--parameters`）で指定したタスクパラメータが dict として渡されます．
 ```python
 @tasklet.initialize()
 async def initialize(parameters:dict):
@@ -1298,7 +1298,7 @@ SlowMesh は，下位の通信層としてメッセージングバックボー�
 SlowMQ は HTTP(S) 上の WebSockets で実装されていて，SlowDash サーバーの URL（ポート）でそのままアクセスできます．
 
 SlowMQ の代わりに，NATS や MQTT，Redis，RabbitMQ などの広く使われている外部のメッセージングシステムを使うこともできます．
-この場合は，`SlowdashProject.yaml` の `mesh` エントリで接続先を指定します．サーバーから起動されるタスクにも同じ URL が渡されます．
+この場合は，`slowdash.yaml` の `mesh` エントリで接続先を指定します．サーバーから起動されるタスクにも同じ URL が渡されます．
 ```yaml
 slowdash_project:
   ...

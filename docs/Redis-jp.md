@@ -114,7 +114,7 @@ $ firefox http://localhost:18881/
 
 # 使い方
 ## プロジェクト設定
-動作テストに使った `ExampleProjects/DatasourceTests/Redis` の `SlowdashProject.yaml` に設定を記述します．
+動作テストに使った `ExampleProjects/DatasourceTests/Redis` の `slowdash.yaml` に設定を記述します．
 Redis サーバのアドレス，ポート番号とデータベース番号を指定するだけです．
 ```yaml
 slowdash_project:

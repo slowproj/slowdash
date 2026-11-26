@@ -387,9 +387,9 @@ startup</h2>
 <li><code>App</code> creates a <code>Project</code>.</li>
 <li><code>Project</code> finds the SlowDash system directory and project
 directory.</li>
-<li><code>Project</code> loads <code>SlowdashProject.yaml</code>, or
-creates an initial config from environment variables when configured
-that way.</li>
+<li><code>Project</code> loads <code>slowdash.yaml</code> (or
+<code>SlowdashProject.yaml</code>), or creates an initial config from
+environment variables when configured that way.</li>
 <li><code>App</code> changes the process working directory to the
 project directory when available.</li>
 <li><code>App</code> adds the system plugin directory, project
@@ -519,7 +519,8 @@ discovering and loading the project configuration.</p>
 <li>Explicit <code>--project-dir</code> or
 <code>--project-file</code>.</li>
 <li><code>SLOWDASH_PROJECT</code>.</li>
-<li>Parent-directory search for <code>SlowdashProject.yaml</code>.</li>
+<li>Parent-directory search for <code>slowdash.yaml</code> (or
+<code>SlowdashProject.yaml</code>).</li>
 <li>Environment-based initial data source via
 <code>SLOWDASH_INIT_DATASOURCE_URL</code>.</li>
 </ol>

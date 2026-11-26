@@ -487,10 +487,9 @@ Format）．この場合，同時に読み出したデータのグルーピン�
 <a href="DataBinding.html">Data Binding</a> の章を参照してください．</p>
 <h3 id="プロジェクト設定">プロジェクト設定</h3>
 <p>SlowDash のプロジェクトでは，通常，専用のディレクトリを作って，そこに
-<code>SlowdashProject.yaml</code>
+<code>slowdash.yaml</code>
 という名前のプロジェクト設定ファイルを置きます．（データファイルを直接読む場合などの例外はあります．）どこのデータベースからどのようなデータを読むかなどを，このプロジェクト設定ファイルに記述します．</p>
-<p>プロジェクトディレクトリに，以下の内容で
-<code>SlowdashProject.yaml</code>
+<p>プロジェクトディレクトリに，以下の内容で <code>slowdash.yaml</code>
 という名前のファイルを作成してください．</p>
 <div class="sourceCode" id="cb20"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
@@ -565,7 +564,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb21-1"><a href=
 などの一部のデータベースで必要になることがありますが，この場合でも，代わりにUNIX
 時間を使うなどで避けられるなら避けたほうがいいです．</p>
 <p><code>slowdash config</code>
-コマンドで設定情報の一部が表示されるので，設定ファイルが読めているかのチェックができます．これは，<code>SlowdashProject.yaml</code>
+コマンドで設定情報の一部が表示されるので，設定ファイルが読めているかのチェックができます．これは，<code>slowdash.yaml</code>
 ファイルを作成したプロジェクトディレクトリで実行してください．</p>
 <div class="sourceCode" id="cb22"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash config --indent=2</span></span>
@@ -860,7 +859,7 @@ SlowDash アプリに統合する</h3>
 <code>slowtask-XXX.py</code> という名前で保存すると，SlowDash
 ホーム画面の左下の “SlowTask”
 セクションに作成したスクリプトが表示され，コントロールできるようになります．
-<code>SlowdashProject.yaml</code>
+<code>slowdash.yaml</code>
 の設定で，スクリプトを自動開始するようにしたり，ブラウザからこの Python
 ファイルを直接編集できるようにすることもできます．具体的な手順は，公式ドキュメントを参照してください．</p>
 <p>ただし，上記のスクリプトは，（上品に）停止させるためのコードがありません．アプリ側から停止や再実行をできるようにするためには，アプリからのコントロールを受けられるようにする必要があります．そのために，以下のように読み出しループを
@@ -1150,7 +1149,7 @@ class="sourceCode html"><code class="sourceCode html"><span id="cb46-1"><a href=
 SlowTask セクションに <code>testdaq</code>
 というタスクがあるはずなので，そこの start
 をクリックしてスクリプトをスタートさせてください．
-毎回手動でスタートするのが面倒な場合は，<code>SlowdashProject.yaml</code>
+毎回手動でスタートするのが面倒な場合は，<code>slowdash.yaml</code>
 に以下のように書くと，スクリプトを slowdash
 開始時に自動で開始するようにできます．</p>
 <div class="sourceCode" id="cb47"><pre
@@ -1372,7 +1371,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb53-1"><a h
 <code>_initialize()</code> でもいいです． さらに，async
 でなくても構いません． 複数の <code>@tasklet.initialize()</code>
 を作成することもできます．</p>
-<p>SlowDash 設定ファイル（<code>SlowdashProject.yaml</code>
+<p>SlowDash 設定ファイル（<code>slowdash.yaml</code>
 ）からパラメータを受け取ることもできます．</p>
 <div class="sourceCode" id="cb54"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.initialize</span>()</span>
@@ -1788,7 +1787,7 @@ href="https://github.com/slowproj/slowdash/pkgs/container/slowdash">ghcr.io/slow
 </ul>
 <p>コンテナ内での SlowDash プロジェクトディレクトリは
 <code>/project</code>
-です．これをボリュームマウントして使ってください．以下は，<code>SlowdashProject.yaml</code>
+です．これをボリュームマウントして使ってください．以下は，<code>slowdash.yaml</code>
 ファイルが作ってあるプロジェクトディレクトリからコンテナの SlowDash
 サーバーを実行する例です．</p>
 <div class="sourceCode" id="cb71"><pre
@@ -1874,7 +1873,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 もしくは SSH のトンネルを経由して使用するのが想定です．</p>
 <h3 id="基本認証">基本認証</h3>
 <p>もし内部の人を信用できない場合，最低限として，基本認証を使ってパスワードを設定することはできます．
-<code>SlowdashProject.yaml</code> に <code>authentication</code>
+<code>slowdash.yaml</code> に <code>authentication</code>
 エントリを追加し，パスワードハッシュを指定してください．</p>
 <div class="sourceCode" id="cb80"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
@@ -1943,7 +1942,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb83-1"><a href=
 <div class="sourceCode" id="cb84"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ tree Nginx</span></span>
 <span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a>Nginx/</span>
-<span id="cb84-3"><a href="#cb84-3" aria-hidden="true" tabindex="-1"></a>├── SlowdashProject.yaml</span>
+<span id="cb84-3"><a href="#cb84-3" aria-hidden="true" tabindex="-1"></a>├── slowdash.yaml</span>
 <span id="cb84-4"><a href="#cb84-4" aria-hidden="true" tabindex="-1"></a>├── docker-compose.yaml</span>
 <span id="cb84-5"><a href="#cb84-5" aria-hidden="true" tabindex="-1"></a>└── nginx</span>
 <span id="cb84-6"><a href="#cb84-6" aria-hidden="true" tabindex="-1"></a>    ├── Dockerfile</span>

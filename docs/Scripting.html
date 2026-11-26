@@ -1102,7 +1102,7 @@ panel (the “SlowTask” section) of the SlowDash home page. By default,
 tasks are only “listed” and are not executed until the
 <code>start</code> button is clicked.</p>
 <p>By creating an entry in the SlowDash configuration file
-(<code>SlowdashProject.yaml</code>), a task can be configured to start
+(<code>slowdash.yaml</code>), a task can be configured to start
 automatically when the server starts.</p>
 <div class="sourceCode" id="cb26"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
@@ -1194,8 +1194,8 @@ task management panel:</p>
 <ul>
 <li><strong>Start</strong>: starts the SlowTask as a child process. The
 start command can be specified with <code>command</code> in the
-<code>SlowdashProject.yaml</code> file; the default is local execution
-with the <code>slowdash-task</code> command.</li>
+<code>slowdash.yaml</code> file; the default is local execution with the
+<code>slowdash-task</code> command.</li>
 <li><strong>Stop</strong>: requests the task to stop via SlowMesh. The
 Tasklet stop procedure is performed, and the finalize callbacks are
 called.</li>
@@ -1244,7 +1244,7 @@ name is specified by one of the following:</p>
 <li>The file name of the task script, with the leading
 <code>slowtask-</code> removed (default)</li>
 <li>The <code>name</code> parameter of the <code>task</code> entry in
-<code>SlowdashProject.yaml</code></li>
+<code>slowdash.yaml</code></li>
 <li>The <code>--name</code> parameter of the <code>slowdash-task</code>
 command</li>
 <li>The <code>name</code> argument of <code>Tasklet.run()</code></li>
@@ -1511,7 +1511,7 @@ repeatedly at the specified interval in seconds</li>
 Finalization</h4>
 <p>If an <code>@tasklet.initialize()</code> function takes one argument,
 the task parameters specified with <code>parameters</code> in
-<code>SlowdashProject.yaml</code> (or <code>--parameters</code> of the
+<code>slowdash.yaml</code> (or <code>--parameters</code> of the
 <code>slowdash-task</code> command) are passed as a dict.</p>
 <div class="sourceCode" id="cb45"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.initialize</span>()</span>
@@ -1947,8 +1947,8 @@ at the URL (port) of the SlowDash server.</p>
 <p>Instead of SlowMQ, widely used external messaging systems such as
 NATS, MQTT, Redis, and RabbitMQ can also be used. In this case, specify
 the endpoint with the <code>mesh</code> entry in
-<code>SlowdashProject.yaml</code>. The same URL is also passed to the
-tasks started from the server.</p>
+<code>slowdash.yaml</code>. The same URL is also passed to the tasks
+started from the server.</p>
 <div class="sourceCode" id="cb61"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
 <span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a><span class="at">  ...</span></span>

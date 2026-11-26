@@ -167,7 +167,7 @@ The normal startup sequence is:
 2. Create `App(project_dir=..., project_file=..., port=..., is_cgi=..., is_command=..., is_async=...)`.
 3. `App` creates a `Project`.
 4. `Project` finds the SlowDash system directory and project directory.
-5. `Project` loads `SlowdashProject.yaml`, or creates an initial config from environment variables when configured that way.
+5. `Project` loads `slowdash.yaml` (or `SlowdashProject.yaml`), or creates an initial config from environment variables when configured that way.
 6. `App` changes the process working directory to the project directory when available.
 7. `App` adds the system plugin directory, project directory, and project `sd_contents` directory to `sys.path`.
 8. `App` includes all built-in components into its Slowlette router.
@@ -289,7 +289,7 @@ Configuration sources:
 
 1. Explicit `--project-dir` or `--project-file`.
 2. `SLOWDASH_PROJECT`.
-3. Parent-directory search for `SlowdashProject.yaml`.
+3. Parent-directory search for `slowdash.yaml` (or `SlowdashProject.yaml`).
 4. Environment-based initial data source via `SLOWDASH_INIT_DATASOURCE_URL`.
 
 The project file must contain a `slowdash_project` dictionary. During loading, `Substitution` processes strings containing:

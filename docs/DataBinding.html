@@ -10,8 +10,9 @@
       div.column{display: inline-block; vertical-align: top; width: 50%;}
   </style>
   <style type="text/css">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -75,6 +76,12 @@ code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
   </style>
   <link rel="stylesheet" href="style.css" />
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({startOnLoad: true});
+</script>
+
 </head>
 
 <body>
@@ -197,34 +204,34 @@ Files</a></li>
 with the contents like this (“long format”):</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>channel</th>
 <th>timestamp</th>
 <th>value</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>sccm.Alicat.Inj.Gas</td>
 <td>2022-09-15 03:19:25.496212+00</td>
 <td>0</td>
 </tr>
-<tr class="even">
+<tr>
 <td>V.ThermoCo.Diss.AS</td>
 <td>2022-09-15 03:19:27.612427+00</td>
 <td>6.605405e-05</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>mbar.IG.Vac.AS</td>
 <td>2022-09-15 03:19:31.490579+00</td>
 <td>2.26e-07</td>
 </tr>
-<tr class="even">
+<tr>
 <td>mbar.IG.Vac.MS</td>
 <td>2022-09-15 03:19:31.529545+00</td>
 <td>2e-09</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>mbar.IG.Vac.BS</td>
 <td>2022-09-15 03:19:31.610188+00</td>
 <td>4e-09</td>
@@ -395,59 +402,59 @@ scalar types (string etc.) or objects (histogram etc.).</p>
 Channel</h3>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>metric</th>
 <th>timestamp</th>
 <th>value</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>psia.Alicat.Inj.Gas</td>
 <td>2022-09-15 03:19:25.419417+00</td>
 <td>9.6</td>
 </tr>
-<tr class="even">
+<tr>
 <td>degC.Alicat.Inj.Gas</td>
 <td>2022-09-15 03:19:25.458695+00</td>
 <td>23.42</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>sccm.Alicat.Inj.Gas</td>
 <td>2022-09-15 03:19:25.496212+00</td>
 <td>0</td>
 </tr>
-<tr class="even">
+<tr>
 <td>V.ThermoCo.Diss.AS</td>
 <td>2022-09-15 03:19:27.612427+00</td>
 <td>6.605405e-05</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>V.PS.Diss.AS</td>
 <td>2022-09-15 03:19:29.387352+00</td>
 <td>0.01</td>
 </tr>
-<tr class="even">
+<tr>
 <td>A.PS.Diss.AS</td>
 <td>2022-09-15 03:19:29.416561+00</td>
 <td>0</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>mbar.IG.Vac.AS</td>
 <td>2022-09-15 03:19:31.490579+00</td>
 <td>2.26e-07</td>
 </tr>
-<tr class="even">
+<tr>
 <td>mbar.IG.Vac.MS</td>
 <td>2022-09-15 03:19:31.529545+00</td>
 <td>2e-09</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>mbar.IG.Vac.VSS</td>
 <td>2022-09-15 03:19:31.56965+00</td>
 <td>1.3e-08</td>
 </tr>
-<tr class="even">
+<tr>
 <td>mbar.IG.Vac.BS</td>
 <td>2022-09-15 03:19:31.610188+00</td>
 <td>4e-09</td>
@@ -478,7 +485,7 @@ Channel</h3>
 <col style="width: 16%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>RunNumber</th>
 <th>TimeStamp</th>
 <th>sccm.Alicat.Inj</th>
@@ -488,7 +495,7 @@ Channel</h3>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>3098</td>
 <td>1664916014</td>
 <td>3</td>
@@ -496,7 +503,7 @@ Channel</h3>
 <td>340.58</td>
 <td>5.38333e-05</td>
 </tr>
-<tr class="even">
+<tr>
 <td>3097</td>
 <td>1664915456</td>
 <td>3</td>
@@ -504,7 +511,7 @@ Channel</h3>
 <td>503.275</td>
 <td>5.36e-05</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>3096</td>
 <td>1664914833</td>
 <td>3</td>
@@ -512,7 +519,7 @@ Channel</h3>
 <td>745.743</td>
 <td>5.38333e-05</td>
 </tr>
-<tr class="even">
+<tr>
 <td>3095</td>
 <td>1664913608</td>
 <td>3</td>
@@ -520,7 +527,7 @@ Channel</h3>
 <td>1154.09</td>
 <td>5.44e-05</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>3094</td>
 <td>1664913032</td>
 <td>3</td>
@@ -528,7 +535,7 @@ Channel</h3>
 <td>1501.14</td>
 <td>5.46667e-05</td>
 </tr>
-<tr class="even">
+<tr>
 <td>3093</td>
 <td>1664912407</td>
 <td>3</td>
@@ -536,7 +543,7 @@ Channel</h3>
 <td>1799.61</td>
 <td>5.52667e-05</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>3092</td>
 <td>1664911835</td>
 <td>3</td>
@@ -544,7 +551,7 @@ Channel</h3>
 <td>2060.59</td>
 <td>5.56e-05</td>
 </tr>
-<tr class="even">
+<tr>
 <td>3091</td>
 <td>1664910949</td>
 <td>0.1</td>
@@ -552,7 +559,7 @@ Channel</h3>
 <td>2069.99</td>
 <td>3.82667e-06</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>3090</td>
 <td>1664910320</td>
 <td>0.1</td>
@@ -560,7 +567,7 @@ Channel</h3>
 <td>1820.41</td>
 <td>2.72333e-06</td>
 </tr>
-<tr class="even">
+<tr>
 <td>3089</td>
 <td>1664909732</td>
 <td>0.1</td>
@@ -592,7 +599,7 @@ Values and Field Names for Channel</h3>
 <col style="width: 17%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>metric</th>
 <th>timestamp</th>
 <th>value_raw</th>
@@ -600,61 +607,61 @@ Values and Field Names for Channel</h3>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>psia.Alicat.Inj.Gas</td>
 <td>2022-09-15 03:19:25.419417+00</td>
 <td>9.6</td>
 <td>9.6</td>
 </tr>
-<tr class="even">
+<tr>
 <td>degC.Alicat.Inj.Gas</td>
 <td>2022-09-15 03:19:25.458695+00</td>
 <td>23.42</td>
 <td>23.42</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>sccm.Alicat.Inj.Gas</td>
 <td>2022-09-15 03:19:25.496212+00</td>
 <td>0</td>
 <td>0</td>
 </tr>
-<tr class="even">
+<tr>
 <td>V.ThermoCo.Diss.AS</td>
 <td>2022-09-15 03:19:27.612427+00</td>
 <td>6.605405e-05</td>
 <td>6.605405e-05</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>V.PS.Diss.AS</td>
 <td>2022-09-15 03:19:29.387352+00</td>
 <td>0.01</td>
 <td>0.01</td>
 </tr>
-<tr class="even">
+<tr>
 <td>A.PS.Diss.AS</td>
 <td>2022-09-15 03:19:29.416561+00</td>
 <td>0</td>
 <td>0</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>mbar.IG.Vac.AS</td>
 <td>2022-09-15 03:19:31.490579+00</td>
 <td>2.26e-07</td>
 <td>2.26e-07</td>
 </tr>
-<tr class="even">
+<tr>
 <td>mbar.IG.Vac.MS</td>
 <td>2022-09-15 03:19:31.529545+00</td>
 <td>2e-09</td>
 <td>2e-09</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>mbar.IG.Vac.VSS</td>
 <td>2022-09-15 03:19:31.56965+00</td>
 <td>1.3e-08</td>
 <td>1.3e-08</td>
 </tr>
-<tr class="even">
+<tr>
 <td>mbar.IG.Vac.BS</td>
 <td>2022-09-15 03:19:31.610188+00</td>
 <td>4e-09</td>
@@ -686,7 +693,7 @@ Values and Field Names for Channel</h3>
 <col style="width: 15%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>metric</th>
 <th>set_or_ist</th>
 <th>timestamp</th>
@@ -695,70 +702,70 @@ Values and Field Names for Channel</h3>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>psia.Alicat.Inj.Gas</td>
 <td>ist</td>
 <td>2022-09-15 03:19:25.419417+00</td>
 <td>9.6</td>
 <td>9.6</td>
 </tr>
-<tr class="even">
+<tr>
 <td>degC.Alicat.Inj.Gas</td>
 <td>ist</td>
 <td>2022-09-15 03:19:25.458695+00</td>
 <td>23.42</td>
 <td>23.42</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>sccm.Alicat.Inj.Gas</td>
 <td>ist</td>
 <td>2022-09-15 03:19:25.496212+00</td>
 <td>0</td>
 <td>0</td>
 </tr>
-<tr class="even">
+<tr>
 <td>V.ThermoCo.Diss.AS</td>
 <td>ist</td>
 <td>2022-09-15 03:19:27.612427+00</td>
 <td>6.605405e-05</td>
 <td>6.605405e-05</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>V.PS.Diss.AS</td>
 <td>ist</td>
 <td>2022-09-15 03:19:29.387352+00</td>
 <td>0.01</td>
 <td>0.01</td>
 </tr>
-<tr class="even">
+<tr>
 <td>A.PS.Diss.AS</td>
 <td>ist</td>
 <td>2022-09-15 03:19:29.416561+00</td>
 <td>0</td>
 <td>0</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>mbar.IG.Vac.AS</td>
 <td>ist</td>
 <td>2022-09-15 03:19:31.490579+00</td>
 <td>2.26e-07</td>
 <td>2.26e-07</td>
 </tr>
-<tr class="even">
+<tr>
 <td>mbar.IG.Vac.MS</td>
 <td>ist</td>
 <td>2022-09-15 03:19:31.529545+00</td>
 <td>2e-09</td>
 <td>2e-09</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>mbar.IG.Vac.VSS</td>
 <td>ist</td>
 <td>2022-09-15 03:19:31.56965+00</td>
 <td>1.3e-08</td>
 <td>1.3e-08</td>
 </tr>
-<tr class="even">
+<tr>
 <td>mbar.IG.Vac.BS</td>
 <td>ist</td>
 <td>2022-09-15 03:19:31.610188+00</td>
@@ -787,7 +794,7 @@ Values and Field Names for Channel</h3>
 <col style="width: 35%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>DBMS</th>
 <th>Python Module Used</th>
 <th>Async</th>
@@ -795,31 +802,31 @@ Values and Field Names for Channel</h3>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>PostgreSQL</td>
 <td>psycopg2</td>
 <td>no</td>
 <td>yes</td>
 </tr>
-<tr class="even">
+<tr>
 <td>PostgreSQL - Async access</td>
 <td>asyncpg</td>
 <td>yes</td>
 <td>yes</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>MySQL</td>
 <td>mysql-connector-python</td>
 <td>no</td>
 <td>yes</td>
 </tr>
-<tr class="even">
+<tr>
 <td>MySQL - Async access</td>
 <td>aiomysql</td>
 <td>yes</td>
 <td>yes</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>SQLite</td>
 <td>(none)</td>
 <td>no</td>
@@ -830,7 +837,7 @@ Values and Field Names for Channel</h3>
 <h2 id="configuration">Configuration</h2>
 <h4 id="postgresql">PostgreSQL</h4>
 <p>Write SlowDash project configuration file
-(<code>SlowdashProject.yaml</code>) like below.</p>
+(<code>slowdash.yaml</code>) like below.</p>
 <div class="sourceCode" id="cb4"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
@@ -839,7 +846,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb4-1"><a href="
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> TABLE [ TAG_COLUMN ] @ TIME_COLUMN</span></span></code></pre></div>
 <h4 id="mysql">MySQL</h4>
 <p>Write SlowDash project configuration file
-(<code>SlowdashProject.yaml</code>) like below.</p>
+(<code>slowdash.yaml</code>) like below.</p>
 <div class="sourceCode" id="cb5"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
@@ -848,8 +855,8 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb5-1"><a href="
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> TABLE [ TAG_COLUMN ] @ TIME_COLUMN</span></span></code></pre></div>
 <h4 id="sqlite">SQLite</h4>
 <p>Write SlowDash project configuration file
-(<code>SlowdashProject.yaml</code>) like below. The SQLite DB file path
-is relative to the project directory.</p>
+(<code>slowdash.yaml</code>) like below. The SQLite DB file path is
+relative to the project directory.</p>
 <div class="sourceCode" id="cb6"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>

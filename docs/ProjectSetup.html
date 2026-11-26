@@ -147,8 +147,8 @@ Contents</a></li>
 <h2 id="project-directory">Project Directory</h2>
 <ul>
 <li><p>Every project has a dedicated project directory.</p></li>
-<li><p>The configuration file is <code>SlowdashProject.yaml</code>,
-placed at the project directory.</p></li>
+<li><p>The configuration file is <code>slowdash.yaml</code>, placed at
+the project directory.</p></li>
 <li><p>Project directory is specified at run time by one of the
 following:</p>
 <ul>
@@ -237,9 +237,8 @@ optional)</h4>
 href="UserModule.html">User Module section</a> for details.</li>
 </ul>
 <h2 id="substitutions">Substitutions</h2>
-<p>Values in <code>SlowdashProject.yaml</code> can use variable and
-command substitutions. The syntax is basically the same as
-docker-compose:</p>
+<p>Values in <code>slowdash.yaml</code> can use variable and command
+substitutions. The syntax is basically the same as docker-compose:</p>
 <ul>
 <li><code>${VARIABLE}</code> for substitution with environmental
 variable</li>
@@ -591,11 +590,10 @@ name. A full working example in Docker Compose with more features such
 as HTTPS, HTTP/2, and Basic Authentication can be found in
 <code>ExampleProjects/ReverseProxy/Apache</code>.</p>
 <h1 id="jupyter-integration">Jupyter Integration</h1>
-<p>By providing Jupyter URL and token in
-<code>SlowdashProject.yaml</code>, SlowDash can export the displayed
-data to Jupyter Notebook so that users can continue analysis on Jupyter.
-Two examples, with and without a reverse proxy, can be found in
-<code>ExampleProjects/Jupyter</code>.</p>
+<p>By providing Jupyter URL and token in <code>slowdash.yaml</code>,
+SlowDash can export the displayed data to Jupyter Notebook so that users
+can continue analysis on Jupyter. Two examples, with and without a
+reverse proxy, can be found in <code>ExampleProjects/Jupyter</code>.</p>
 <h2 id="native-without-containers">Native (without containers)</h2>
 <div class="sourceCode" id="cb22"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
@@ -637,8 +635,8 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb23-1"><a href=
 <span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> SLOWDASH_INTERNAL_URL=http://slowdash:18881</span><span class="co">    # SlowDash seen from Jupyter</span></span></code></pre></div>
 <p>Note that the Jupyter and SlowDash URLs are different when accessed
 within the container system.</p>
-<p>Edit the <code>SlowdashProject.yaml</code> file to include the
-Jupyter settings:</p>
+<p>Edit the <code>slowdash.yaml</code> file to include the Jupyter
+settings:</p>
 <div class="sourceCode" id="cb24"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">export</span><span class="kw">:</span></span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> jupyter</span></span>
@@ -696,7 +694,7 @@ Web Server configuration.</p>
 <div class="sourceCode" id="cb28"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ PATH/TO/SLOWDASH/utils/slowdash-setup-apache.py --interface=CGI   (or --interface=WSGI)</span></span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>Project: MySlowSystem</span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>Project directory: /home/sanshiro/MySlowSystem/SlowdashProject</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>Project directory: /home/sanshiro/MySlowSystem/slowdash</span>
 <span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>Web-file directory: /home/sanshiro/public_html/SlowDash/MySlowSystem</span>
 <span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>User: slow</span>
 <span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>continue? [Y/n] y</span>

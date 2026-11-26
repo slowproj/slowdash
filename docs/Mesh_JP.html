@@ -1060,9 +1060,9 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb31-1"><a h
 という名前で SlowDash プロジェクトの <code>sd_contents</code>
 以下に置くと，SlowDash
 サーバーに認識され，起動や停止を行えるようになります．</p>
-<p>また，<code>SlowdashProject.yaml</code> ファイルに
-<code>task(s)</code> エントリを作って，<code>auto_start</code>
-を設定すると，SlowDash サーバー起動時に SlowTask
+<p>また，<code>slowdash.yaml</code> ファイルに <code>task(s)</code>
+エントリを作って，<code>auto_start</code> を設定すると，SlowDash
+サーバー起動時に SlowTask
 も自動でスタートできます．また，ここで，タスクスクリプトの
 <code>@initialize</code>
 コールバックに渡すパラメータも記述できます．</p>
@@ -1137,18 +1137,17 @@ MeshID の２つの名前を持ちます．</p>
 <li><code>Tasklet.run()</code> の <code>name</code> 引数</li>
 <li><code>slowdash-task</code> コマンドの <code>--name</code>
 パラメータ</li>
-<li><code>SlowdashProject.yaml</code> の <code>task</code> セクションの
+<li><code>slowdash.yaml</code> の <code>task</code> セクションの
 <code>name</code> パラメータ</li>
 </ul>
 <p>TaskName には，英数字および <code>_</code>
 以外の文字は使用できません．これらの文字が含まれる場合は，<code>_</code>
 に置き換えられます．</p>
-<p>同じスクリプトを複数走らせたい場合，<code>SlowdashProject.yaml</code>
+<p>同じスクリプトを複数走らせたい場合，<code>slowdash.yaml</code>
 ファイル内に同じスクリプトで名前の異なる複数のエントリを作ることができます．</p>
 <p>多数のタスクを同時に自動で走らせたい場合は，<code>slowdash-task</code>
 コマンドを <code>--name=NAME</code> オプション付きで多数実行するような
-Python スクリプト (Spawn Script)
-を作成し，<code>SlowdashProject.yaml</code>
+Python スクリプト (Spawn Script) を作成し，<code>slowdash.yaml</code>
 からはそれだけを起動するようにすることもできます． この構成では，Spawn
 スクリプトの中で初期値の設定や SubPub や RPC
 によるコマンドの分配も細かく指定できるようになります．
@@ -1400,7 +1399,7 @@ set point 設定</li>
 <h3 id="実行-1">実行</h3>
 <h4
 id="タスクをサーバーと一緒に自動開始自動停止">タスクをサーバーと一緒に自動開始・自動停止</h4>
-<p><code>SlowdashProject.yaml</code> で，これらの SlowTask
+<p><code>slowdash.yaml</code> で，これらの SlowTask
 はサーバーと同時に自動スタートし，終了時に自動停止するように構成されています．
 タスクが暴走した場合でも，サーバーはタスクをシグナルにより強制終了させることができます．
 サーバーがクラッシュしたり，外部から即時強制終了 (SIGKILL)

@@ -93,11 +93,11 @@ For information about other supported data table formats, please refer to the [D
 # Basic Usage
 
 ## Project Configuration
-Each SlowDash project requires a configuration file named `SlowdashProject.yaml` in the project directory. This file specifies which database to read, which columns contain timestamps and data values, and other essential settings.
+Each SlowDash project requires a configuration file named `slowdash.yaml` in the project directory. This file specifies which database to read, which columns contain timestamps and data values, and other essential settings.
 
 ### Creating the Configuration File
 
-Create `SlowdashProject.yaml` with the following content:
+Create `slowdash.yaml` with the following content:
 ```yaml
 slowdash_project:
   name: QuickTour
@@ -397,7 +397,7 @@ Stop it with `Ctrl-C` or `Ctrl-\`. (You might see messy output, but it’s harml
 ## Integrating the Script into the SlowDash Application
 Any Python script (not necessarily using SlowPy) placed in your project's `sd_contents` directory as `slowtask-XXX.py` will automatically appear in the "SlowTask" section of the SlowDash home screen, where it can be controlled via the web interface.
 
-You can also configure it to auto-start or edit directly from the browser via entries in `SlowdashProject.yaml` (see the official documentation).
+You can also configure it to auto-start or edit directly from the browser via entries in `slowdash.yaml` (see the official documentation).
 
 However, the previous script cannot be gracefully stopped yet. To allow start/stop control from the app, implement the callback functions defined by SlowDash, such as `_loop()` and `_run()`:
 
@@ -626,7 +626,7 @@ The `name` format is the script filename (the `XXX` part of `slowtask-XXX.py`) a
 
 After creating and placing these files under `sd_contents`, restart slowdash. 
 In the SlowTask section at the lower left of the home screen, you should see a task called `testdaq`; click `start` there to start the script.
-If manually starting every time is inconvenient, add the following to `SlowdashProject.yaml` to auto-start the script when slowdash starts.
+If manually starting every time is inconvenient, add the following to `slowdash.yaml` to auto-start the script when slowdash starts.
 
 ```yaml
 slowdash_project:
@@ -834,7 +834,7 @@ You can also keep the previous name, `_initialize()`.
 The function does not have to be async.
 You can define multiple `@tasklet.initialize()` callbacks.
 
-You can also receive parameters from the SlowDash configuration file (`SlowdashProject.yaml`).
+You can also receive parameters from the SlowDash configuration file (`slowdash.yaml`).
 
 ```python
 @tasklet.initialize()

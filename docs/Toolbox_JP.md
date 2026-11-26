@@ -6,7 +6,7 @@ title: Toolbox
 Slow Task および User Module の Python スクリプトは，Toolbox に入れることにより，共有部品として使用可能になります．
 SlowDash パッケージには，すでにいくつかの汎用の Slow Task スクリプトが含まれています．
 
-Toolbox にあるスクリプトを使用するには，`SlowdashProject.yaml` の `task` エントリで，タスク名の前に `@toolbox/` を付加します．
+Toolbox にあるスクリプトを使用するには，`slowdash.yaml` の `task` エントリで，タスク名の前に `@toolbox/` を付加します．
 その他は，プロジェクトディレクトリの `config` にあるスクリプトと同様の振る舞いになります．
 
 以下は，Toolbox にある `data_request_redis` という Slow Task を使用する例です．

@@ -7,7 +7,7 @@ This page summarizes the key points and frequently used commands of tools that a
 
 
 # YAML
-The SlowDash project configuration file (`SlowdashProject.yaml`) and `docker-compose.yaml` are written in YAML.
+The SlowDash project configuration file (`slowdash.yaml`) and `docker-compose.yaml` are written in YAML.
 
 ## Syntax
 
@@ -52,7 +52,7 @@ command: >                   # multi-line string (newlines replaced with spaces)
 To see whether the file is read as intended, convert it to JSON and print it (requires `pyyaml`, which is included in the SlowDash venv):
 
 ```console
-$ python -c 'import sys,yaml,json; print(json.dumps(yaml.safe_load(open(sys.argv[1])), indent=2))' SlowdashProject.yaml
+$ python -c 'import sys,yaml,json; print(json.dumps(yaml.safe_load(open(sys.argv[1])), indent=2))' slowdash.yaml
 ```
 
 For `docker-compose.yaml`, `docker compose config` shows the final configuration after variable expansion.

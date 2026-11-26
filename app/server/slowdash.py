@@ -178,7 +178,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--project-file',
         action='store', dest='project_file', default=None,
-        help='project file (default: SlowdashProject.yaml file at the project directory)'
+        help='project file (default: SlowdashProject.yaml or slowdash.yaml file at the project directory)'
     )
     parser.add_argument(
         '--logging',

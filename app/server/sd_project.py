@@ -21,7 +21,13 @@ class Project:
         else:
             self.server_url = None
 
-        self.config_file = project_file if project_file is not None else 'SlowdashProject.yaml'
+        self.config_file = project_file
+        if self.config_file is None:
+            if self.project_dir is not None and os.path.isfile(os.path.join(self.project_dir, 'SlowdashProject.yaml')):
+                self.config_file = 'SlowdashProject.yaml'
+            else:
+                self.config_file = 'slowdash.yaml'
+            
         self.toolbox_dir = os.path.join(self.sys_dir, 'toolbox')
 
         if self.project_dir is None:
@@ -64,7 +70,7 @@ class Project:
         project_dir = None
         while not project_dir and search_dir != '/':
             for dirent in os.listdir(search_dir):
-                if dirent == 'SlowdashProject.yaml':
+                if dirent in ['SlowdashProject.yaml', 'slowdash.yaml']:
                     project_dir = search_dir
                     break
             search_dir = os.path.normpath(os.path.join(search_dir, '..'))
@@ -296,7 +302,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--project-file',
         action='store', dest='project_file', default=None,
-        help='project file (default: SlowdashProject.yaml file at the project directory)'
+        help='project file (default: SlowdashProject.yaml or slowdash.yaml file at the project directory)'
     )
     args = parser.parse_args()
 

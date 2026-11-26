@@ -619,7 +619,7 @@ If a sleep is absolutely necessary, use `await asyncio.sleep()` or `await contro
 ### Running
 If a SlowTask script file is placed under the SlowDash project's `sd_contents` directory with the filename `slowtask-{name}.py`, the SlowDash server recognizes it and can start and stop it.
 
-In addition, if a `task(s)` entry is created in `SlowdashProject.yaml` and `auto_start` is set, the SlowTask can automatically start when the SlowDash server starts.
+In addition, if a `task(s)` entry is created in `slowdash.yaml` and `auto_start` is set, the SlowTask can automatically start when the SlowDash server starts.
 ```yaml
   tasks:
     - name: {name}
@@ -667,13 +667,13 @@ By default, running multiple copies of the same script at the same time gives th
 - The task-script filename (default)
 - The `name` argument of `Tasklet.run()`
 - The `--name` parameter of the `slowdash-task` command
-- The `name` parameter in the `task` section of `SlowdashProject.yaml`
+- The `name` parameter in the `task` section of `slowdash.yaml`
 
 TaskName may contain only alphanumeric characters and `_`. Any other characters are replaced with `_`.
 
-To run multiple copies of the same script, multiple entries using the same script but different names can be created in `SlowdashProject.yaml`.
+To run multiple copies of the same script, multiple entries using the same script but different names can be created in `slowdash.yaml`.
 
-To automatically run many tasks at once, another option is to create a Python script (a Spawn Script) that launches many `slowdash-task` commands with the `--name=NAME` option, and configure `SlowdashProject.yaml` to start only that script.
+To automatically run many tasks at once, another option is to create a Python script (a Spawn Script) that launches many `slowdash-task` commands with the `--name=NAME` option, and configure `slowdash.yaml` to start only that script.
 With this configuration, initial values and distribution of commands by PubSub and RPC can also be finely controlled from within the Spawn Script.
 The `slowdash-task` command automatically exits when the parent process that launched it exits, so when the Spawn Script exits, all tasks launched from it also terminate automatically.
 
@@ -857,7 +857,7 @@ Examples using the basic SlowTask functions are available in `ExampleProjects/Ex
 
 ### Running
 #### Automatically Start and Stop Tasks Together with the Server
-In `SlowdashProject.yaml`, these SlowTasks are configured to start automatically with the server and stop automatically when it terminates.
+In `slowdash.yaml`, these SlowTasks are configured to start automatically with the server and stop automatically when it terminates.
 Even if a task runs out of control, the server can forcibly terminate it with a signal.
 Even if the server crashes or is immediately force-killed externally (SIGKILL), the tasks automatically terminate at the same time.
 

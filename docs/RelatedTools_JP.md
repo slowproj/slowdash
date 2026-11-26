@@ -7,7 +7,7 @@ SlowDash を使う際によく必要になる関連ツール（YAML、pyenv / ve
 
 
 # YAML
-SlowDash のプロジェクト設定ファイル（`SlowdashProject.yaml`）と `docker-compose.yaml` は YAML で記述します．
+SlowDash のプロジェクト設定ファイル（`slowdash.yaml`）と `docker-compose.yaml` は YAML で記述します．
 
 ## 書き方
 
@@ -52,7 +52,7 @@ command: >                   # 複数行文字列（改行を空白に置換）
 意図どおりに読み込まれているかは、JSON に変換して表示すると確認できます（`pyyaml` が必要．SlowDash の venv には入っています）．
 
 ```console
-$ python -c 'import sys,yaml,json; print(json.dumps(yaml.safe_load(open(sys.argv[1])), indent=2))' SlowdashProject.yaml
+$ python -c 'import sys,yaml,json; print(json.dumps(yaml.safe_load(open(sys.argv[1])), indent=2))' slowdash.yaml
 ```
 
 `docker-compose.yaml` の場合は `docker compose config` で、変数展開後の最終的な設定を表示できます．

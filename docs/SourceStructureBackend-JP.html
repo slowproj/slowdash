@@ -375,8 +375,8 @@ id="コマンドラインまたはサーバーの起動">コマンドライン�
 <li><code>App</code> が <code>Project</code> を生成する．</li>
 <li><code>Project</code> が SlowDash
 のシステムディレクトリとプロジェクトディレクトリを探す．</li>
-<li><code>Project</code> が <code>SlowdashProject.yaml</code>
-を読み込む．設定によっては，環境変数から初期設定を生成する．</li>
+<li><code>Project</code> が <code>slowdash.yaml</code> （または
+<code>SlowdashProject.yaml</code>）を読み込む．設定によっては，環境変数から初期設定を生成する．</li>
 <li>プロジェクトディレクトリが存在する場合，<code>App</code>
 はプロセスの作業ディレクトリをプロジェクトディレクトリに移す．</li>
 <li><code>App</code>
@@ -508,8 +508,8 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a hr
 <li>明示的に指定された <code>--project-dir</code> または
 <code>--project-file</code>．</li>
 <li><code>SLOWDASH_PROJECT</code>．</li>
-<li>親ディレクトリをたどっての <code>SlowdashProject.yaml</code>
-の探索．</li>
+<li>親ディレクトリをたどっての <code>slowdash.yaml</code> （または
+<code>SlowdashProject.yaml</code>）の探索．</li>
 <li><code>SLOWDASH_INIT_DATASOURCE_URL</code>
 による，環境変数ベースの初期データソース．</li>
 </ol>

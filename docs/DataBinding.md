@@ -239,7 +239,7 @@ Note that the numeric data values shown here can be of any other scalar types (s
 ## Configuration
 
 #### PostgreSQL
-Write SlowDash project configuration file (`SlowdashProject.yaml`) like below.
+Write SlowDash project configuration file (`slowdash.yaml`) like below.
 ```yaml
 slowdash_project:
   data_source:
@@ -249,7 +249,7 @@ slowdash_project:
 ```
 
 #### MySQL
-Write SlowDash project configuration file (`SlowdashProject.yaml`) like below.
+Write SlowDash project configuration file (`slowdash.yaml`) like below.
 ```yaml
 slowdash_project:
   data_source:
@@ -259,7 +259,7 @@ slowdash_project:
 ```
 
 #### SQLite
-Write SlowDash project configuration file (`SlowdashProject.yaml`) like below. The SQLite DB file path is relative to the project directory.
+Write SlowDash project configuration file (`slowdash.yaml`) like below. The SQLite DB file path is relative to the project directory.
 ```yaml
 slowdash_project:
   data_source:

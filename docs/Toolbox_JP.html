@@ -103,8 +103,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 に入れることにより，共有部品として使用可能になります． SlowDash
 パッケージには，すでにいくつかの汎用の Slow Task
 スクリプトが含まれています．</p>
-<p>Toolbox
-にあるスクリプトを使用するには，<code>SlowdashProject.yaml</code> の
+<p>Toolbox にあるスクリプトを使用するには，<code>slowdash.yaml</code> の
 <code>task</code> エントリで，タスク名の前に <code>@toolbox/</code>
 を付加します． その他は，プロジェクトディレクトリの <code>config</code>
 にあるスクリプトと同様の振る舞いになります．</p>
@@ -118,7 +117,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> REDIS_URL=redis://localhost:6379/12</span></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">task</span><span class="kw">:</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> @toolbox/data_request_redis</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;@toolbox/data_request_redis&quot;</span></span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">auto_load</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">parameters</span><span class="kw">:</span></span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">redis_url</span><span class="kw">:</span><span class="at"> ${REDIS_URL}</span></span>

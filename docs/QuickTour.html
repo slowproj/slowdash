@@ -251,13 +251,12 @@ href="DataBinding.html">Data Binding section</a>.</p>
 <h1 id="basic-usage">Basic Usage</h1>
 <h2 id="project-configuration">Project Configuration</h2>
 <p>Each SlowDash project requires a configuration file named
-<code>SlowdashProject.yaml</code> in the project directory. This file
-specifies which database to read, which columns contain timestamps and
-data values, and other essential settings.</p>
+<code>slowdash.yaml</code> in the project directory. This file specifies
+which database to read, which columns contain timestamps and data
+values, and other essential settings.</p>
 <h3 id="creating-the-configuration-file">Creating the Configuration
 File</h3>
-<p>Create <code>SlowdashProject.yaml</code> with the following
-content:</p>
+<p>Create <code>slowdash.yaml</code> with the following content:</p>
 <div class="sourceCode" id="cb9"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> QuickTour</span></span>
@@ -631,8 +630,8 @@ project’s <code>sd_contents</code> directory as
 section of the SlowDash home screen, where it can be controlled via the
 web interface.</p>
 <p>You can also configure it to auto-start or edit directly from the
-browser via entries in <code>SlowdashProject.yaml</code> (see the
-official documentation).</p>
+browser via entries in <code>slowdash.yaml</code> (see the official
+documentation).</p>
 <p>However, the previous script cannot be gracefully stopped yet. To
 allow start/stop control from the app, implement the callback functions
 defined by SlowDash, such as <code>_loop()</code> and
@@ -910,8 +909,8 @@ script.</p>
 the lower left of the home screen, you should see a task called
 <code>testdaq</code>; click <code>start</code> there to start the
 script. If manually starting every time is inconvenient, add the
-following to <code>SlowdashProject.yaml</code> to auto-start the script
-when slowdash starts.</p>
+following to <code>slowdash.yaml</code> to auto-start the script when
+slowdash starts.</p>
 <div class="sourceCode" id="cb43"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
 <span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> QuickTour</span></span>
@@ -1134,7 +1133,7 @@ example. You can also keep the previous name,
 <code>_initialize()</code>. The function does not have to be async. You
 can define multiple <code>@tasklet.initialize()</code> callbacks.</p>
 <p>You can also receive parameters from the SlowDash configuration file
-(<code>SlowdashProject.yaml</code>).</p>
+(<code>slowdash.yaml</code>).</p>
 <div class="sourceCode" id="cb50"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.initialize</span>()</span>
 <span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> my_init(parameters:<span class="bu">dict</span>):</span>

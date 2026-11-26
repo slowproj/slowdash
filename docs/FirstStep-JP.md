@@ -315,9 +315,9 @@ UNIX 時間の代わりにデータベースが持つ日付時刻型を使うこ
 特に，テーブルにカラムを追加するのが簡単なタイプのデータストアを使用している場合は，各チャンネルを各カラム割り当てるのも普通にアリだと思います（Wide Format）．この場合，同時に読み出したデータのグルーピングが簡単になるというメリットもあります．詳しくは，公式ドキュメントの [Data Binding](DataBinding.html) の章を参照してください．
 
 ### プロジェクト設定
-SlowDash のプロジェクトでは，通常，専用のディレクトリを作って，そこに `SlowdashProject.yaml` という名前のプロジェクト設定ファイルを置きます．（データファイルを直接読む場合などの例外はあります．）どこのデータベースからどのようなデータを読むかなどを，このプロジェクト設定ファイルに記述します．
+SlowDash のプロジェクトでは，通常，専用のディレクトリを作って，そこに `slowdash.yaml` という名前のプロジェクト設定ファイルを置きます．（データファイルを直接読む場合などの例外はあります．）どこのデータベースからどのようなデータを読むかなどを，このプロジェクト設定ファイルに記述します．
 
-プロジェクトディレクトリに，以下の内容で `SlowdashProject.yaml` という名前のファイルを作成してください．
+プロジェクトディレクトリに，以下の内容で `slowdash.yaml` という名前のファイルを作成してください．
 ```yaml
 slowdash_project:
   name: QuickTour   (なんでも良いが，スペースや特殊文字を含まない方が人生が楽になる)
@@ -352,7 +352,7 @@ slowdash_project:
 （日本でしか使わないと思ってすでに without timezone 形式でデータを保存している場合は，夏時間の導入に反対しておいた方がいいです．）
 `unspecified utc` は，SQLite などの一部のデータベースで必要になることがありますが，この場合でも，代わりにUNIX 時間を使うなどで避けられるなら避けたほうがいいです．
 
-`slowdash config` コマンドで設定情報の一部が表示されるので，設定ファイルが読めているかのチェックができます．これは，`SlowdashProject.yaml` ファイルを作成したプロジェクトディレクトリで実行してください．
+`slowdash config` コマンドで設定情報の一部が表示されるので，設定ファイルが読めているかのチェックができます．これは，`slowdash.yaml` ファイルを作成したプロジェクトディレクトリで実行してください．
 ```console
 $ slowdash config --indent=2
 Running in venv at /PATH/TO/SLOWDASH/venv
@@ -570,7 +570,7 @@ while True:
 
 ### 読み出しスクリプトを SlowDash アプリに統合する
 任意の Python スクリプト(SlowPyを使う必要もない)を SlowDash プロジェクトディレクトリの下の `sd_contents` ディレクトリ（すでに自動作成されているはず）に `slowtask-XXX.py` という名前で保存すると，SlowDash ホーム画面の左下の "SlowTask" セクションに作成したスクリプトが表示され，コントロールできるようになります．
-`SlowdashProject.yaml` の設定で，スクリプトを自動開始するようにしたり，ブラウザからこの Python ファイルを直接編集できるようにすることもできます．具体的な手順は，公式ドキュメントを参照してください．
+`slowdash.yaml` の設定で，スクリプトを自動開始するようにしたり，ブラウザからこの Python ファイルを直接編集できるようにすることもできます．具体的な手順は，公式ドキュメントを参照してください．
 
 ただし，上記のスクリプトは，（上品に）停止させるためのコードがありません．アプリ側から停止や再実行をできるようにするためには，アプリからのコントロールを受けられるようにする必要があります．そのために，以下のように読み出しループを SlowDash で規定されているコールバックに置き換えます：
 ```python
@@ -791,7 +791,7 @@ def stop():
 ここでは，それぞれの関数に対応したボタンを２つ作成しているだけです．それぞれのボタンの `name` 属性で，そのボタンがクリックされたときにどのファイルのどの関数を呼ぶかを指定しています．`name` の形式は，スクリプトファイル名（`slowtask-XXX.py` の `XXX` の部分）と，その中の関数名です．
 
 これらのファイルを作成して `sd_contents` 以下に配置したら，slowdash を立ち上げ直してください．ホーム画面の左下の SlowTask セクションに `testdaq` というタスクがあるはずなので，そこの start をクリックしてスクリプトをスタートさせてください．
-毎回手動でスタートするのが面倒な場合は，`SlowdashProject.yaml` に以下のように書くと，スクリプトを slowdash 開始時に自動で開始するようにできます．
+毎回手動でスタートするのが面倒な場合は，`slowdash.yaml` に以下のように書くと，スクリプトを slowdash 開始時に自動で開始するようにできます．
 ```yaml
 slowdash_project:
   name: QuickTour
@@ -987,7 +987,7 @@ async def my_init():
 さらに，async でなくても構いません．
 複数の `@tasklet.initialize()` を作成することもできます．
 
-SlowDash 設定ファイル（`SlowdashProject.yaml` ）からパラメータを受け取ることもできます．
+SlowDash 設定ファイル（`slowdash.yaml` ）からパラメータを受け取ることもできます．
 ```python
 @tasklet.initialize()
 async def my_init(parameters:dict):
@@ -1376,7 +1376,7 @@ DockerHub と GitHub に SlowDash のコンテナイメージがあります．�
 - DockerHub: [slowproj/slowdash:TAG](https://hub.docker.com/r/slowproj/slowdash/tags)
 - GitHub Container Registry: [ghcr.io/slowproj/slowdash:TAG](https://github.com/slowproj/slowdash/pkgs/container/slowdash)
 
-コンテナ内での SlowDash プロジェクトディレクトリは `/project` です．これをボリュームマウントして使ってください．以下は，`SlowdashProject.yaml` ファイルが作ってあるプロジェクトディレクトリからコンテナの SlowDash サーバーを実行する例です．
+コンテナ内での SlowDash プロジェクトディレクトリは `/project` です．これをボリュームマウントして使ってください．以下は，`slowdash.yaml` ファイルが作ってあるプロジェクトディレクトリからコンテナの SlowDash サーバーを実行する例です．
 ```console
 $ docker run --rm -p 18881:18881 -v $(pwd):/project slowproj/slowdash
 ```
@@ -1457,7 +1457,7 @@ SlowDash をコンテナ内で使用する場合でも，設定ファイルや�
 ### 基本認証
 
 もし内部の人を信用できない場合，最低限として，基本認証を使ってパスワードを設定することはできます．
-`SlowdashProject.yaml` に `authentication` エントリを追加し，パスワードハッシュを指定してください．
+`slowdash.yaml` に `authentication` エントリを追加し，パスワードハッシュを指定してください．
 
 ```yaml
 slowdash_project:
@@ -1518,7 +1518,7 @@ services:
 ```console
 $ tree Nginx
 Nginx/
-├── SlowdashProject.yaml
+├── slowdash.yaml
 ├── docker-compose.yaml
 └── nginx
     ├── Dockerfile

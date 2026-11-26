@@ -626,7 +626,7 @@ SlowTask はシングルスレッドの非同期呼び出しで全体が並列�
 ### 実行
 SlowTask のスクリプトファイルを，`slowtask-{名前}.py` という名前で SlowDash プロジェクトの `sd_contents` 以下に置くと，SlowDash サーバーに認識され，起動や停止を行えるようになります．
 
-また，`SlowdashProject.yaml` ファイルに `task(s)` エントリを作って，`auto_start` を設定すると，SlowDash サーバー起動時に SlowTask も自動でスタートできます．また，ここで，タスクスクリプトの `@initialize` コールバックに渡すパラメータも記述できます．
+また，`slowdash.yaml` ファイルに `task(s)` エントリを作って，`auto_start` を設定すると，SlowDash サーバー起動時に SlowTask も自動でスタートできます．また，ここで，タスクスクリプトの `@initialize` コールバックに渡すパラメータも記述できます．
 ```yaml
   tasks:
     - name: {名前}
@@ -674,13 +674,13 @@ RPC 呼び出しなどは，呼び出し先の名前が事前に分かる TaskNa
 - タスクスクリプトのファイル名（デフォルト）
 - `Tasklet.run()` の `name` 引数
 - `slowdash-task` コマンドの `--name` パラメータ
-- `SlowdashProject.yaml` の `task` セクションの `name` パラメータ
+- `slowdash.yaml` の `task` セクションの `name` パラメータ
 
 TaskName には，英数字および `_` 以外の文字は使用できません．これらの文字が含まれる場合は，`_` に置き換えられます．
 
-同じスクリプトを複数走らせたい場合，`SlowdashProject.yaml` ファイル内に同じスクリプトで名前の異なる複数のエントリを作ることができます．
+同じスクリプトを複数走らせたい場合，`slowdash.yaml` ファイル内に同じスクリプトで名前の異なる複数のエントリを作ることができます．
 
-多数のタスクを同時に自動で走らせたい場合は，`slowdash-task` コマンドを `--name=NAME` オプション付きで多数実行するような Python スクリプト (Spawn Script) を作成し，`SlowdashProject.yaml` からはそれだけを起動するようにすることもできます．
+多数のタスクを同時に自動で走らせたい場合は，`slowdash-task` コマンドを `--name=NAME` オプション付きで多数実行するような Python スクリプト (Spawn Script) を作成し，`slowdash.yaml` からはそれだけを起動するようにすることもできます．
 この構成では，Spawn スクリプトの中で初期値の設定や SubPub や RPC によるコマンドの分配も細かく指定できるようになります．
 `slowdash-task` コマンドは，それを起動した親プロセスが終了すると自分も自動で終了するので，Spawn スクリプトが終了すればそこから起動されたタスクはすべて自動終了します．
 
@@ -865,7 +865,7 @@ SlowTask の基本的な機能を使用する例が `ExampleProjects/Experimenta
 
 ### 実行
 #### タスクをサーバーと一緒に自動開始・自動停止
-`SlowdashProject.yaml` で，これらの SlowTask はサーバーと同時に自動スタートし，終了時に自動停止するように構成されています．
+`slowdash.yaml` で，これらの SlowTask はサーバーと同時に自動スタートし，終了時に自動停止するように構成されています．
 タスクが暴走した場合でも，サーバーはタスクをシグナルにより強制終了させることができます．
 サーバーがクラッシュしたり，外部から即時強制終了 (SIGKILL) された場合でも，タスクは自動で同時終了します．
 

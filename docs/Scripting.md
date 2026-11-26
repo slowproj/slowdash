@@ -638,7 +638,7 @@ if __name__ == '__main__':
 When a SlowTask script file (e.g., `slowtask-test.py`) is placed under the `sd_contents` directory of the project, it is recognized by the SlowDash server and shown in the task management panel (the "SlowTask" section) of the SlowDash home page.
 By default, tasks are only "listed" and are not executed until the `start` button is clicked.
 
-By creating an entry in the SlowDash configuration file (`SlowdashProject.yaml`), a task can be configured to start automatically when the server starts.
+By creating an entry in the SlowDash configuration file (`slowdash.yaml`), a task can be configured to start automatically when the server starts.
 ```yaml
 slowdash_project:
   ...
@@ -689,7 +689,7 @@ Use this feature only if access is strictly controlled.
 ### Operating Tasks from the SlowDash Server
 The following SlowTask operations can be performed from the SlowDash task management panel:
 
-- **Start**: starts the SlowTask as a child process. The start command can be specified with `command` in the `SlowdashProject.yaml` file; the default is local execution with the `slowdash-task` command.
+- **Start**: starts the SlowTask as a child process. The start command can be specified with `command` in the `slowdash.yaml` file; the default is local execution with the `slowdash-task` command.
 - **Stop**: requests the task to stop via SlowMesh. The Tasklet stop procedure is performed, and the finalize callbacks are called.
 - **Kill**: if the task was started by the server as a child process, sends a KILL signal to the child process.
 - **Purge**: removes a task that no longer responds from SlowMesh.
@@ -726,7 +726,7 @@ Each SlowTask has a name (task name), which is used for function calls from the 
 The task name is specified by one of the following:
 
 - The file name of the task script, with the leading `slowtask-` removed (default)
-- The `name` parameter of the `task` entry in `SlowdashProject.yaml`
+- The `name` parameter of the `task` entry in `slowdash.yaml`
 - The `--name` parameter of the `slowdash-task` command
 - The `name` argument of `Tasklet.run()`
 
@@ -961,7 +961,7 @@ In particular, by making multiple small `@tasklet.loop(interval)` functions, one
 - `@tasklet.loop(interval:float, ticks=None)`: called repeatedly at the specified interval in seconds
 
 #### Initialization and Finalization
-If an `@tasklet.initialize()` function takes one argument, the task parameters specified with `parameters` in `SlowdashProject.yaml` (or `--parameters` of the `slowdash-task` command) are passed as a dict.
+If an `@tasklet.initialize()` function takes one argument, the task parameters specified with `parameters` in `slowdash.yaml` (or `--parameters` of the `slowdash-task` command) are passed as a dict.
 ```python
 @tasklet.initialize()
 async def initialize(parameters:dict):
@@ -1298,7 +1298,7 @@ By default, SlowMQ, which is built into the SlowDash server, is used, so it can 
 SlowMQ is implemented with WebSockets over HTTP(S), and can be accessed directly at the URL (port) of the SlowDash server.
 
 Instead of SlowMQ, widely used external messaging systems such as NATS, MQTT, Redis, and RabbitMQ can also be used.
-In this case, specify the endpoint with the `mesh` entry in `SlowdashProject.yaml`. The same URL is also passed to the tasks started from the server.
+In this case, specify the endpoint with the `mesh` entry in `slowdash.yaml`. The same URL is also passed to the tasks started from the server.
 ```yaml
 slowdash_project:
   ...

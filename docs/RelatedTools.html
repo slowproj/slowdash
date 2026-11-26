@@ -198,9 +198,8 @@ each tool; it is meant as a reference for when you have used a tool
 before but forgot the details. See the official documentation of each
 tool for more. This document was written by Claude.</p>
 <h1 id="yaml">YAML</h1>
-<p>The SlowDash project configuration file
-(<code>SlowdashProject.yaml</code>) and <code>docker-compose.yaml</code>
-are written in YAML.</p>
+<p>The SlowDash project configuration file (<code>slowdash.yaml</code>)
+and <code>docker-compose.yaml</code> are written in YAML.</p>
 <h2 id="syntax">Syntax</h2>
 <div class="sourceCode" id="cb1"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Comment (from the beginning of a line, or after a space)</span></span>
@@ -254,7 +253,7 @@ silently overwrites the earlier one.</li>
 print it (requires <code>pyyaml</code>, which is included in the
 SlowDash venv):</p>
 <div class="sourceCode" id="cb2"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python -c &#39;import sys,yaml,json; print(json.dumps(yaml.safe_load(open(sys.argv[1])), indent=2))&#39; SlowdashProject.yaml</span></span></code></pre></div>
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python -c &#39;import sys,yaml,json; print(json.dumps(yaml.safe_load(open(sys.argv[1])), indent=2))&#39; slowdash.yaml</span></span></code></pre></div>
 <p>For <code>docker-compose.yaml</code>,
 <code>docker compose config</code> shows the final configuration after
 variable expansion.</p>
