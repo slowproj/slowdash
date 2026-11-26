@@ -201,7 +201,7 @@ pages:
             e.preventDefault();
             const filename = 'slowcruise-' + nameInput.val() + '.yaml';
             const content = this.contentDiv.find('textarea').val();
-            Platform.upload(this.savePopup, 'config/file/' + filename, content);
+            Platform.upload(this.savePopup, 'content/file/' + filename, content);
         });
     }
 
@@ -301,7 +301,7 @@ class ConfigEditorPanel extends Panel {
             if (filename && filename.length < 3) {
                 return;
             }
-            Platform.upload(this.buttonDiv.find('dialog'), 'config/file/' + filename, this.textarea.val(), {
+            Platform.upload(this.buttonDiv.find('dialog'), 'content/file/' + filename, this.textarea.val(), {
                 contentType: 'text/plain; charset=utf-8',
                 overwritable: true,
                 quietOnSuccess: true,
@@ -334,7 +334,7 @@ class ConfigEditorPanel extends Panel {
     async _load(filepath) {
         let content = null;
         try {
-            let response = await fetch('./api/config/file/' + filepath);
+            let response = await fetch('./api/content/file/' + filepath);
             if (! response.ok) {
                 throw new Error(response.status + " " + response.statusText);
             }
@@ -347,7 +347,7 @@ class ConfigEditorPanel extends Panel {
 
         let contentlist = [];
         try {
-            let response = await fetch('./api/config/contentlist/');
+            let response = await fetch('./api/content/contentlist/');
             if (! response.ok) {
                 throw new Error(response.status + " " + response.statusText);
             }
@@ -357,15 +357,15 @@ class ConfigEditorPanel extends Panel {
             this.statusDiv.text(`Server Error: ${error.message}`);
         }
         for (const meta of contentlist) {
-            if (meta.config_file != filepath) {
+            if (meta.content_file != filepath) {
                 continue;
             }
-            if (meta.config_error) {
-                this.statusDiv.text(meta.config_error);
-                if (meta.config_error_line > 0) {
+            if (meta.content_error) {
+                this.statusDiv.text(meta.content_error);
+                if (meta.content_error_line > 0) {
                     const lines = content.split('\n');
-                    const pos1 = lines.slice(0, meta.config_error_line-1).join('\n').length;
-                    const pos2 = pos1 + lines[meta.config_error_line-1].length;
+                    const pos1 = lines.slice(0, meta.content_error_line-1).join('\n').length;
+                    const pos2 = pos1 + lines[meta.content_error_line-1].length;
                     this.textarea.focus();
                     this.textarea.get().setSelectionRange(pos1, pos2);
                 }
@@ -517,7 +517,7 @@ class FileManagerPanel extends Panel {
             return;
         }
 
-        const url = './api/config/file/' + filename;
+        const url = './api/content/file/' + filename;
         this.indicator.open("Sending Command...", "&#x23f3;", event?.clientX ?? null, event?.clientY ?? null);
         fetch(url, {
             method: 'POST',
@@ -546,7 +546,7 @@ class FileManagerPanel extends Panel {
             const reader = new FileReader();
             reader.onload = (e) => {
                 const content = e.target.result;
-                Platform.upload(this.savePopup, 'config/file/' + file.name, content, {
+                Platform.upload(this.savePopup, 'content/file/' + file.name, content, {
                     contentType: 'application/octet-stream',
                     overwritable: this.overwritable.val(),
                     quietOnSuccess: true,
@@ -572,7 +572,7 @@ class FileManagerPanel extends Panel {
     _deleteFile(filename) {
         let commitDeletion = (() => {
             this.indicator.open("Deleting " + filename, "&#x23f3;");
-            fetch(`./api/config/file/${filename}`, {
+            fetch(`./api/content/file/${filename}`, {
                 method: 'DELETE',
             })
                 .then(response => {
@@ -620,7 +620,7 @@ class FileManagerPanel extends Panel {
 
         let filelist = null;
         try {
-            let response = await fetch('./api/config/filelist?sortby=name');
+            let response = await fetch('./api/content/filelist?sortby=name');
             if (! response.ok) {
                 throw new Error(response.status + " " + response.statusText);
             }
@@ -650,7 +650,7 @@ class FileManagerPanel extends Panel {
             }
             else if (readables.includes(ext)) {
                 name = $('<a>').attr({
-                    'href': `./api/config/file/${entry.name}`,
+                    'href': `./api/content/file/${entry.name}`,
                     'target': '_blank',
                 });
             }

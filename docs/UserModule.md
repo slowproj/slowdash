@@ -223,7 +223,7 @@ Create an HTML form to send commands from a web browser:
   <input type="submit" name="set_time_offset" value="Set">
 </form>
 ```
-Save this in a file named `html-WorldClock.html` and place it in the `config` directory of the user project.
+Save this in a file named `html-WorldClock.html` and place it in the `contents` directory of the user project.
 Restart `slowdash` and on the web layout, add a new "HTML/Form" panel with HTML named `WorldClock`.
 
 <img src="fig/UserModule-Dispatcher.png" style="width:70%;border:thin solid gray">
@@ -358,7 +358,7 @@ Optionally, `_setup()` can take a second argument, `params`, which is identical 
 Note that most SlowDash App services are async and must be called with `await` in an `async` user function (or handle the return values properly, e.g., with `asyncio.gather()`).
 
 ## Dynamic Generation of HTML Content
-HTML forms associated with a user module (`html-WorldClock.html` in the example above) can be created directly from the user module, eliminating the need for a separate HTML file in the `config` directory. 
+HTML forms associated with a user module (`html-WorldClock.html` in the example above) can be created directly from the user module, eliminating the need for a separate HTML file in the `contents` directory. 
 For this, define the `_get_html()` callback function and return the HTML text:
 ```python
 def _get_html():
@@ -369,7 +369,7 @@ def _get_html():
         </form>
     '''
 ```
-This will insert an HTML element as if a file named `html-UserModuleName.html` existed in the `config` directory.
+This will insert an HTML element as if a file named `html-UserModuleName.html` existed in the `contents` directory.
 
 When an HTML panel is placed on a layout, an "On Update" option is available, which includes a "reload HTML" checkbox. 
 If this option is checked, the HTML content is reloaded with every data update, enabling a user module to generate dynamic data content.
@@ -392,7 +392,7 @@ def _get_html(name):
 ```
 
 ## Dynamic Generation of Panel Layouts
-Similar to the dynamic generation of HTML forms, panel layouts (content of `config/slowplot-XXX.json` files) can be dynamically generated. 
+Similar to the dynamic generation of HTML forms, panel layouts (content of `contents/slowplot-XXX.json` files) can be dynamically generated. 
 To do this, define the `_get_layout()` callback function and return a JSON object describing the layout:
 ```python
 def _get_layout():
@@ -407,7 +407,7 @@ def _get_layout():
         ],
     }
 ```
-This will insert a SlowPlot layout as if a file named `slowplot-UserModuleName.json` existed in the `config` directory.
+This will insert a SlowPlot layout as if a file named `slowplot-UserModuleName.json` existed in the `contents` directory.
 
 In the same way as HTML forms, multiple layouts can be generated:
 ```python
@@ -463,10 +463,10 @@ Directly handling the Web API allows User Modules to perform any action on the r
 Slowlette will distribute a web request to all possible (matching) handlers in the system and aggregate the multiple responses. 
 The handler for `/channels` above returns only one channel, but the client (web browser) will receive the entire list of channels due to this aggregation mechanism. 
 
-### Config List & Content API Extension
+### Content List & Content API Extension
 Here is another example for overriding SlowDash API more aggressively. 
-In this example, the handler for `/config/contentlist` (a request to return a list of project `config` directory contents) inserts a slowplot file entry, `slowplot-PlotLayoutOverride.json`, which actually does not exist. 
-Then the handler for the content request (`/config/content/FILENAME`) returns dynamically generated content (time-series plots for all channels, where the channel list is obtained from the SlowDash App in `_setup()`), as if the file existed in the `config` directory with that content. 
+In this example, the handler for `/content/contentlist` (a request to return a list of project `contents` directory contents) inserts a slowplot file entry, `slowplot-PlotLayoutOverride.json`, which actually does not exist. 
+Then the handler for the content request (`/contents/content/FILENAME`) returns dynamically generated content (time-series plots for all channels, where the channel list is obtained from the SlowDash App in `_setup()`), as if the file existed in the `contents` directory with that content. 
 ```python
 import slowlette
 webapi = slowlette.Slowlette()
@@ -477,20 +477,20 @@ async def _setup(slowdash):
     channels = await slowdash.request_channels()
 
     
-@webapi.get('/api/config/contentlist')
+@webapi.get('/api/content/contentlist')
 def add_slowplot_PlotLayoutOverride():
     # this entry will be "injected" into the list through Slowlette's response aggregation
     entries = [{
         "type": "slowplot",
         "name": "PlotLayoutOverride",
-        "config_file": "slowplot-PlotLayoutOverride.json",
+        "content_file": "slowplot-PlotLayoutOverride.json",
         "description": "Dynamically generated by UserModule"
     }]
 
     return entries
 
 
-@webapi.get('/api/config/content/slowplot-PlotLayoutOverride.json')
+@webapi.get('/api/content/content/slowplot-PlotLayoutOverride.json')
 def generate_slowplot_PlotLayoutOverride(request:slowlette.Request):
     request.abort()   # stop propagation to avoid being handled by SlowDash (no aggregation)
 

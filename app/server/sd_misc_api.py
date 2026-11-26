@@ -14,6 +14,25 @@ class MiscApiComponent(Component):
         
 
     def public_config(self):
+        self.project.update()
+        config = self.project.config or {}
+
+        doc = {
+            'slowdash': {
+                'version': self.project.version
+            },
+            'project': {
+                'name': config.get('name', 'Untitled Project'),
+                'title': config.get('title', ''),
+                'server_url': self.project.server_url,
+                'is_secure': self.project.is_secure,
+                'is_cgi': self.app.is_cgi,
+                'is_command': self.app.is_command,
+                'is_async': self.app.is_async,
+            },
+            'style': config.get('style', {}),
+        }
+        
         now = time.time()
         up_time = now - self._start_time + 0.01
         requests = self.app.slowlette.request_count
@@ -24,7 +43,7 @@ class MiscApiComponent(Component):
             rate = '%.1f' % rate
         else:
             rate = '%.3f' % rate
-        return { 'slowlette': {
+        doc['slowlette'] = {
             'statistics': {
                 'up_time': int(up_time),
                 'requests': requests,
@@ -34,9 +53,11 @@ class MiscApiComponent(Component):
                 f'{(now - req.time):.3f}s, {req}'
                 for req in self.app.slowlette.current_requests
             ]
-        }}
+        }
 
-        
+        return doc
+    
+
     @slowlette.get('/api/ping')
     def ping(self):
         return 'pong'

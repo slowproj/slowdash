@@ -112,7 +112,7 @@ GET http://ADDRESS:PORT/api/config
                 "mtime": 1677724206.5829866,
                 "title": "",
                 "description": "Atomic Tritium Demonstrator at UW Top Level",
-                "config_file": "slowdash-ATDS.json"
+                "content_file": "slowdash-ATDS.json"
             }
         ],
         "slowplot": [
@@ -121,14 +121,14 @@ GET http://ADDRESS:PORT/api/config
                 "mtime": 1678019620.6981564,
                 "title": "Accomodator RTDs",
                 "description": "Accomodator RTDs",
-                "config_file": "slowplot-RTD_ACC.json"
+                "content_file": "slowplot-RTD_ACC.json"
             },
             {
                 "name": "ATDS",
                 "mtime": 1677726950.1148098,
                 "title": "ATDS Overview",
                 "description": "ATDS Standard Plots",
-                "config_file": "slowplot-ATDS.json"
+                "content_file": "slowplot-ATDS.json"
             }
         ],
         "slowcruise": [
@@ -137,7 +137,7 @@ GET http://ADDRESS:PORT/api/config
                 "mtime": 1678019441.923559,
                 "title": "ATDS All Plots",
                 "description": "Loop over all Dashboards and Plots",
-                "config_file": "slowcruise-AllPlots.yaml"
+                "content_file": "slowcruise-AllPlots.yaml"
             }
         ],
         "alarms": [
@@ -146,7 +146,7 @@ GET http://ADDRESS:PORT/api/config
                 "mtime": 1630663955.5648437,
                 "title": "",
                 "description": "",
-                "config_file": "alarms-normal.yaml"
+                "content_file": "alarms-normal.yaml"
             }
         ]
     }
@@ -194,32 +194,32 @@ For details see the [Data Model section](DataModel.html).
 GET http://ADDRESS:PORT/api/blob/CHANNEL?id=ID
 ```
 
-## Listing User Configuration Entries
+## Listing User Content Entries
 ### Request
 ```
-GET http://ADDRESS:PORT/api/config/contentlist
+GET http://ADDRESS:PORT/api/content/contentlist
 ```
 
-## Fetching User Configuration Content
-This returns the content of the configuration entry. If the file is YAML, it is converted into JSON. If the file is a Python script, the reply content will be dynamically generated.
+## Fetching User Content
+This returns decoded contents in JSON. If the file is YAML, it is converted into JSON. If the file is a Python script, the reply content will be dynamically generated.
 
 ### Request
 ```
-GET http://ADDRESS:PORT/api/config/content/FILENAME
+GET http://ADDRESS:PORT/api/content/content/FILENAME
 ```
 
-## Listing User Configuration Files
+## Listing User Content Files
 ### Request
 ```
-GET http://ADDRESS:PORT/api/config/filelist
+GET http://ADDRESS:PORT/api/content/filelist
 ```
 
-## Fetching User Configuration Files
+## Fetching User Content Files
 This returns the raw content of the file
 
 ### Request
 ```
-GET http://ADDRESS:PORT/api/config/file/FILENAME
+GET http://ADDRESS:PORT/api/content/file/FILENAME
 ```
 
 - The FILENAME must:
@@ -228,16 +228,16 @@ GET http://ADDRESS:PORT/api/config/file/FILENAME
   - end with one of: `.json`, `.yaml`, `.html`, `.png`, `.jpg`, `.jpeg`, `.svg`, `.csv`
 
 
-## Uploading User Configuration Files
+## Uploading User Content Files
 ### Request
 ```
-POST http://ADDRESS:PORT/api/config/file/NAME?OPTIONS
+POST http://ADDRESS:PORT/api/content/file/NAME?OPTIONS
 [ with JSON text as contents ]
 ```
 - The NAME must:
   - consist of only alphabets, digits, `.`, `_` and `-`.
 - Depending on securiy settings, only certain file names and types might be accepted.
-- Files are stored under the `config` sub-directory of the user project directory.
+- Files are stored under the `content` sub-directory of the user project directory.
 
 ### Response
 - If the file writing is not permitted by the file system,

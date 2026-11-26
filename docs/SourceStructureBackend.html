@@ -124,8 +124,8 @@ id="toc-built-in-server-components">Built-In Server Components</a>
 <li><a href="#component-and-plugincomponent"
 id="toc-component-and-plugincomponent"><code>Component</code> and
 <code>PluginComponent</code></a></li>
-<li><a href="#configcomponent"
-id="toc-configcomponent"><code>ConfigComponent</code></a></li>
+<li><a href="#contentcomponent"
+id="toc-contentcomponent"><code>ContentComponent</code></a></li>
 <li><a href="#datasourcecomponent-and-datasource"
 id="toc-datasourcecomponent-and-datasource"><code>DataSourceComponent</code>
 and <code>DataSource</code></a></li>
@@ -228,7 +228,7 @@ WSGI/CGI entry points.</li>
 environment/command substitution, public project metadata.</li>
 <li><code>sd_component.py</code>: base classes for components and
 plugin-backed components.</li>
-<li><code>sd_config.py</code>: <code>/api/config</code>, config
+<li><code>sd_content.py</code>: <code>/api/content</code>, content
 file/content APIs, transient content support.</li>
 <li><code>sd_datasource.py</code>: data source plugin base class and
 <code>/api/channels</code>, <code>/api/data</code>,
@@ -393,7 +393,7 @@ that way.</li>
 <li><code>App</code> changes the process working directory to the
 project directory when available.</li>
 <li><code>App</code> adds the system plugin directory, project
-directory, and project <code>config</code> directory to
+directory, and project <code>contents</code> directory to
 <code>sys.path</code>.</li>
 <li><code>App</code> includes all built-in components into its Slowlette
 router.</li>
@@ -540,7 +540,7 @@ $$</code></pre>
 <li><code>system.our_security_is_perfect</code> controls
 <code>project.is_secure</code>.</li>
 </ul>
-<p><code>ConfigComponent</code> exposes public project metadata through
+<p><code>MiscComponent</code> exposes public project metadata through
 <code>/api/config</code>, but avoids publishing raw project
 configuration because it can contain secrets.</p>
 <p><code>project.mesh_url</code> comes from
@@ -573,16 +573,16 @@ form.</li>
 </ol>
 <p>When the app is not async, <code>_NoAsync</code> plugin files are
 preferred when available.</p>
-<h2 id="configcomponent"><code>ConfigComponent</code></h2>
+<h2 id="contentcomponent"><code>ContentComponent</code></h2>
 <p>Main responsibilities:</p>
 <ul>
-<li>Expose <code>/api/config</code>.</li>
-<li>List and load project <code>config/*-*.*</code> content.</li>
-<li>Serve config files when allowed.</li>
+<li>Expose <code>/api/contents</code>.</li>
+<li>List and load project <code>contents/*-*.*</code> content.</li>
+<li>Serve contents files when allowed.</li>
 <li>Manage transient content, such as generated plot content.</li>
 </ul>
-<p>The <code>/api/config/contentlist</code> and
-<code>/api/config/content/{filename}</code> endpoints are used by UI
+<p>The <code>/api/content/contentlist</code> and
+<code>/api/content/content/{filename}</code> endpoints are used by UI
 components to discover dashboards, plots, cruises, and other user
 content.</p>
 <h2
@@ -659,12 +659,12 @@ POST /api/task/control/{taskname}
 POST /api/control
 GET  /api/channels
 GET  /api/data/{*}
-GET  /api/config/contentlist
-GET  /api/config/content/{filename}
-GET  /api/config/file/{filename}</code></pre>
+GET  /api/content/contentlist
+GET  /api/content/content/{filename}
+GET  /api/content/file/{filename}</code></pre>
 <ul>
 <li>Builds a catalog from <code>task</code> / <code>tasks</code>
-configuration and <code>config/slowtask-*.py</code>. The default
+configuration and <code>contents/slowtask-*.py</code>. The default
 configured command is
 <code>slowdash-task &lt;file_path&gt; --name=&lt;name&gt;</code>, with
 the Mesh URL and JSON parameters added. <code>auto_start</code> (or the
@@ -742,9 +742,9 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb14-1"><a href=
 <span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> slowmq://localhost:18881</span></span>
 <span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">task</span><span class="kw">:</span></span>
 <span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> sensor</span></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">file_path</span><span class="kw">:</span><span class="at"> config/slowtask-sensor.py</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">file_path</span><span class="kw">:</span><span class="at"> contents/slowtask-sensor.py</span></span>
 <span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">auto_start</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code></pre></div>
-<p>Contents of <code>config/slowtask-sensor.py</code>:</p>
+<p>Contents of <code>contents/slowtask-sensor.py</code>:</p>
 <div class="sourceCode" id="cb15"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> Tasklet, DataPacket</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -784,7 +784,7 @@ inferred. The implementation uses this information to construct the
 specification and convert arguments on the server.</p>
 <h2 id="userhtmlcomponent"><code>UserHtmlComponent</code></h2>
 <p><code>sd_userhtml.py</code> serves user-provided HTML and related
-content. It also redirects or maps user URLs to internal config/content
+content. It also redirects or maps user URLs to internal content/content
 APIs.</p>
 <p>This lets project-specific UI pages live in the project
 configuration/content area without changing the core server.</p>
@@ -1244,7 +1244,7 @@ as <code>tick.store</code>.</td>
 unless UTC is selected.</td>
 </tr>
 <tr>
-<td><code>@tasklet.content("config/html-status")</code></td>
+<td><code>@tasklet.content("html-status.html")</code></td>
 <td>Registers an on-demand content generator, fetched through the task’s
 <code>_sd_get_content</code> RPC; it is not a periodic callback.</td>
 </tr>

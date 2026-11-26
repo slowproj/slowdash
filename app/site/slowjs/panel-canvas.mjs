@@ -159,7 +159,7 @@ class ImageItem extends CanvasItem {
         let attr = $.extend({}, this.attr);
         let filename = attr.href;
         if (filename) {
-            attr["href"] = "./api/config/file/" + filename;
+            attr["href"] = "./api/content/file/" + filename;
             if (
                 (filename === this.style.negatingImages) ||
                 (Array.isArray(this.style.negatingImages) && this.style.negatingImages.includes(filename))
@@ -937,7 +937,7 @@ export class CanvasPanel extends Panel {
             if (config.config_name != this.loaded_config_name) {
                 this.loaded_config_name = config.config_name;
 
-                const url ='./api/config/content/slowdash-' + config.config_name + '.json';
+                const url ='./api/content/content/slowdash-' + config.config_name + '.json';
                 const response = await fetch(url);
                 if (! response.ok) {
                     this.div.html(`

@@ -11,9 +11,6 @@ class Project:
         self.project_dir = project_dir if project_dir is not None else Project.find_project_dir()
         self.port = port
         
-        self.config_file = project_file if project_file is not None else 'SlowdashProject.yaml'
-        self.toolbox_dir = os.path.join(self.sys_dir, 'toolbox')
-        
         self.mesh_url = None
         self.is_secure = False
         self.auth_list = None
@@ -24,8 +21,19 @@ class Project:
         else:
             self.server_url = None
 
+        self.config_file = project_file if project_file is not None else 'SlowdashProject.yaml'
+        self.toolbox_dir = os.path.join(self.sys_dir, 'toolbox')
+
+        if self.project_dir is None:
+            self.contents_dir = None
+        else:
+            self.contents_dir = os.path.join(self.project_dir, 'config')
+            if os.path.isdir(self.contents_dir):
+                logging.warning('"config" directory is depreciated, rename to "contents"')
+            else:
+                self.contents_dir = os.path.join(self.project_dir, 'contents')
+
         self.config = None
-        
         self.update()
         
 
@@ -302,4 +310,3 @@ if __name__ == '__main__':
         'project_dir': project.project_dir,
         'config': project.config
     }))
-        

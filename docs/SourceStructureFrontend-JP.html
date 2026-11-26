@@ -10,8 +10,9 @@
       div.column{display: inline-block; vertical-align: top; width: 50%;}
   </style>
   <style type="text/css">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -295,15 +296,15 @@ slowplan.html</code></pre>
 を読み込みます．</li>
 </ul>
 <p>どちらも，次のような SlowDash の設定 API を呼び出します．</p>
-<pre class="text"><code>GET /api/config/file/{filename}
-GET /api/config/contentlist
-POST /api/config/file/{filename}</code></pre>
+<pre class="text"><code>GET /api/contents/file/{filename}
+GET /api/contents/contentlist
+POST /api/contents/file/{filename}</code></pre>
 <h3 id="autocruise-ページ">autocruise ページ</h3>
 <p><code>slowcruise.html</code> は <code>autocruise</code>
 サブモジュールを読み込みます．</p>
 <div class="sourceCode" id="cb6"><pre
-class="sourceCode html"><code class="sourceCode html"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">script</span><span class="ot"> type=</span><span class="st">&quot;text/javascript&quot;</span> <span class="er">src</span><span class="ot">=</span><span class="st">&quot;slowjs/autocruise/autocruise.js&quot;</span><span class="dt">&gt;&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">body</span> <span class="er">autocruise-configbase</span><span class="ot">=</span><span class="st">&quot;api/config/content/&quot;</span> <span class="er">autocruise-interval</span><span class="ot">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span></code></pre></div>
+class="sourceCode html"><code class="sourceCode html"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">script</span><span class="ot"> type=</span><span class="st">&quot;text/javascript&quot;</span><span class="ot"> src</span><span class="op">=</span><span class="st">&quot;slowjs/autocruise/autocruise.js&quot;</span><span class="dt">&gt;&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">body</span><span class="ot"> autocruise-configbase</span><span class="op">=</span><span class="st">&quot;api/contents/content/&quot;</span><span class="ot"> autocruise-interval</span><span class="op">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span></code></pre></div>
 <p>これは，<code>autocruise.js</code>
 を使って複数のダッシュボード/設定ページを巡回表示します．</p>
 <h1
@@ -325,7 +326,7 @@ _buildConfig(...)
 Platform.initialize(defaults, options, args)
     |
     +-- GET ./api/config
-    +-- optional GET ./api/config/content/{config_file}
+    +-- optional GET ./api/contents/content/{contents_file}
     +-- load theme CSS slowjs/slowdash-{theme}.css
     |
     v
@@ -343,7 +344,7 @@ merged config object</code></pre>
 <p><code>config</code> がクエリ文字列の場合（<code>slowdash.html</code>
 のように），<code>SlowDash._buildSettings()</code> が URL
 パラメータを設定値に対応づけます．</p>
-<pre class="text"><code>config=&lt;name&gt;        ./api/config/content/ から名前付きのページ設定を読み込む
+<pre class="text"><code>config=&lt;name&gt;        ./api/contents/content/ から名前付きのページ設定を読み込む
 configdata=&lt;base64&gt;  インラインの base64 エンコード済み設定を読み込む（ポップアウトで使用）
 mode=normal|protected|display
 theme=&lt;name&gt;         slowjs/slowdash-&lt;name&gt;.css を読み込む
@@ -390,7 +391,7 @@ Scheduler.start()</code></pre>
 <ul>
 <li>URL のオプションを解析する．</li>
 <li><code>./api/config</code> からプロジェクト設定を取得する．</li>
-<li><code>./api/config/content/{config_file}</code>
+<li><code>./api/contents/content/{contents_file}</code>
 からページ設定を取得する．</li>
 <li>URL 中のインライン base64 設定データをデコードする．</li>
 <li>テーマの CSS を動的に読み込む．</li>
@@ -401,9 +402,9 @@ Scheduler.start()</code></pre>
 </ul>
 <p>主なサーバー呼び出しは次のとおりです．</p>
 <pre class="text"><code>GET  ./api/config
-GET  ./api/config/content/{filename}
+GET  ./api/contents/content/{filename}
 GET  api/channels?fields=name
-GET  ./api/config/contentlist
+GET  ./api/contents/contentlist
 POST ./api/{filename}</code></pre>
 <p>最終的な設定は，次をディープマージして作られます．</p>
 <pre class="text"><code>defaults
@@ -774,7 +775,7 @@ sequenceDiagram
 <h3 id="map-パネル">map パネル</h3>
 <p><code>panel-map.mjs</code>
 は，次のエンドポイントからマップ設定を読み込みます．</p>
-<pre class="text"><code>GET ./api/config/file/map-{name}.json</code></pre>
+<pre class="text"><code>GET ./api/contents/file/map-{name}.json</code></pre>
 <p>マップのジオメトリとカラースケールを使い，チャンネルベースのマップ表示を描画します．</p>
 <h3 id="テーブルツリーblob-パネル">テーブル，ツリー，blob パネル</h3>
 <p><code>panel-table.mjs</code> は，3 つのパネルクラスをエイリアス付きで
@@ -805,8 +806,8 @@ id="カタログとチャンネル一覧のパネル">カタログとチャン�
 </ul>
 <p>設定済みの SlowDash
 コンテンツを一覧・オープンするため，次を使います．</p>
-<pre class="text"><code>GET ./api/config/contentlist
-GET ./api/config/content/{filename}</code></pre>
+<pre class="text"><code>GET ./api/contents/contentlist
+GET ./api/contents/content/{filename}</code></pre>
 <h3 id="ダウンロードと-slowpy-パネル">ダウンロードと SlowPy パネル</h3>
 <p><code>panel-download.mjs</code> は，次を含みます．</p>
 <ul>
@@ -825,9 +826,9 @@ GET ./api/config/content/{filename}</code></pre>
 <li><code>ConfigEditorPanel</code></li>
 </ul>
 <p>これらのパネルは，次のような API を使います．</p>
-<pre class="text"><code>GET  ./api/config/filelist
-GET  ./api/config/file/{filename}
-POST ./api/config/file/{filename}
+<pre class="text"><code>GET  ./api/contents/filelist
+GET  ./api/contents/file/{filename}
+POST ./api/contents/file/{filename}
 GET  api/control/task?since={revision}
 POST ./api/control/task/{taskname}
 GET  api/console?since={revision}
@@ -1020,11 +1021,11 @@ JavaScript ライブラリです．</p>
 </ul>
 <p>SlowDash は，次のように設定します．</p>
 <div class="sourceCode" id="cb41"><pre
-class="sourceCode html"><code class="sourceCode html"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">body</span> <span class="er">autocruise-configbase</span><span class="ot">=</span><span class="st">&quot;api/config/content/&quot;</span> <span class="er">autocruise-interval</span><span class="ot">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span></code></pre></div>
+class="sourceCode html"><code class="sourceCode html"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">body</span><span class="ot"> autocruise-configbase</span><span class="op">=</span><span class="st">&quot;api/contents/content/&quot;</span><span class="ot"> autocruise-interval</span><span class="op">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span></code></pre></div>
 <p>これにより，たとえば次のような cruise ページを開けます．</p>
 <pre class="text"><code>slowcruise.html?config=slowcruise-example.json</code></pre>
 <p>その場合，<code>autocruise.js</code> は次を取得します．</p>
-<pre class="text"><code>api/config/content/slowcruise-example.json</code></pre>
+<pre class="text"><code>api/contents/content/slowcruise-example.json</code></pre>
 <h3 id="実行時モデル">実行時モデル</h3>
 <p>Autocruise は，ページのボディを自身の UI で置き換えます．</p>
 <ul>
@@ -1054,11 +1055,11 @@ autocruise.js
 サーバーと通信します．</p>
 <h3 id="設定">設定</h3>
 <pre class="text"><code>GET ./api/config
-GET ./api/config/content/{filename}
-GET ./api/config/contentlist
-GET ./api/config/file/{filename}
-GET ./api/config/filelist
-POST ./api/config/file/{filename}</code></pre>
+GET ./api/contents/content/{filename}
+GET ./api/contents/contentlist
+GET ./api/contents/file/{filename}
+GET ./api/contents/filelist
+POST ./api/contents/file/{filename}</code></pre>
 <h3 id="データ">データ</h3>
 <pre class="text"><code>GET api/channels?fields=name
 GET api/data/{channels}?length=...&amp;to=...&amp;resample=...
@@ -1111,7 +1112,7 @@ currentData update
 Layout.draw(...)</code></pre>
 <p>パネルは，自身に設定されたチャンネルとデータタイプを解釈する責任を持ちます．</p>
 <h1 id="パネルへの設定フロー">パネルへの設定フロー</h1>
-<p>ページ設定は，通常 <code>/api/config/content/{filename}</code>
+<p>ページ設定は，通常 <code>/api/contents/content/{filename}</code>
 から来て，次のような構造を持ちます．</p>
 <pre class="text"><code>meta
 control

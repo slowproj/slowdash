@@ -61,7 +61,7 @@
         });
         let savePopup = $('<dialog>').addClass('sd-pad').appendTo($('body'));
         let saveButton = $('<button>').html("&#x1f4be;").bind('click', e=>{
-            Platform.upload(savePopup, 'config/file/' + config.filename, editor.getValue(), {
+            Platform.upload(savePopup, 'content/file/' + config.filename, editor.getValue(), {
                 contentType: 'text/plain; charset=utf-8',
                 overwritable: true,
                 quietOnSuccess: true,
@@ -124,7 +124,7 @@
             if (! config.filename) {
                 return;
             }
-            let response = await fetch('./api/config/file/' + config.filename);
+            let response = await fetch('./api/content/file/' + config.filename);
             if (response.status != 200) {
                 frame.setStatus(response.statusText);
                 return;
@@ -181,7 +181,7 @@
                 return {};
             }
                 
-            let response = await fetch('./api/config/contentlist');
+            let response = await fetch('./api/content/contentlist');
             const contentlist = await response.json();
             for (const meta of contentlist) {
                 if (meta.config_file != config.filename) {

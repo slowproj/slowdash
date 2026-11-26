@@ -116,21 +116,21 @@ export class CatalogPanel extends Panel {
                     if (entry.type != content_type) {
                         continue;
                     }
-                    if (entry.config_file) {
+                    if (entry.content_file) {
                         let href = '';
                         if (content_type == 'userhtml') {
-                            href = './userhtml/' + entry.config_file;
+                            href = './userhtml/' + entry.content_file;
                         }
                         else {
-                            href = './' + content_type + '.html?config=' + entry.config_file;
+                            href = './' + content_type + '.html?config=' + entry.content_file;
                         }
                         catalog.push({
                             name: entry.name,
                             href: href,
                             title: entry.title || entry.name,
                             description: entry.description ?? '',
-                            file: entry.config_file ?? null,
-                            error: entry.config_error ?? null,
+                            file: entry.content_file ?? null,
+                            error: entry.content_error ?? null,
                             mtime: entry.mtime || null,
                         });
                     }
@@ -151,7 +151,7 @@ export class CatalogPanel extends Panel {
             }
         }
 
-        fetch('./api/config/contentlist')
+        fetch('./api/content/contentlist')
             .then(response => {
                 if (! response.ok) {
                     throw new Error(response.status + " " + response.statusText);

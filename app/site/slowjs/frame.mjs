@@ -77,7 +77,7 @@ export class Frame {
         this.clockDiv.text((new JGDateTime()).asString('%a, %b %d %H:%M %Z'));
         
         if (this.options.style.logo?.file) {
-            const file = './api/config/file/' + this.options.style.logo.file;
+            const file = './api/content/file/' + this.options.style.logo.file;
             const img = $('<img>').attr('src', file).css({'width': '100%', 'border': 'none'});
             const size = getComputedStyle(headerDiv.get()).height;
             let div = (this.options.style.logo?.position ?? 'left') == 'right' ? rightLogoDiv : leftLogoDiv;

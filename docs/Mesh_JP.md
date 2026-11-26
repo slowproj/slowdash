@@ -624,7 +624,7 @@ SlowTask はシングルスレッドの非同期呼び出しで全体が並列�
 
 
 ### 実行
-SlowTask のスクリプトファイルを，`slowtask-{名前}.py` という名前で SlowDash プロジェクトの `config` 以下に置くと，SlowDash サーバーに認識され，起動や停止を行えるようになります．
+SlowTask のスクリプトファイルを，`slowtask-{名前}.py` という名前で SlowDash プロジェクトの `contents` 以下に置くと，SlowDash サーバーに認識され，起動や停止を行えるようになります．
 
 また，`SlowdashProject.yaml` ファイルに `task(s)` エントリを作って，`auto_start` を設定すると，SlowDash サーバー起動時に SlowTask も自動でスタートできます．また，ここで，タスクスクリプトの `@initialize` コールバックに渡すパラメータも記述できます．
 ```yaml
@@ -802,8 +802,8 @@ SlowTask は，内部に接続済 SlowMesh を保持していて，これを介�
 必要に応じて，処理状況を逐次 publish するか，Registry に状態を記録するなどすれば，呼び出し側が状況を把握できます．
 高信頼が必要な場合の高度な方法として，`sd.rpc.>` を subscribe して，システムが期待する状態に遷移するかを監視する SlowTask を走らせるという手もあります．
 
-### config コンテンツの動的生成
-`@content(name:str)` デコレータにより，通常は SlowDash プロジェクトの `config` 以下に置かれるファイルの内容を動的に生成することができます．以下の例では，ブラウザからは HTML ファイル `html-disk_usage.html` が `config` に存在するかのように見え，かつ，リロードする度に内容が変わるものです．ブラウザの HTML フォームで `On update: reload HTML` をチェックすることにより，データ更新のたびに新しい HTML が生成され表示されるようにすることができます．
+### コンテンツの動的生成
+`@content(name:str)` デコレータにより，通常は SlowDash プロジェクトの `contents` 以下に置かれるファイルの内容を動的に生成することができます．以下の例では，ブラウザからは HTML ファイル `html-disk_usage.html` が `contents` に存在するかのように見え，かつ，リロードする度に内容が変わるものです．ブラウザの HTML フォームで `On update: reload HTML` をチェックすることにより，データ更新のたびに新しい HTML が生成され表示されるようにすることができます．
 
 ```python
 @tasklet.content('html-disk_usage.html')
@@ -818,7 +818,7 @@ def html_disk_usage():
     '''
 ```
 
-`config/slowplot-XXX.json` も同じように生成できるので，HTML フォームと合わせて，SlowTask から，それを使うための完全なレイアウトを提供することができます．SlowTask 自体は普通の Python スクリプトなので，その中で例えば Jinja などのテンプレートエンジンを組み合わせて，動的な SlowDash レイアウトや HTML ページを作成することもできます．
+`contents/slowplot-XXX.json` も同じように生成できるので，HTML フォームと合わせて，SlowTask から，それを使うための完全なレイアウトを提供することができます．SlowTask 自体は普通の Python スクリプトなので，その中で例えば Jinja などのテンプレートエンジンを組み合わせて，動的な SlowDash レイアウトや HTML ページを作成することもできます．
 
 
 ### 標準入出力の SlowMesh PubSub へのリダイレクト
@@ -910,7 +910,7 @@ SlowDash サーバープロセスを走らせたままタスクプロセスの�
 また，タスクプロセスを走らせたまま SlowDash サーバーの停止・再実行をしても自動再接続をするはずです．
 ```console
 $ cd PATH/TO/PROJECT
-$ slowdash-task config/slowtask-store.py --mesh=slowmq://localhost:18881
+$ slowdash-task contents/slowtask-store.py --mesh=slowmq://localhost:18881
 ```
 この場合でも，SlowDash のタスクコントロールパネルから，タスクの「終了要求」を出すことができます．
 もしタスクが Tasklet で実装されていて，暴走していなければ，通常はこれできれいに終了します．
@@ -988,7 +988,7 @@ SlowTask の HTTP API により，タスクから export された変数は，�
 publish が基本的にデータ生成元からの push なのに対して，ControlNode の export は，外部からの pull 要求でデータを返すインターフェースです．「必要なときに最新値を得る」用途に向いています．
 
 ##### 追加その２
-この例の Store タスクは，通常は SlowDash プロジェクトの `config` 以下に置かれるファイルを動的に生成する例も含まれています．
+この例の Store タスクは，通常は SlowDash プロジェクトの `contents` 以下に置かれるファイルを動的に生成する例も含まれています．
 `@content(name)` で，コンテンツ名と，それを生成する関数を結びつけています．
 
 ```python
@@ -1089,7 +1089,7 @@ async def stop():
 - Histogram タスクによりストリーミングされるオンライン解析結果の表示(`data.stream.histogram.HV.ch0.V` プロット)
 - RandomWalk タスクが publish したデータをストリーミングチャンネル経由で直接受信した値の表示(`HV.ch0.V` の Single Value Display)
 - Store タスクが export した disk_usage の表示 (`store.data_usage` データチャンネル)
-- Store タスクが動的生成した HTML コンテンツ (disk usage テーブル） の表示 (動的生成 `config/html-disk_usage.html` ファイルコンテンツ）
+- Store タスクが動的生成した HTML コンテンツ (disk usage テーブル） の表示 (動的生成 `contents/html-disk_usage.html` ファイルコンテンツ）
 - レジストリに保持されている値の表示
   - `randomwalk.run.status` の値を Single Scalar として表示 （`@registry:randomwalk.run.status` データチャンネル）
   - `randomwalk` 以下全体を Tree として表示 (`@registry:randomwalk/` データチャンネル)
@@ -1109,14 +1109,14 @@ SlowTask への HTTP API は Slowlette を経由して `sd_task.py` コンポー
 {
   "randomwalk": {
     "name": "randomwalk",
-    "file_path": "config/slowtask-randomwalk.py",
-    "command": "slowdash-task config/slowtask-randomwalk.py --name=randomwalk",
+    "file_path": "contents/slowtask-randomwalk.py",
+    "command": "slowdash-task contents/slowtask-randomwalk.py --name=randomwalk",
     "auto_start": true
   },
   "store": {
     "name": "store",
-    "file_path": "config/slowtask-store.py",
-    "command": "slowdash-task config/slowtask-store.py --name=store",
+    "file_path": "contents/slowtask-store.py",
+    "command": "slowdash-task contents/slowtask-store.py --name=store",
     "auto_start": true
   },
 }
@@ -1201,13 +1201,13 @@ Task が export している変数の値をデータベース中のデータと�
 - length と to で指定されるクエリ期間が現在時刻を含んでいる場合のみ値を返す（典型的には `to` が `0` のクエリ）
 
 
-### 一般 config インターフェース
+### 一般 Content アクセスインターフェース
 
-#### GET `api/config/contentlist`
-Task が提供している contents のうち，名前が `config/` で始まるものについて，SlowDash Project の `config` 以下にあるファイルと同様のリストを生成して返す
+#### GET `api/contents/contentlist`
+Task が提供している contents に対して，SlowDash Project の `contents` 以下にあるファイルと同様のリストを生成して返す
 
-#### GET `api/config/content/{content_name}`
-Task が提供している contents のうち，名前が `config/` で始まるものについて，その内容を返す
+#### GET `api/contents/content/{content_name}`
+Task が提供している contents に対して，その内容を返す
 
 
 ## Registry (Key-Value Store)

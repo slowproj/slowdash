@@ -143,9 +143,9 @@ slowplan.html
 どちらも，次のような SlowDash の設定 API を呼び出します．
 
 ```text
-GET /api/config/file/{filename}
-GET /api/config/contentlist
-POST /api/config/file/{filename}
+GET /api/contents/file/{filename}
+GET /api/contents/contentlist
+POST /api/contents/file/{filename}
 ```
 
 ### autocruise ページ
@@ -154,7 +154,7 @@ POST /api/config/file/{filename}
 
 ```html
 <script type="text/javascript" src="slowjs/autocruise/autocruise.js"></script>
-<body autocruise-configbase="api/config/content/" autocruise-interval="10">
+<body autocruise-configbase="api/contents/content/" autocruise-interval="10">
 ```
 
 これは，`autocruise.js` を使って複数のダッシュボード/設定ページを巡回表示します．
@@ -183,7 +183,7 @@ _buildConfig(...)
 Platform.initialize(defaults, options, args)
     |
     +-- GET ./api/config
-    +-- optional GET ./api/config/content/{config_file}
+    +-- optional GET ./api/contents/content/{contents_file}
     +-- load theme CSS slowjs/slowdash-{theme}.css
     |
     v
@@ -203,7 +203,7 @@ merged config object
 `config` がクエリ文字列の場合（`slowdash.html` のように），`SlowDash._buildSettings()` が URL パラメータを設定値に対応づけます．
 
 ```text
-config=<name>        ./api/config/content/ から名前付きのページ設定を読み込む
+config=<name>        ./api/contents/content/ から名前付きのページ設定を読み込む
 configdata=<base64>  インラインの base64 エンコード済み設定を読み込む（ポップアウトで使用）
 mode=normal|protected|display
 theme=<name>         slowjs/slowdash-<name>.css を読み込む
@@ -255,7 +255,7 @@ Scheduler.start()
 
 - URL のオプションを解析する．
 - `./api/config` からプロジェクト設定を取得する．
-- `./api/config/content/{config_file}` からページ設定を取得する．
+- `./api/contents/content/{contents_file}` からページ設定を取得する．
 - URL 中のインライン base64 設定データをデコードする．
 - テーマの CSS を動的に読み込む．
 - チャンネルセレクタやコンテンツセレクタ用の `<datalist>` を作る．
@@ -266,9 +266,9 @@ Scheduler.start()
 
 ```text
 GET  ./api/config
-GET  ./api/config/content/{filename}
+GET  ./api/contents/content/{filename}
 GET  api/channels?fields=name
-GET  ./api/config/contentlist
+GET  ./api/contents/contentlist
 POST ./api/{filename}
 ```
 
@@ -675,7 +675,7 @@ canvas のアイテムは，データを読み，SVG/HTML 要素を描画し，�
 `panel-map.mjs` は，次のエンドポイントからマップ設定を読み込みます．
 
 ```text
-GET ./api/config/file/map-{name}.json
+GET ./api/contents/file/map-{name}.json
 ```
 
 マップのジオメトリとカラースケールを使い，チャンネルベースのマップ表示を描画します．
@@ -722,8 +722,8 @@ HrefPanel as Panel2
 設定済みの SlowDash コンテンツを一覧・オープンするため，次を使います．
 
 ```text
-GET ./api/config/contentlist
-GET ./api/config/content/{filename}
+GET ./api/contents/contentlist
+GET ./api/contents/content/{filename}
 ```
 
 ### ダウンロードと SlowPy パネル
@@ -749,9 +749,9 @@ GET ./api/config/content/{filename}
 これらのパネルは，次のような API を使います．
 
 ```text
-GET  ./api/config/filelist
-GET  ./api/config/file/{filename}
-POST ./api/config/file/{filename}
+GET  ./api/contents/filelist
+GET  ./api/contents/file/{filename}
+POST ./api/contents/file/{filename}
 GET  api/control/task?since={revision}
 POST ./api/control/task/{taskname}
 GET  api/console?since={revision}
@@ -941,7 +941,7 @@ SlowDash は，`slowcruise.html` からこれを使います．
 SlowDash は，次のように設定します．
 
 ```html
-<body autocruise-configbase="api/config/content/" autocruise-interval="10">
+<body autocruise-configbase="api/contents/content/" autocruise-interval="10">
 ```
 
 これにより，たとえば次のような cruise ページを開けます．
@@ -953,7 +953,7 @@ slowcruise.html?config=slowcruise-example.json
 その場合，`autocruise.js` は次を取得します．
 
 ```text
-api/config/content/slowcruise-example.json
+api/contents/content/slowcruise-example.json
 ```
 
 ### 実行時モデル
@@ -991,11 +991,11 @@ Autocruise は，メインの `slowjs/slowdash.mjs` のダッシュボード実�
 
 ```text
 GET ./api/config
-GET ./api/config/content/{filename}
-GET ./api/config/contentlist
-GET ./api/config/file/{filename}
-GET ./api/config/filelist
-POST ./api/config/file/{filename}
+GET ./api/contents/content/{filename}
+GET ./api/contents/contentlist
+GET ./api/contents/file/{filename}
+GET ./api/contents/filelist
+POST ./api/contents/file/{filename}
 ```
 
 ### データ
@@ -1075,7 +1075,7 @@ Layout.draw(...)
 
 # パネルへの設定フロー
 
-ページ設定は，通常 `/api/config/content/{filename}` から来て，次のような構造を持ちます．
+ページ設定は，通常 `/api/contents/content/{filename}` から来て，次のような構造を持ちます．
 
 ```text
 meta

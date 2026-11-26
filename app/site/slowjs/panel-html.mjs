@@ -92,7 +92,7 @@ class HtmlPanel extends Panel {
         this.formNames = [];
 
         if (config.file) {
-            const base = ((this.config.location??'') == 'system' ? './' : './api/config/content/');
+            const base = ((this.config.location??'') == 'system' ? './' : './api/content/content/');
             this.url = base + 'html-' + config.file;
             this.url += '?content_type=html';
         }

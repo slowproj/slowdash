@@ -281,7 +281,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a hr
 <h4 id="calling-a-function-from-the-slowdash-web-gui">Calling a function
 from the SlowDash Web GUI</h4>
 <p>Output voltage setting function <code>set_Vout()</code> in script
-<code>config/slowtask-test.py</code>:</p>
+<code>contents/slowtask-test.py</code>:</p>
 <div class="sourceCode" id="cb5"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>Vout <span class="op">=</span> ctrl.ethernet(<span class="st">&#39;192.168.1.43&#39;</span>, <span class="dv">5025</span>).scpi(append_opc<span class="op">=</span><span class="va">True</span>).command(<span class="st">&#39;VOLT&#39;</span>)</span>
@@ -289,7 +289,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a hr
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_Vout(value:<span class="bu">float</span>):</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    Vout.<span class="bu">set</span>(value)</span></code></pre></div>
 <p>User-created HTML for the Web GUI
-(<code>config/html-test.html</code>):</p>
+(<code>contents/html-test.html</code>):</p>
 <div class="sourceCode" id="cb6"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  Voltage output: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;value&quot;</span><span class="dt">&gt;</span></span>
@@ -633,7 +633,7 @@ list</li>
 of the data of the specified channels</li>
 <li><strong>config()</strong>: gets the JSON object of the project
 configuration</li>
-<li><strong>config_file(name)</strong>: gets or sends a configuration
+<li><strong>content_file(name)</strong>: gets or sends a content
 file</li>
 </ul></li>
 </ul>
@@ -1059,7 +1059,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb24-1"><a h
 <h1 id="slowtask-binding-the-gui-and-scripts">SlowTask: Binding the GUI
 and Scripts</h1>
 <p>A SlowTask is a user Python script placed under the
-<code>config</code> directory of a SlowDash project, with a name like
+<code>contents</code> directory of a SlowDash project, with a name like
 <code>slowtask-XXX.py</code>. From the SlowDash GUI, the script can be
 started and stopped, functions defined in the script can be called,
 variables in the script can be displayed, etc. The SlowPy library is
@@ -1096,7 +1096,7 @@ SlowTasks</h2>
 <h3 id="starting-from-the-slowdash-server">Starting from the SlowDash
 Server</h3>
 <p>When a SlowTask script file (e.g., <code>slowtask-test.py</code>) is
-placed under the <code>config</code> directory of the project, it is
+placed under the <code>contents</code> directory of the project, it is
 recognized by the SlowDash server and shown in the task management panel
 (the “SlowTask” section) of the SlowDash home page. By default, tasks
 are only “listed” and are not executed until the <code>start</code>
@@ -1161,7 +1161,7 @@ old name <code>auto_load</code> can also be used)</td>
 <tr>
 <td><code>file_path</code></td>
 <td>Path of the script file</td>
-<td><code>config/slowtask-{name}.py</code></td>
+<td><code>contents/slowtask-{name}.py</code></td>
 </tr>
 <tr>
 <td><code>command</code></td>
@@ -1221,14 +1221,14 @@ case, enclose the entire JSON string in single quotes so that it is not
 misinterpreted by the shell.</p>
 <div class="sourceCode" id="cb28"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/PROJECT</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-task config/slowtask-mytask.py --mesh=slowmq://localhost:18881 --parameters=&#39;{&quot;p1&quot;:10,&quot;p2&quot;:20}&#39;</span></span></code></pre></div>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-task contents/slowtask-mytask.py --mesh=slowmq://localhost:18881 --parameters=&#39;{&quot;p1&quot;:10,&quot;p2&quot;:20}&#39;</span></span></code></pre></div>
 <p>If the script has
 <code>if __name__ == '__main__': tasklet.run(...)</code>, it can also be
 run as a normal Python script. In this case, however, task parameters
 cannot be passed.</p>
 <div class="sourceCode" id="cb29"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv</span></span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python config/slowtask-mytask.py</span></span></code></pre></div>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python contents/slowtask-mytask.py</span></span></code></pre></div>
 <p>SlowTask processes started independently can also be stopped (Stop)
 from the SlowDash server. However, they cannot be forcibly terminated
 (Kill) from the server. SlowTask processes started independently keep
@@ -1323,7 +1323,7 @@ this button is bound to a SlowTask function.</p>
 which by default is the script file name with the leading
 <code>slowtask-</code> removed. (If the task name contains
 <code>-</code>, it is replaced with <code>_</code>.)</p>
-<p>HTML files are placed in the <code>config</code> directory of the
+<p>HTML files are placed in the <code>contents</code> directory of the
 project, with names like <code>html-XXX.html</code>. As described later,
 HTML contents can also be generated in a SlowTask script.</p>
 <h4 id="passing-parameters">Passing Parameters</h4>
@@ -1793,7 +1793,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb56-1"><a h
 <code>ctrl.form(name).aio_set(dict)</code>.</p>
 <h3 id="dynamic-content-generation">Dynamic Content Generation</h3>
 <p>With the <code>@tasklet.content(name)</code> decorator, the contents
-of files that are normally placed under <code>config</code> of a
+of files that are normally placed under <code>contents</code> of a
 SlowDash project can be generated dynamically. This makes it possible to
 put a task script and the HTML form to control it into a single file,
 making it easier to keep them consistent.</p>
@@ -1807,7 +1807,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb57-1"><a h
 <span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a><span class="st">      &lt;/form&gt;</span></span>
 <span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a><span class="st">    &#39;&#39;&#39;</span></span></code></pre></div>
 <p>From the browser, it looks as if the HTML file
-<code>html-test.html</code> exists in <code>config</code>.</p>
+<code>html-test.html</code> exists in <code>contents</code>.</p>
 <p>If <code>On Update: Reload HTML</code> is checked in the HTML panel,
 this function is called on every data update, so HTML pages containing
 data can be generated dynamically. Here is an example of displaying disk
@@ -1825,7 +1825,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb58-1"><a h
 <span id="cb58-10"><a href="#cb58-10" aria-hidden="true" tabindex="-1"></a><span class="ss">      &lt;tr&gt;&lt;td&gt;Free&lt;/td&gt;&lt;td&gt;</span><span class="sc">{</span>free<span class="sc">}</span><span class="ss"> GB&lt;/td&gt;&lt;/tr&gt;</span></span>
 <span id="cb58-11"><a href="#cb58-11" aria-hidden="true" tabindex="-1"></a><span class="ss">    &lt;/table&gt;    </span></span>
 <span id="cb58-12"><a href="#cb58-12" aria-hidden="true" tabindex="-1"></a><span class="ss">    &#39;&#39;&#39;</span></span></code></pre></div>
-<p><code>config/slowplot-XXX.json</code> can be generated in the same
+<p><code>contents/slowplot-XXX.json</code> can be generated in the same
 way, so together with an HTML form, a SlowTask can provide a complete
 layout to use it. As content generation functions are ordinary Python
 functions, template engines such as Jinja can also be used with

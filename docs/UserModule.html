@@ -10,8 +10,9 @@
       div.column{display: inline-block; vertical-align: top; width: 50%;}
   </style>
   <style type="text/css">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -75,6 +76,12 @@ code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
   </style>
   <link rel="stylesheet" href="style.css" />
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({startOnLoad: true});
+</script>
+
 </head>
 
 <body>
@@ -325,11 +332,11 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb7-1"><a hr
 <p>Create an HTML form to send commands from a web browser:</p>
 <div class="sourceCode" id="cb8"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  Time Offset (hours): <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;time_offset&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;set_time_offset&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Set&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  Time Offset (hours): <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;time_offset&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;set_time_offset&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Set&quot;</span><span class="dt">&gt;</span></span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
 <p>Save this in a file named <code>html-WorldClock.html</code> and place
-it in the <code>config</code> directory of the user project. Restart
+it in the <code>contents</code> directory of the user project. Restart
 <code>slowdash</code> and on the web layout, add a new “HTML/Form” panel
 with HTML named <code>WorldClock</code>.</p>
 <p><img src="fig/UserModule-Dispatcher.png" style="width:70%;border:thin solid gray"></p>
@@ -479,7 +486,7 @@ Content</h2>
 <p>HTML forms associated with a user module
 (<code>html-WorldClock.html</code> in the example above) can be created
 directly from the user module, eliminating the need for a separate HTML
-file in the <code>config</code> directory. For this, define the
+file in the <code>contents</code> directory. For this, define the
 <code>_get_html()</code> callback function and return the HTML text:</p>
 <div class="sourceCode" id="cb18"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _get_html():</span>
@@ -490,8 +497,8 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb18-1"><a h
 <span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="ss">        &lt;/form&gt;</span></span>
 <span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="ss">    &#39;&#39;&#39;</span></span></code></pre></div>
 <p>This will insert an HTML element as if a file named
-<code>html-UserModuleName.html</code> existed in the <code>config</code>
-directory.</p>
+<code>html-UserModuleName.html</code> existed in the
+<code>contents</code> directory.</p>
 <p>When an HTML panel is placed on a layout, an “On Update” option is
 available, which includes a “reload HTML” checkbox. If this option is
 checked, the HTML content is reloaded with every data update, enabling a
@@ -516,7 +523,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb19-1"><a h
 <h2 id="dynamic-generation-of-panel-layouts">Dynamic Generation of Panel
 Layouts</h2>
 <p>Similar to the dynamic generation of HTML forms, panel layouts
-(content of <code>config/slowplot-XXX.json</code> files) can be
+(content of <code>contents/slowplot-XXX.json</code> files) can be
 dynamically generated. To do this, define the <code>_get_layout()</code>
 callback function and return a JSON object describing the layout:</p>
 <div class="sourceCode" id="cb20"><pre
@@ -533,7 +540,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb20-1"><a h
 <span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    }</span></code></pre></div>
 <p>This will insert a SlowPlot layout as if a file named
 <code>slowplot-UserModuleName.json</code> existed in the
-<code>config</code> directory.</p>
+<code>contents</code> directory.</p>
 <p>In the same way as HTML forms, multiple layouts can be generated:</p>
 <div class="sourceCode" id="cb21"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _get_layout_list():</span>
@@ -592,18 +599,18 @@ possible (matching) handlers in the system and aggregate the multiple
 responses. The handler for <code>/channels</code> above returns only one
 channel, but the client (web browser) will receive the entire list of
 channels due to this aggregation mechanism.</p>
-<h3 id="config-list-content-api-extension">Config List &amp; Content API
-Extension</h3>
+<h3 id="content-list-content-api-extension">Content List &amp; Content
+API Extension</h3>
 <p>Here is another example for overriding SlowDash API more
 aggressively. In this example, the handler for
-<code>/config/contentlist</code> (a request to return a list of project
-<code>config</code> directory contents) inserts a slowplot file entry,
+<code>/content/contentlist</code> (a request to return a list of project
+<code>contents</code> directory contents) inserts a slowplot file entry,
 <code>slowplot-PlotLayoutOverride.json</code>, which actually does not
 exist. Then the handler for the content request
-(<code>/config/content/FILENAME</code>) returns dynamically generated
+(<code>/contents/content/FILENAME</code>) returns dynamically generated
 content (time-series plots for all channels, where the channel list is
 obtained from the SlowDash App in <code>_setup()</code>), as if the file
-existed in the <code>config</code> directory with that content.</p>
+existed in the <code>contents</code> directory with that content.</p>
 <div class="sourceCode" id="cb23"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>webapi <span class="op">=</span> slowlette.Slowlette()</span>
@@ -614,20 +621,20 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb23-1"><a h
 <span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    channels <span class="op">=</span> <span class="cf">await</span> slowdash.request_channels()</span>
 <span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a><span class="at">@webapi.get</span>(<span class="st">&#39;/api/config/contentlist&#39;</span>)</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a><span class="at">@webapi.get</span>(<span class="st">&#39;/api/content/contentlist&#39;</span>)</span>
 <span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> add_slowplot_PlotLayoutOverride():</span>
 <span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># this entry will be &quot;injected&quot; into the list through Slowlette&#39;s response aggregation</span></span>
 <span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>    entries <span class="op">=</span> [{</span>
 <span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;type&quot;</span>: <span class="st">&quot;slowplot&quot;</span>,</span>
 <span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;name&quot;</span>: <span class="st">&quot;PlotLayoutOverride&quot;</span>,</span>
-<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;config_file&quot;</span>: <span class="st">&quot;slowplot-PlotLayoutOverride.json&quot;</span>,</span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;content_file&quot;</span>: <span class="st">&quot;slowplot-PlotLayoutOverride.json&quot;</span>,</span>
 <span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;description&quot;</span>: <span class="st">&quot;Dynamically generated by UserModule&quot;</span></span>
 <span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>    }]</span>
 <span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> entries</span>
 <span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-22"><a href="#cb23-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a><span class="at">@webapi.get</span>(<span class="st">&#39;/api/config/content/slowplot-PlotLayoutOverride.json&#39;</span>)</span>
+<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a><span class="at">@webapi.get</span>(<span class="st">&#39;/api/content/content/slowplot-PlotLayoutOverride.json&#39;</span>)</span>
 <span id="cb23-24"><a href="#cb23-24" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> generate_slowplot_PlotLayoutOverride(request:slowlette.Request):</span>
 <span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a>    request.abort()   <span class="co"># stop propagation to avoid being handled by SlowDash (no aggregation)</span></span>
 <span id="cb23-26"><a href="#cb23-26" aria-hidden="true" tabindex="-1"></a></span>

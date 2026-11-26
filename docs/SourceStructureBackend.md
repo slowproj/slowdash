@@ -48,7 +48,7 @@ Key files:
 - `slowdash_wsgi.py` and `slowdash.cgi`: WSGI/CGI entry points.
 - `sd_project.py`: project discovery, YAML loading, environment/command substitution, public project metadata.
 - `sd_component.py`: base classes for components and plugin-backed components.
-- `sd_config.py`: `/api/config`, config file/content APIs, transient content support.
+- `sd_content.py`: `/api/content`, content file/content APIs, transient content support.
 - `sd_datasource.py`: data source plugin base class and `/api/channels`, `/api/data`, `/api/blob` routes.
 - `sd_datasource_SQL.py`, `sd_datasource_TableStore.py`, `sd_dataschema.py`: common data-source helpers.
 - `sd_blobstorage.py`: blob storage helpers.
@@ -169,7 +169,7 @@ The normal startup sequence is:
 4. `Project` finds the SlowDash system directory and project directory.
 5. `Project` loads `SlowdashProject.yaml`, or creates an initial config from environment variables when configured that way.
 6. `App` changes the process working directory to the project directory when available.
-7. `App` adds the system plugin directory, project directory, and project `config` directory to `sys.path`.
+7. `App` adds the system plugin directory, project directory, and project `contents` directory to `sys.path`.
 8. `App` includes all built-in components into its Slowlette router.
 9. The app is run as ASGI, WSGI, CGI, or command-line internal request depending on the selected mode.
 
@@ -309,7 +309,7 @@ After loading:
 - `authentication.key` becomes `project.auth_list`.
 - `system.our_security_is_perfect` controls `project.is_secure`.
 
-`ConfigComponent` exposes public project metadata through `/api/config`, but avoids publishing raw project configuration because it can contain secrets.
+`MiscComponent` exposes public project metadata through `/api/config`, but avoids publishing raw project configuration because it can contain secrets.
 
 `project.mesh_url` comes from `slowdash_project.mesh.url`. If it is absent and a server port is available, it defaults to `slowmq://{hostname}:{port}`. `Mesh.connect()` can select NATS, MQTT, Redis, and RabbitMQ transports as well as SlowMQ. A `Mesh` without a URL uses local pub/sub.
 
@@ -334,16 +334,16 @@ After loading:
 
 When the app is not async, `_NoAsync` plugin files are preferred when available.
 
-## `ConfigComponent`
+## `ContentComponent`
 
 Main responsibilities:
 
-- Expose `/api/config`.
-- List and load project `config/*-*.*` content.
-- Serve config files when allowed.
+- Expose `/api/contents`.
+- List and load project `contents/*-*.*` content.
+- Serve contents files when allowed.
 - Manage transient content, such as generated plot content.
 
-The `/api/config/contentlist` and `/api/config/content/{filename}` endpoints are used by UI components to discover dashboards, plots, cruises, and other user content.
+The `/api/content/contentlist` and `/api/content/content/{filename}` endpoints are used by UI components to discover dashboards, plots, cruises, and other user content.
 
 ## `DataSourceComponent` and `DataSource`
 
@@ -430,12 +430,12 @@ POST /api/task/control/{taskname}
 POST /api/control
 GET  /api/channels
 GET  /api/data/{*}
-GET  /api/config/contentlist
-GET  /api/config/content/{filename}
-GET  /api/config/file/{filename}
+GET  /api/content/contentlist
+GET  /api/content/content/{filename}
+GET  /api/content/file/{filename}
 ```
 
-- Builds a catalog from `task` / `tasks` configuration and `config/slowtask-*.py`. The default configured command is `slowdash-task <file_path> --name=<name>`, with the Mesh URL and JSON parameters added. `auto_start` (or the compatibility name `auto_load`) launches tasks using `subprocess.Popen`.
+- Builds a catalog from `task` / `tasks` configuration and `contents/slowtask-*.py`. The default configured command is `slowdash-task <file_path> --name=<name>`, with the Mesh URL and JSON parameters added. `auto_start` (or the compatibility name `auto_load`) launches tasks using `subprocess.Popen`.
 - Subscribes to `sd.task.spec.>`, `sd.task.exit.>`, `sd.task.heartbeat.>`, and `sd.task.life_event.>` and maintains `TaskProxy` objects by `mesh_id`. Publishing `sd.task.control.introduce` requests task specifications, so independently launched tasks can also register.
 - `TaskFunctionProxy` prepares RPC arguments using the advertised argument specification. `TaskVariableProxy` reads values with `mesh.remote_node('<task>.<variable>')`.
 - Task-control actions are `start`, `stop`, `kill`, and `purge`. `stop` calls the `<task>._sd_stop` RPC; `kill` acts on child processes tracked by this server; `purge` publishes exit notifications to remove registrations.
@@ -478,11 +478,11 @@ slowdash_project:
     url: slowmq://localhost:18881
   task:
     - name: sensor
-      file_path: config/slowtask-sensor.py
+      file_path: contents/slowtask-sensor.py
       auto_start: true
 ```
 
-Contents of `config/slowtask-sensor.py`:
+Contents of `contents/slowtask-sensor.py`:
 
 ```python
 from slowpy.mesh import Tasklet, DataPacket
@@ -519,7 +519,7 @@ The command name is a JSON key; other fields supply arguments. For inclusion in 
 
 ## `UserHtmlComponent`
 
-`sd_userhtml.py` serves user-provided HTML and related content. It also redirects or maps user URLs to internal config/content APIs.
+`sd_userhtml.py` serves user-provided HTML and related content. It also redirects or maps user URLs to internal content/content APIs.
 
 This lets project-specific UI pages live in the project configuration/content area without changing the core server.
 

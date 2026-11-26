@@ -75,7 +75,7 @@ export class MapPanel extends Panel {
         }
         
         this.loaded_map = config.map;
-        const url = './api/config/file/map-' + config.map + '.json';
+        const url = './api/content/file/map-' + config.map + '.json';
         const response = await fetch(url);
         if (! response.ok) {
             this.div.html(`

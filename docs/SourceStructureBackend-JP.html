@@ -122,8 +122,8 @@ id="toc-組み込みサーバーコンポーネント">組み込みサーバー�
 <li><a href="#component-と-plugincomponent"
 id="toc-component-と-plugincomponent"><code>Component</code> と
 <code>PluginComponent</code></a></li>
-<li><a href="#configcomponent"
-id="toc-configcomponent"><code>ConfigComponent</code></a></li>
+<li><a href="#contentcomponent"
+id="toc-contentcomponent"><code>ContentComponent</code></a></li>
 <li><a href="#datasourcecomponent-と-datasource"
 id="toc-datasourcecomponent-と-datasource"><code>DataSourceComponent</code>
 と <code>DataSource</code></a></li>
@@ -222,8 +222,8 @@ API のヘルパー．</li>
 の読み込み，環境変数やコマンドの置換，公開用のプロジェクトメタデータ．</li>
 <li><code>sd_component.py</code>:
 コンポーネントおよびプラグインベースのコンポーネントの基底クラス．</li>
-<li><code>sd_config.py</code>:
-<code>/api/config</code>，設定ファイル/コンテンツ
+<li><code>sd_content.py</code>:
+<code>/api/content</code>，設定ファイル/コンテンツ
 API，一時コンテンツのサポート．</li>
 <li><code>sd_datasource.py</code>:
 データソースプラグインの基底クラスと，<code>/api/channels</code>，<code>/api/data</code>，<code>/api/blob</code>
@@ -381,7 +381,7 @@ id="コマンドラインまたはサーバーの起動">コマンドライン�
 はプロセスの作業ディレクトリをプロジェクトディレクトリに移す．</li>
 <li><code>App</code>
 は，システムのプラグインディレクトリ，プロジェクトディレクトリ，プロジェクトの
-<code>config</code> ディレクトリを <code>sys.path</code>
+<code>contents</code> ディレクトリを <code>sys.path</code>
 に追加する．</li>
 <li><code>App</code> がすべての組み込みコンポーネントを，自身の
 Slowlette ルーターに組み込む．</li>
@@ -397,7 +397,7 @@ WebMeshComponent
 DataSourceComponent
 UserHtmlComponent
 ExportComponent
-ConfigComponent
+ContentComponent
 MiscApiComponent
 TaskComponent</code></pre>
 <p>Slowlette
@@ -530,7 +530,7 @@ $$</code></pre>
 <li><code>system.our_security_is_perfect</code> が
 <code>project.is_secure</code> を制御する．</li>
 </ul>
-<p><code>ConfigComponent</code> は，公開用のプロジェクトメタデータを
+<p><code>MiscComponent</code> は，公開用のプロジェクトメタデータを
 <code>/api/config</code>
 から提供します．ただし，生のプロジェクト設定は秘密情報を含む可能性があるため，そのまま公開しません．</p>
 <p><code>project.mesh_url</code> は
@@ -563,17 +563,17 @@ id="組み込みサーバーコンポーネント">組み込みサーバーコ�
 </ol>
 <p>アプリが非同期でない場合は，利用可能であれば <code>_NoAsync</code>
 版のプラグインファイルが優先されます．</p>
-<h2 id="configcomponent"><code>ConfigComponent</code></h2>
+<h2 id="contentcomponent"><code>ContentComponent</code></h2>
 <p>主な責務は次のとおりです．</p>
 <ul>
-<li><code>/api/config</code> を提供する．</li>
-<li>プロジェクトの <code>config/*-*.*</code>
+<li><code>/api/content</code> を提供する．</li>
+<li>プロジェクトの <code>contents/*-*.*</code>
 コンテンツを一覧・読み込みする．</li>
 <li>許可されている場合に設定ファイルを配信する．</li>
 <li>生成されたプロット内容などの一時コンテンツを管理する．</li>
 </ul>
-<p><code>/api/config/contentlist</code> と
-<code>/api/config/content/{filename}</code> のエンドポイントは，UI
+<p><code>/api/content/contentlist</code> と
+<code>/api/content/content/{filename}</code> のエンドポイントは，UI
 コンポーネントがダッシュボード，プロット，cruise，その他のユーザーコンテンツを見つけるために使われます．</p>
 <h2
 id="datasourcecomponent-と-datasource"><code>DataSourceComponent</code>
@@ -647,12 +647,12 @@ POST /api/task/control/{taskname}
 POST /api/control
 GET  /api/channels
 GET  /api/data/{*}
-GET  /api/config/contentlist
-GET  /api/config/content/{filename}
-GET  /api/config/file/{filename}</code></pre>
+GET  /api/content/contentlist
+GET  /api/content/content/{filename}
+GET  /api/content/file/{filename}</code></pre>
 <ul>
 <li><code>task</code> / <code>tasks</code> 設定と
-<code>config/slowtask-*.py</code>
+<code>contents/slowtask-*.py</code>
 からカタログを作る．設定の既定コマンドは
 <code>slowdash-task &lt;file_path&gt; --name=&lt;name&gt;</code>
 で，Mesh URL と JSON
@@ -724,9 +724,9 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb14-1"><a href=
 <span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> slowmq://localhost:18881</span></span>
 <span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">task</span><span class="kw">:</span></span>
 <span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> sensor</span></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">file_path</span><span class="kw">:</span><span class="at"> config/slowtask-sensor.py</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">file_path</span><span class="kw">:</span><span class="at"> contents/slowtask-sensor.py</span></span>
 <span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">auto_start</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code></pre></div>
-<p><code>config/slowtask-sensor.py</code> の内容:</p>
+<p><code>contents/slowtask-sensor.py</code> の内容:</p>
 <div class="sourceCode" id="cb15"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> Tasklet, DataPacket</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -1214,7 +1214,7 @@ I/O を使い，Mesh の受信やハートビートを止めないようにし�
 <code>*</code> に対応し，UTC 指定がなければローカル時刻を使う．</td>
 </tr>
 <tr>
-<td><code>@tasklet.content("config/html-status")</code></td>
+<td><code>@tasklet.content("html-status.html")</code></td>
 <td><code>_sd_get_content</code> RPC
 から要求時に呼ばれるコンテンツ生成関数を登録する．周期実行のコールバックではない．</td>
 </tr>

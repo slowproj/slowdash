@@ -123,7 +123,7 @@
 
 
     async function loadContents(filename) {
-        let response = await fetch('./api/config/file/' + filename);
+        let response = await fetch('./api/content/file/' + filename);
         if (response.status != 200) {
             const meta = { config_error: response.statusText };
             return [ null, null, meta ];
@@ -147,7 +147,7 @@
 
         let meta = {};
         if (content && (content.length > 0) && ['json', 'yaml'].includes(filetype)) {
-            let response = await fetch('./api/config/contentlist');
+            let response = await fetch('./api/content/contentlist');
             const contentlist = await response.json();
             for (const this_meta of contentlist) {
                 if (this_meta.config_file == filename) {
@@ -256,7 +256,7 @@
     function setupSaveButton(config, frame, editor) {
         let savePopup = $('<dialog>').addClass('sd-pad').appendTo($('body'));
         let saveButton = $('<button>').html("&#x1f4be;").bind('click', e=>{
-            Platform.upload(savePopup, 'config/file/' + config.filename, editor.getValue(), {
+            Platform.upload(savePopup, 'contents/file/' + config.filename, editor.getValue(), {
                 contentType: 'text/plain; charset=utf-8',
                 overwritable: true,
                 quietOnSuccess: true,

@@ -99,7 +99,7 @@
                     "resampling": { "buckets": null, "threshold": null, "reducer": "last" }
                 }
             ],
-            "axes": { "ylog": false, "xfixed": false, "yfixed": false, "xmin": 0, "xmax": 200, "ymin": 0, "ymax": 30, "title": "Time-Series Projection Histograms", "xlog": false, "zlog": false, "zmin": 0, "zmax": 1 },
+            "axes": { "ylog": false, "xfixed": false, "yfixed": false, "xmin": 0, "xmax": 200, "ymin": 0, "ymax": 30, "title": "Time-Series Projection Histograms", "xlog": false, "zlog": false, "zmin": 0, "zmax": 1, "yminw": 0 },
             "legend": { "style": "transparent", "position": "left" }
         },
         {

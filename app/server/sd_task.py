@@ -791,7 +791,7 @@ class TaskComponent(Component):
         return record
     
 
-    @slowlette.get('/api/config/contentlist')
+    @slowlette.get('/api/content/contentlist')
     async def api_get_content_list(self):
         self._content_table = {}
 
@@ -819,16 +819,16 @@ class TaskComponent(Component):
                     'mtime': int(time.time()),
                     'title': '',
                     'description': '',
-                    'config_file': config_file,
-                    'config_error': '',
-                    'config_error_line': '',
+                    'content_file': config_file,
+                    'content_error': '',
+                    'content_error_line': '',
                 })
                 self._content_table[f'{kind}-{name}'] = content_file_name
                         
         return doc
 
     
-    @slowlette.get('/api/config/content/{filename}')
+    @slowlette.get('/api/content/content/{filename}')
     async def api_get_content(self, filename:str):
         root_name = Path(filename).stem
         if '-' not in root_name:
@@ -861,18 +861,6 @@ class TaskComponent(Component):
         return slowlette.Response(200, content_type=content_type, content=content)
 
 
-    @slowlette.get('/api/config/file/{filename}')
-    async def get_file(self, filename:str):
-        await self._check_task_heartbeats()
-        
-        for task in list(self._task_table.values()):
-            if task._is_dead:
-                continue
-            result = await task.get_content(os.path.join('config', filename), self._mesh)
-            if result is not None:
-                break
-        else:
-            return None
-
-        content_type, content = result
-        return slowlette.Response(200, content_type=content_type, content=content)
+    @slowlette.get('/api/content/file/{filename}')
+    async def api_get_content_file(self, filename:str):
+        return await self.api_get_content(filename)

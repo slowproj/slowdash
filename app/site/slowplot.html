@@ -184,7 +184,7 @@
         let saveDialog = new SaveConfigDialog(saveDiv, {
             title: 'Save Workspace',
             saveConfig: (name, doc) => {
-                let filename = 'config/file/slowplot-' + name + '.json';
+                let filename = 'content/file/slowplot-' + name + '.json';
                 if (doc.control?.range?.to) {
                     delete doc.control.range.to;
                 }

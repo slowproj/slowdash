@@ -10,7 +10,7 @@ import slowlette
 from sd_version import slowdash_version
 from sd_component import Component
 from sd_project import Project
-from sd_config import ConfigComponent
+from sd_content import ContentComponent
 from sd_datasource import DataSourceComponent
 from sd_export import ExportComponent
 from sd_webmesh import WebMeshComponent
@@ -60,7 +60,8 @@ class App(slowlette.App):
             sys.path.insert(1, os.path.join(self.project.sys_dir, 'app', 'plugin'))
         if self.project.project_dir is not None:
             sys.path.insert(1, self.project.project_dir)
-            sys.path.insert(1, os.path.join(self.project.project_dir, 'config'))
+            sys.path.insert(1, os.path.join(self.project.project_dir, 'content'))
+            sys.path.insert(1, os.path.join(self.project.project_dir, 'config'))  # for backwards com
 
             
         ### API Components: see the Slowlette documentation for the mechanism ###
@@ -74,7 +75,7 @@ class App(slowlette.App):
         self.slowlette.include(DataSourceComponent(self, self.project))  # user/task modules might create DB
         self.slowlette.include(UserHtmlComponent(self, self.project))
         self.slowlette.include(ExportComponent(self, self.project))
-        self.slowlette.include(ConfigComponent(self, self.project))
+        self.slowlette.include(ContentComponent(self, self.project))
         self.slowlette.include(MiscApiComponent(self, self.project))
 
 
@@ -162,7 +163,7 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         'COMMAND', nargs='?',
-        help='API query string. Ex) "config", "channels", "data/CHANNELS?length=LENGTH"'
+        help='API query string. Ex) "content", "channels", "data/CHANNELS?length=LENGTH"'
     )
     parser.add_argument(
         '-p', '--port',

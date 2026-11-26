@@ -40,7 +40,7 @@ if __name__ == '__main__':
     tasklet.run()
 ```
 
-Details of the script are described in the [Controls](ControlsScript.html) section. For now, just copy and paste the script and use it to generate some test data. (If copy-and-paste fails, the identical source can be found at `ExampleProjects/QuickTour/01_DummyData/config/slowtask-testdata.py`. As we will see later, this script can be started from web browsers.)
+Details of the script are described in the [Controls](ControlsScript.html) section. For now, just copy and paste the script and use it to generate some test data. (If copy-and-paste fails, the identical source can be found at `ExampleProjects/QuickTour/01_DummyData/contents/slowtask-testdata.py`. As we will see later, this script can be started from web browsers.)
 
 If you installed SlowPy in a virtual environment (the standard installation method), activate it using either:
 ```console
@@ -395,7 +395,7 @@ Stop it with `Ctrl-C` or `Ctrl-\`. (You might see messy output, but it’s harml
 
 
 ## Integrating the Script into the SlowDash Application
-Any Python script (not necessarily using SlowPy) placed in your project's `config` directory as `slowtask-XXX.py` will automatically appear in the "SlowTask" section of the SlowDash home screen, where it can be controlled via the web interface.
+Any Python script (not necessarily using SlowPy) placed in your project's `contents` directory as `slowtask-XXX.py` will automatically appear in the "SlowTask" section of the SlowDash home screen, where it can be controlled via the web interface.
 
 You can also configure it to auto-start or edit directly from the browser via entries in `SlowdashProject.yaml` (see the official documentation).
 
@@ -447,7 +447,7 @@ Open your browser at <http://localhost:18881> — you'll find "read-my" under Sl
 You can still run the script without the SlowDash app as before:
 ```console
 $ slowdash-activate-venv
-$ python config/slowtask-read-my.py
+$ python contents/slowtask-read-my.py
 ```
 
 ## Additional Notes
@@ -569,7 +569,7 @@ If you place input elements such as `<input type="number">` there and create but
 The function name to call is specified with the button's `name` attribute.
 
 First, we add start/stop control to the device readout script created in the previous example. 
-This time, save it as `slowtask-testdaq.py` under the `config` directory.
+This time, save it as `slowtask-testdaq.py` under the `contents` directory.
 ```python
 from dataclasses import dataclass
 
@@ -610,7 +610,7 @@ The main loop checks this variable to decide whether to read data from the devic
 We also define `start()` and `stop()` so this flag can be set externally.
 We also added error handling to make the script more practical in realistic situations.
 
-Create a form to call these `start()` and `stop()` functions from the browser, save it as `html-testdaq.html`, and place it under `config`. 
+Create a form to call these `start()` and `stop()` functions from the browser, save it as `html-testdaq.html`, and place it under `contents`. 
 The filename must start with `html-` and have the `.html` extension.
 
 ```html
@@ -624,7 +624,7 @@ Here, we simply create two buttons corresponding to the two functions.
 In each button's `name` attribute, specify which function in which file should be called when the button is clicked. 
 The `name` format is the script filename (the `XXX` part of `slowtask-XXX.py`) and the function name in that script.
 
-After creating and placing these files under `config`, restart slowdash. 
+After creating and placing these files under `contents`, restart slowdash. 
 In the SlowTask section at the lower left of the home screen, you should see a task called `testdaq`; click `start` there to start the script.
 If manually starting every time is inconvenient, add the following to `SlowdashProject.yaml` to auto-start the script when slowdash starts.
 
@@ -913,8 +913,8 @@ With Tasklet, functions must be exported explicitly.
 
 ### Content Generation Functions
 
-The `@tasklet.content(FILENAME)` decorator allows a script to dynamically generate content for the project's `config` directory.
-The following example generates the contents of the `config/html-testdaq.html` file from the previous section within the task script.
+The `@tasklet.content(FILENAME)` decorator allows a script to dynamically generate content for the project's `contents` directory.
+The following example generates the contents of the `contents/html-testdaq.html` file from the previous section within the task script.
 
 ```python
 @tasklet.content('html-testdaq.html')
@@ -999,10 +999,10 @@ The changes are:
 - Import `Tasklet` and create a `tasklet` instance.
 - Explicitly declare the loop callback with `@tasklet.loop(interval=1.0)` and remove the `time.sleep(1.0)` call inside it.
 - Explicitly export the browser-callable `start()` and `stop()` functions with `@tasklet.mesh.export()`.
-- Remove `config/html-testdaq.html` and generate its contents with a function decorated with `@tasklet.content("html-testdaq.html")`.
+- Remove `contents/html-testdaq.html` and generate its contents with a function decorated with `@tasklet.content("html-testdaq.html")`.
 - Give the HTML form a name to enable synchronization across browsers and persistence of input values.
 
-Here is the complete updated SlowTask script (`config/slowtask-testdaq.py`).
+Here is the complete updated SlowTask script (`contents/slowtask-testdaq.py`).
 
 ```python
 ### The first part is unchanged.

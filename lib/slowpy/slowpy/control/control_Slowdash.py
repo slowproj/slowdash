@@ -36,7 +36,7 @@ class SlowdashNode(ControlNode):
         opts.update(options)
         return self.http.path(url,**opts).json().readonly()
 
-    def config_file(self, name, **options):
+    def content_file(self, name, **options):
         opts = { 'overwrite': 'yes' }
         opts.update(options)
-        return self.http.path(f'/api/config/file/{name}', **opts)
+        return self.http.path(f'/api/content/file/{name}', **opts)

@@ -275,15 +275,16 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a hr
 <span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    datastore.append(value, tag<span class="op">=</span><span class="st">&quot;voltmeter&quot;</span>)</span></code></pre></div>
 <h4 id="slowdash-の-web-gui-から関数を呼び出す">SlowDash の Web GUI
 から関数を呼び出す</h4>
-<p>スクリプト <code>config/slowtask-test.py</code> 中の出力電圧設定関数
-<code>set_Vout()</code>:</p>
+<p>スクリプト <code>contents/slowtask-test.py</code>
+中の出力電圧設定関数 <code>set_Vout()</code>:</p>
 <div class="sourceCode" id="cb5"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>Vout <span class="op">=</span> ctrl.ethernet(<span class="st">&#39;192.168.1.43&#39;</span>, <span class="dv">5025</span>).scpi(append_opc<span class="op">=</span><span class="va">True</span>).command(<span class="st">&#39;VOLT&#39;</span>)</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_Vout(value:<span class="bu">float</span>):</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    Vout.<span class="bu">set</span>(value)</span></code></pre></div>
-<p>Web GUI のユーザー作成 HTML (<code>config/html-test.html</code>):</p>
+<p>Web GUI のユーザー作成 HTML
+(<code>contents/html-test.html</code>):</p>
 <div class="sourceCode" id="cb6"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  Voltage output: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;value&quot;</span><span class="dt">&gt;</span></span>
@@ -628,7 +629,7 @@ ControlVariableNode を返す</li>
 指定したチャンネルのデータの JSON オブジェクトを取得する</li>
 <li><strong>config()</strong>: プロジェクト設定の JSON
 オブジェクトを取得する</li>
-<li><strong>config_file(name)</strong>:
+<li><strong>content_file(name)</strong>:
 設定ファイルを取得または送信する</li>
 </ul></li>
 </ul>
@@ -1060,7 +1061,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb24-1"><a h
 <span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>server.start()</span></code></pre></div>
 <h1 id="slowtask-gui-とスクリプトの結合">SlowTask: GUI
 とスクリプトの結合</h1>
-<p>SlowTask は，SlowDash プロジェクトの <code>config</code>
+<p>SlowTask は，SlowDash プロジェクトの <code>contents</code>
 ディレクトリの下に <code>slowtask-XXX.py</code>
 のような名前で置かれたユーザーの Python スクリプトです． SlowDash の GUI
 から，スクリプトの開始・停止，スクリプト中で定義された関数の呼び出し，スクリプト中の変数の表示などを行えます．
@@ -1094,7 +1095,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb25-1"><a h
 <h2 id="slowtask-の開始と停止">SlowTask の開始と停止</h2>
 <h3 id="slowdash-サーバーからの開始">SlowDash サーバーからの開始</h3>
 <p>SlowTask のスクリプトファイル（例えば
-<code>slowtask-test.py</code>）をプロジェクトの <code>config</code>
+<code>slowtask-test.py</code>）をプロジェクトの <code>contents</code>
 ディレクトリの下に置くと，SlowDash サーバーに認識され，SlowDash
 のホーム画面のタスク管理パネル（“SlowTask” セクション）に表示されます．
 デフォルトでは，タスクは「リスト」されるだけで，<code>start</code>
@@ -1158,7 +1159,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb27-1"><a href=
 <tr>
 <td><code>file_path</code></td>
 <td>スクリプトファイルのパス</td>
-<td><code>config/slowtask-{name}.py</code></td>
+<td><code>contents/slowtask-{name}.py</code></td>
 </tr>
 <tr>
 <td><code>command</code></td>
@@ -1221,14 +1222,14 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb27-1"><a href=
 文字列がシェルによって誤って処理されないようにするために，全体をシングルクオートで囲ってください．</p>
 <div class="sourceCode" id="cb28"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/PROJECT</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-task config/slowtask-mytask.py --mesh=slowmq://localhost:18881 --parameters=&#39;{&quot;p1&quot;:10,&quot;p2&quot;:20}&#39;</span></span></code></pre></div>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-task contents/slowtask-mytask.py --mesh=slowmq://localhost:18881 --parameters=&#39;{&quot;p1&quot;:10,&quot;p2&quot;:20}&#39;</span></span></code></pre></div>
 <p>もしスクリプト中で
 <code>if __name__ == '__main__': tasklet.run(...)</code>
 をしているなら，通常の Python スクリプトとしての実行もできます．
 ただし，この場合は，タスクパラメータを渡すことはできません．</p>
 <div class="sourceCode" id="cb29"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv</span></span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python config/slowtask-mytask.py</span></span></code></pre></div>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python contents/slowtask-mytask.py</span></span></code></pre></div>
 <p>独立に開始した SlowTask プロセスでも，SlowDash サーバーから停止操作
 (Stop) を行えます． ただし，サーバーからの強制終了 (Kill) はできません．
 独立に開始した SlowTask プロセスは，SlowDash
@@ -1323,7 +1324,7 @@ class="sourceCode html"><code class="sourceCode html"><span id="cb32-1"><a href=
 <code>slowtask-</code> を除いたものになります． （タスク名に
 <code>-</code> が含まれる場合は <code>_</code>
 に置き換えられます．）</p>
-<p>HTML ファイルは，プロジェクトの <code>config</code> ディレクトリに
+<p>HTML ファイルは，プロジェクトの <code>contents</code> ディレクトリに
 <code>html-XXX.html</code> という名前で置きます． 後述のように，SlowTask
 スクリプトの中で HTML の内容を生成することもできます．</p>
 <h4 id="パラメータの受け渡し">パラメータの受け渡し</h4>
@@ -1788,7 +1789,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb56-1"><a h
 で，複数の入力値をまとめて設定することもできます．</p>
 <h3 id="コンテンツの動的生成">コンテンツの動的生成</h3>
 <p><code>@tasklet.content(name)</code> デコレーターにより，通常は
-SlowDash プロジェクトの <code>config</code>
+SlowDash プロジェクトの <code>contents</code>
 以下に置かれるファイルの内容を動的に生成することができます．
 これにより，タスクスクリプトと，それをコントロールするための HTML
 フォームを一つのファイルにまとめて，整合をとりやすくできます．</p>
@@ -1802,7 +1803,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb57-1"><a h
 <span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a><span class="st">      &lt;/form&gt;</span></span>
 <span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a><span class="st">    &#39;&#39;&#39;</span></span></code></pre></div>
 <p>ブラウザからは，HTML ファイル <code>html-test.html</code> が
-<code>config</code> に存在するかのように見えます．</p>
+<code>contents</code> に存在するかのように見えます．</p>
 <p>HTML パネルで <code>On Update: Reload HTML</code>
 をチェックすると，データ更新のたびにこの関数が呼ばれるので，データを含んだ
 HTML ページを動的に生成することもできます．
@@ -1820,7 +1821,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb58-1"><a h
 <span id="cb58-10"><a href="#cb58-10" aria-hidden="true" tabindex="-1"></a><span class="ss">      &lt;tr&gt;&lt;td&gt;Free&lt;/td&gt;&lt;td&gt;</span><span class="sc">{</span>free<span class="sc">}</span><span class="ss"> GB&lt;/td&gt;&lt;/tr&gt;</span></span>
 <span id="cb58-11"><a href="#cb58-11" aria-hidden="true" tabindex="-1"></a><span class="ss">    &lt;/table&gt;    </span></span>
 <span id="cb58-12"><a href="#cb58-12" aria-hidden="true" tabindex="-1"></a><span class="ss">    &#39;&#39;&#39;</span></span></code></pre></div>
-<p><code>config/slowplot-XXX.json</code>
+<p><code>contents/slowplot-XXX.json</code>
 も同じように生成できるので，HTML フォームと合わせて，SlowTask
 から，それを使うための完全なレイアウトを提供することができます．
 コンテンツ生成関数は普通の Python 関数なので，Jinja

@@ -48,7 +48,7 @@ SlowDash サーバーコンポーネント
 - `slowdash_wsgi.py` と `slowdash.cgi`: WSGI/CGI のエントリーポイント．
 - `sd_project.py`: プロジェクトの探索，YAML の読み込み，環境変数やコマンドの置換，公開用のプロジェクトメタデータ．
 - `sd_component.py`: コンポーネントおよびプラグインベースのコンポーネントの基底クラス．
-- `sd_config.py`: `/api/config`，設定ファイル/コンテンツ API，一時コンテンツのサポート．
+- `sd_content.py`: `/api/content`，設定ファイル/コンテンツ API，一時コンテンツのサポート．
 - `sd_datasource.py`: データソースプラグインの基底クラスと，`/api/channels`，`/api/data`，`/api/blob` の各ルート．
 - `sd_datasource_SQL.py`，`sd_datasource_TableStore.py`，`sd_dataschema.py`: データソース共通のヘルパー．
 - `sd_blobstorage.py`: blob ストレージのヘルパー．
@@ -169,7 +169,7 @@ SlowPy は，データ型，制御の抽象化，ストレージへの書き込�
 4. `Project` が SlowDash のシステムディレクトリとプロジェクトディレクトリを探す．
 5. `Project` が `SlowdashProject.yaml` を読み込む．設定によっては，環境変数から初期設定を生成する．
 6. プロジェクトディレクトリが存在する場合，`App` はプロセスの作業ディレクトリをプロジェクトディレクトリに移す．
-7. `App` は，システムのプラグインディレクトリ，プロジェクトディレクトリ，プロジェクトの `config` ディレクトリを `sys.path` に追加する．
+7. `App` は，システムのプラグインディレクトリ，プロジェクトディレクトリ，プロジェクトの `contents` ディレクトリを `sys.path` に追加する．
 8. `App` がすべての組み込みコンポーネントを，自身の Slowlette ルーターに組み込む．
 9. 選択されたモードに応じて，ASGI，WSGI，CGI，またはコマンドラインの内部リクエストとして実行される．
 
@@ -185,7 +185,7 @@ WebMeshComponent
 DataSourceComponent
 UserHtmlComponent
 ExportComponent
-ConfigComponent
+ContentComponent
 MiscApiComponent
 TaskComponent
 ```
@@ -309,7 +309,7 @@ $$
 - `authentication.key` は `project.auth_list` になる．
 - `system.our_security_is_perfect` が `project.is_secure` を制御する．
 
-`ConfigComponent` は，公開用のプロジェクトメタデータを `/api/config` から提供します．ただし，生のプロジェクト設定は秘密情報を含む可能性があるため，そのまま公開しません．
+`MiscComponent` は，公開用のプロジェクトメタデータを `/api/config` から提供します．ただし，生のプロジェクト設定は秘密情報を含む可能性があるため，そのまま公開しません．
 
 `project.mesh_url` は `slowdash_project.mesh.url` から取得します．未指定でサーバーポートがある場合は，`slowmq://{hostname}:{port}` を使います．`Mesh.connect()` は SlowMQ に加えて NATS，MQTT，Redis，RabbitMQ のトランスポートを選択できます．URL を与えない `Mesh` はローカルの pub/sub を使います．
 
@@ -334,16 +334,16 @@ $$
 
 アプリが非同期でない場合は，利用可能であれば `_NoAsync` 版のプラグインファイルが優先されます．
 
-## `ConfigComponent`
+## `ContentComponent`
 
 主な責務は次のとおりです．
 
-- `/api/config` を提供する．
-- プロジェクトの `config/*-*.*` コンテンツを一覧・読み込みする．
+- `/api/content` を提供する．
+- プロジェクトの `contents/*-*.*` コンテンツを一覧・読み込みする．
 - 許可されている場合に設定ファイルを配信する．
 - 生成されたプロット内容などの一時コンテンツを管理する．
 
-`/api/config/contentlist` と `/api/config/content/{filename}` のエンドポイントは，UI コンポーネントがダッシュボード，プロット，cruise，その他のユーザーコンテンツを見つけるために使われます．
+`/api/content/contentlist` と `/api/content/content/{filename}` のエンドポイントは，UI コンポーネントがダッシュボード，プロット，cruise，その他のユーザーコンテンツを見つけるために使われます．
 
 ## `DataSourceComponent` と `DataSource`
 
@@ -430,12 +430,12 @@ POST /api/task/control/{taskname}
 POST /api/control
 GET  /api/channels
 GET  /api/data/{*}
-GET  /api/config/contentlist
-GET  /api/config/content/{filename}
-GET  /api/config/file/{filename}
+GET  /api/content/contentlist
+GET  /api/content/content/{filename}
+GET  /api/content/file/{filename}
 ```
 
-- `task` / `tasks` 設定と `config/slowtask-*.py` からカタログを作る．設定の既定コマンドは `slowdash-task <file_path> --name=<name>` で，Mesh URL と JSON パラメータも渡される．`auto_start`（互換名 `auto_load`）に従って `subprocess.Popen` で起動する．
+- `task` / `tasks` 設定と `contents/slowtask-*.py` からカタログを作る．設定の既定コマンドは `slowdash-task <file_path> --name=<name>` で，Mesh URL と JSON パラメータも渡される．`auto_start`（互換名 `auto_load`）に従って `subprocess.Popen` で起動する．
 - `sd.task.spec.>`，`sd.task.exit.>`，`sd.task.heartbeat.>`，`sd.task.life_event.>` を購読し，`mesh_id` ごとの `TaskProxy` を管理する．`sd.task.control.introduce` でタスク仕様の再通知を要求するため，別途起動されたタスクも登録できる．
 - `TaskFunctionProxy` は通知された引数仕様に基づき RPC 引数を整える．`TaskVariableProxy` は `mesh.remote_node('<task>.<variable>')` を使って値を読む．
 - タスク制御の `action` は `start`，`stop`，`kill`，`purge`．`stop` は `<task>._sd_stop` RPC，`kill` はこのサーバーが保持する子プロセス，`purge` は終了通知による登録解除を扱う．
@@ -478,11 +478,11 @@ slowdash_project:
     url: slowmq://localhost:18881
   task:
     - name: sensor
-      file_path: config/slowtask-sensor.py
+      file_path: contents/slowtask-sensor.py
       auto_start: true
 ```
 
-`config/slowtask-sensor.py` の内容:
+`contents/slowtask-sensor.py` の内容:
 
 ```python
 from slowpy.mesh import Tasklet, DataPacket

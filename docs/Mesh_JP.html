@@ -1057,7 +1057,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb31-1"><a h
 <code>await control_system.aio_sleep()</code> を使ってください．</p>
 <h3 id="実行">実行</h3>
 <p>SlowTask のスクリプトファイルを，<code>slowtask-{名前}.py</code>
-という名前で SlowDash プロジェクトの <code>config</code>
+という名前で SlowDash プロジェクトの <code>contents</code>
 以下に置くと，SlowDash
 サーバーに認識され，起動や停止を行えるようになります．</p>
 <p>また，<code>SlowdashProject.yaml</code> ファイルに
@@ -1303,11 +1303,11 @@ publish するか，Registry
 高信頼が必要な場合の高度な方法として，<code>sd.rpc.&gt;</code> を
 subscribe して，システムが期待する状態に遷移するかを監視する SlowTask
 を走らせるという手もあります．</p>
-<h3 id="config-コンテンツの動的生成">config コンテンツの動的生成</h3>
+<h3 id="コンテンツの動的生成">コンテンツの動的生成</h3>
 <p><code>@content(name:str)</code> デコレータにより，通常は SlowDash
-プロジェクトの <code>config</code>
+プロジェクトの <code>contents</code>
 以下に置かれるファイルの内容を動的に生成することができます．以下の例では，ブラウザからは
-HTML ファイル <code>html-disk_usage.html</code> が <code>config</code>
+HTML ファイル <code>html-disk_usage.html</code> が <code>contents</code>
 に存在するかのように見え，かつ，リロードする度に内容が変わるものです．ブラウザの
 HTML フォームで <code>On update: reload HTML</code>
 をチェックすることにより，データ更新のたびに新しい HTML
@@ -1323,7 +1323,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb39-1"><a h
 <span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a><span class="ss">      &lt;tr&gt;&lt;td&gt;Free&lt;/td&gt;&lt;td&gt;</span><span class="sc">{</span>free<span class="sc">}</span><span class="ss"> GB&lt;/td&gt;&lt;/tr&gt;</span></span>
 <span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a><span class="ss">    &lt;/table&gt;    </span></span>
 <span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a><span class="ss">    &#39;&#39;&#39;</span></span></code></pre></div>
-<p><code>config/slowplot-XXX.json</code>
+<p><code>contents/slowplot-XXX.json</code>
 も同じように生成できるので，HTML フォームと合わせて，SlowTask
 から，それを使うための完全なレイアウトを提供することができます．SlowTask
 自体は普通の Python スクリプトなので，その中で例えば Jinja
@@ -1448,7 +1448,7 @@ SlowDash
 サーバーの停止・再実行をしても自動再接続をするはずです．</p>
 <div class="sourceCode" id="cb42"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/PROJECT</span></span>
-<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-task config/slowtask-store.py --mesh=slowmq://localhost:18881</span></span></code></pre></div>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-task contents/slowtask-store.py --mesh=slowmq://localhost:18881</span></span></code></pre></div>
 <p>この場合でも，SlowDash
 のタスクコントロールパネルから，タスクの「終了要求」を出すことができます．
 もしタスクが Tasklet
@@ -1528,7 +1528,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb47-1"><a h
 要求でデータを返すインターフェースです．「必要なときに最新値を得る」用途に向いています．</p>
 <h5 id="追加その２">追加その２</h5>
 <p>この例の Store タスクは，通常は SlowDash プロジェクトの
-<code>config</code>
+<code>contents</code>
 以下に置かれるファイルを動的に生成する例も含まれています．
 <code>@content(name)</code>
 で，コンテンツ名と，それを生成する関数を結びつけています．</p>
@@ -1657,7 +1657,7 @@ subscribe
 <li>Store タスクが export した disk_usage の表示
 (<code>store.data_usage</code> データチャンネル)</li>
 <li>Store タスクが動的生成した HTML コンテンツ (disk usage テーブル）
-の表示 (動的生成 <code>config/html-disk_usage.html</code>
+の表示 (動的生成 <code>contents/html-disk_usage.html</code>
 ファイルコンテンツ）</li>
 <li>レジストリに保持されている値の表示
 <ul>
@@ -1680,14 +1680,14 @@ subscribe
 class="sourceCode json"><code class="sourceCode json"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;randomwalk&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
 <span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;randomwalk&quot;</span><span class="fu">,</span></span>
-<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;file_path&quot;</span><span class="fu">:</span> <span class="st">&quot;config/slowtask-randomwalk.py&quot;</span><span class="fu">,</span></span>
-<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;command&quot;</span><span class="fu">:</span> <span class="st">&quot;slowdash-task config/slowtask-randomwalk.py --name=randomwalk&quot;</span><span class="fu">,</span></span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;file_path&quot;</span><span class="fu">:</span> <span class="st">&quot;contents/slowtask-randomwalk.py&quot;</span><span class="fu">,</span></span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;command&quot;</span><span class="fu">:</span> <span class="st">&quot;slowdash-task contents/slowtask-randomwalk.py --name=randomwalk&quot;</span><span class="fu">,</span></span>
 <span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;auto_start&quot;</span><span class="fu">:</span> <span class="kw">true</span></span>
 <span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
 <span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;store&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
 <span id="cb52-9"><a href="#cb52-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;store&quot;</span><span class="fu">,</span></span>
-<span id="cb52-10"><a href="#cb52-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;file_path&quot;</span><span class="fu">:</span> <span class="st">&quot;config/slowtask-store.py&quot;</span><span class="fu">,</span></span>
-<span id="cb52-11"><a href="#cb52-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;command&quot;</span><span class="fu">:</span> <span class="st">&quot;slowdash-task config/slowtask-store.py --name=store&quot;</span><span class="fu">,</span></span>
+<span id="cb52-10"><a href="#cb52-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;file_path&quot;</span><span class="fu">:</span> <span class="st">&quot;contents/slowtask-store.py&quot;</span><span class="fu">,</span></span>
+<span id="cb52-11"><a href="#cb52-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;command&quot;</span><span class="fu">:</span> <span class="st">&quot;slowdash-task contents/slowtask-store.py --name=store&quot;</span><span class="fu">,</span></span>
 <span id="cb52-12"><a href="#cb52-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;auto_start&quot;</span><span class="fu">:</span> <span class="kw">true</span></span>
 <span id="cb52-13"><a href="#cb52-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
 <span id="cb52-14"><a href="#cb52-14" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
@@ -1810,16 +1810,15 @@ object が publish される．</li>
 で指定されるクエリ期間が現在時刻を含んでいる場合のみ値を返す（典型的には
 <code>to</code> が <code>0</code> のクエリ）</li>
 </ul>
-<h3 id="一般-config-インターフェース">一般 config インターフェース</h3>
-<h4 id="get-apiconfigcontentlist">GET
-<code>api/config/contentlist</code></h4>
-<p>Task が提供している contents のうち，名前が <code>config/</code>
-で始まるものについて，SlowDash Project の <code>config</code>
-以下にあるファイルと同様のリストを生成して返す</p>
-<h4 id="get-apiconfigcontentcontent_name">GET
-<code>api/config/content/{content_name}</code></h4>
-<p>Task が提供している contents のうち，名前が <code>config/</code>
-で始まるものについて，その内容を返す</p>
+<h3 id="一般-content-アクセスインターフェース">一般 Content
+アクセスインターフェース</h3>
+<h4 id="get-apicontentscontentlist">GET
+<code>api/contents/contentlist</code></h4>
+<p>Task が提供している contents に対して，SlowDash Project の
+<code>contents</code> 以下にあるファイルと同様のリストを生成して返す</p>
+<h4 id="get-apicontentscontentcontent_name">GET
+<code>api/contents/content/{content_name}</code></h4>
+<p>Task が提供している contents に対して，その内容を返す</p>
 <h2 id="registry-key-value-store-1">Registry (Key-Value Store)</h2>
 <p>Registry への HTTP API は Slowlette を経由して
 <code>sd_mesh_registry.py</code>

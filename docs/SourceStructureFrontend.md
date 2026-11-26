@@ -140,12 +140,12 @@ The typical pattern is:
 - `slowedit.html` uses local `slow-extern/ace-builds`.
 - `slowedit2.html` loads Monaco from `https://unpkg.com/monaco-editor/...`.
 
-Both pages call SlowDash config APIs such as:
+Both pages call SlowDash content access APIs such as:
 
 ```text
-GET /api/config/file/{filename}
-GET /api/config/contentlist
-POST /api/config/file/{filename}
+GET /api/contents/file/{filename}
+GET /api/contents/contentlist
+POST /api/contents/file/{filename}
 ```
 
 ### Autocruise page
@@ -154,7 +154,7 @@ POST /api/config/file/{filename}
 
 ```html
 <script type="text/javascript" src="slowjs/autocruise/autocruise.js"></script>
-<body autocruise-configbase="api/config/content/" autocruise-interval="10">
+<body autocruise-configbase="api/contents/content/" autocruise-interval="10">
 ```
 
 It uses `autocruise.js` to rotate through multiple dashboard/config pages.
@@ -183,7 +183,7 @@ _buildConfig(...)
 Platform.initialize(defaults, options, args)
     |
     +-- GET ./api/config
-    +-- optional GET ./api/config/content/{config_file}
+    +-- optional GET ./api/contents/content/{contents_file}
     +-- load theme CSS slowjs/slowdash-{theme}.css
     |
     v
@@ -203,7 +203,7 @@ If a config contains `items` instead of `panels`, `SlowDash` treats it as a canv
 When `config` is a query string (as on `slowdash.html`), `SlowDash._buildSettings()` maps URL parameters to config values:
 
 ```text
-config=<name>        load a named page config from ./api/config/content/
+config=<name>        load a named page config from ./api/contents/content/
 configdata=<base64>  load an inline base64-encoded config (used by pop-out)
 mode=normal|protected|display
 theme=<name>         load slowjs/slowdash-<name>.css
@@ -255,7 +255,7 @@ Main responsibilities:
 
 - Parse URL options.
 - Fetch project config from `./api/config`.
-- Fetch page config from `./api/config/content/{config_file}`.
+- Fetch page config from `./api/contents/content/{contents_file}`.
 - Decode inline base64 config data from the URL.
 - Load theme CSS dynamically.
 - Build `<datalist>` elements for channel and content selectors.
@@ -266,9 +266,9 @@ Important server calls:
 
 ```text
 GET  ./api/config
-GET  ./api/config/content/{filename}
+GET  ./api/contents/content/{filename}
 GET  api/channels?fields=name
-GET  ./api/config/contentlist
+GET  ./api/contents/contentlist
 POST ./api/{filename}
 ```
 
@@ -675,7 +675,7 @@ Canvas items can read data, draw SVG/HTML elements, and emit control messages th
 `panel-map.mjs` loads map configuration from:
 
 ```text
-GET ./api/config/file/map-{name}.json
+GET ./api/contents/file/map-{name}.json
 ```
 
 It uses map geometry and color scales to draw channel-based map displays.
@@ -722,8 +722,8 @@ It can:
 It uses:
 
 ```text
-GET ./api/config/contentlist
-GET ./api/config/content/{filename}
+GET ./api/contents/contentlist
+GET ./api/contents/content/{filename}
 ```
 
 to list and open configured SlowDash content.
@@ -751,9 +751,9 @@ It can list channels, build export/download requests, and send server requests f
 These panels use APIs such as:
 
 ```text
-GET  ./api/config/filelist
-GET  ./api/config/file/{filename}
-POST ./api/config/file/{filename}
+GET  ./api/contents/filelist
+GET  ./api/contents/file/{filename}
+POST ./api/contents/file/{filename}
 GET  api/control/task?since={revision}
 POST ./api/control/task/{taskname}
 GET  api/console?since={revision}
@@ -943,7 +943,7 @@ It can load page lists from:
 SlowDash configures it with:
 
 ```html
-<body autocruise-configbase="api/config/content/" autocruise-interval="10">
+<body autocruise-configbase="api/contents/content/" autocruise-interval="10">
 ```
 
 This lets users open a cruise page such as:
@@ -955,7 +955,7 @@ slowcruise.html?config=slowcruise-example.json
 and have `autocruise.js` fetch:
 
 ```text
-api/config/content/slowcruise-example.json
+api/contents/content/slowcruise-example.json
 ```
 
 ### Runtime model
@@ -993,11 +993,11 @@ The frontend communicates with the SlowDash server mostly through relative URLs.
 
 ```text
 GET ./api/config
-GET ./api/config/content/{filename}
-GET ./api/config/contentlist
-GET ./api/config/file/{filename}
-GET ./api/config/filelist
-POST ./api/config/file/{filename}
+GET ./api/contents/content/{filename}
+GET ./api/contents/contentlist
+GET ./api/contents/file/{filename}
+GET ./api/contents/filelist
+POST ./api/contents/file/{filename}
 ```
 
 ### Data
@@ -1077,7 +1077,7 @@ Panels are responsible for interpreting their configured channels and data types
 
 # Configuration Flow into Panels
 
-The page config usually comes from `/api/config/content/{filename}` and has a structure containing:
+The page config usually comes from `/api/contents/content/{filename}` and has a structure containing:
 
 ```text
 meta

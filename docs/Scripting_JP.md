@@ -86,7 +86,7 @@ while True:
 ```
 
 #### SlowDash の Web GUI から関数を呼び出す
-スクリプト `config/slowtask-test.py` 中の出力電圧設定関数 `set_Vout()`:
+スクリプト `contents/slowtask-test.py` 中の出力電圧設定関数 `set_Vout()`:
 ```python
 from slowpy.control import control_system as ctrl
 Vout = ctrl.ethernet('192.168.1.43', 5025).scpi(append_opc=True).command('VOLT')
@@ -94,7 +94,7 @@ Vout = ctrl.ethernet('192.168.1.43', 5025).scpi(append_opc=True).command('VOLT')
 def set_Vout(value:float):
     Vout.set(value)
 ```
-Web GUI のユーザー作成 HTML (`config/html-test.html`):
+Web GUI のユーザー作成 HTML (`contents/html-test.html`):
 ```html
 <form>
   Voltage output: <input name="value">
@@ -334,7 +334,7 @@ HTTP ノードにロードします：`ctrl.http(url).import_control_module('Slo
   - **channels()**: チャンネルリストの JSON オブジェクトを取得する
   - **data(channels, length=3600)**: 指定したチャンネルのデータの JSON オブジェクトを取得する
   - **config()**: プロジェクト設定の JSON オブジェクトを取得する
-  - **config_file(name)**: 設定ファイルを取得または送信する
+  - **content_file(name)**: 設定ファイルを取得または送信する
 
 async 版として，`async_http(url)` にロードする `AsyncSlowdash` プラグイン (`async_slowdash()`) もあります．
   
@@ -610,7 +610,7 @@ server.start()
 ```
 
 # SlowTask: GUI とスクリプトの結合
-SlowTask は，SlowDash プロジェクトの `config` ディレクトリの下に `slowtask-XXX.py` のような名前で置かれたユーザーの Python スクリプトです．
+SlowTask は，SlowDash プロジェクトの `contents` ディレクトリの下に `slowtask-XXX.py` のような名前で置かれたユーザーの Python スクリプトです．
 SlowDash の GUI から，スクリプトの開始・停止，スクリプト中で定義された関数の呼び出し，スクリプト中の変数の表示などを行えます．
 SlowPy ライブラリは SlowTask スクリプトで使用することを想定して設計されていますが，使用は必須ではありません．
 
@@ -635,7 +635,7 @@ if __name__ == '__main__':
 
 ## SlowTask の開始と停止
 ### SlowDash サーバーからの開始
-SlowTask のスクリプトファイル（例えば `slowtask-test.py`）をプロジェクトの `config` ディレクトリの下に置くと，SlowDash サーバーに認識され，SlowDash のホーム画面のタスク管理パネル（"SlowTask" セクション）に表示されます．
+SlowTask のスクリプトファイル（例えば `slowtask-test.py`）をプロジェクトの `contents` ディレクトリの下に置くと，SlowDash サーバーに認識され，SlowDash のホーム画面のタスク管理パネル（"SlowTask" セクション）に表示されます．
 デフォルトでは，タスクは「リスト」されるだけで，`start` ボタンがクリックされるまで実行されません．
 
 SlowDash の設定ファイル (`SlowdashProject.yaml`) にエントリを作ると，サーバーの開始時に自動でタスクを開始するように設定できます．
@@ -670,7 +670,7 @@ slowdash_project:
 | `name` | タスク名 | （必須） |
 | `auto_start` | サーバー開始時にタスクを自動で開始するか（旧名 `auto_load` も使用可） | `false` |
 | `parameters` | スクリプトに渡すパラメータ | なし |
-| `file_path` | スクリプトファイルのパス | `config/slowtask-{name}.py` |
+| `file_path` | スクリプトファイルのパス | `contents/slowtask-{name}.py` |
 | `command` | タスクの開始コマンド | `slowdash-task {file_path} --name={name}` |
 
 `parameters` は省略可能で，指定した場合は SlowTask スクリプトの initialize コールバック（後述）に渡されます．また，Tasklet の `parameters` プロパティにも保持され，デコレーターなど `initialize` 前でも使用できます．
@@ -706,14 +706,14 @@ SlowTask を SlowDash サーバーから独立したプロセスとして実行�
 この場合は，JSON 文字列がシェルによって誤って処理されないようにするために，全体をシングルクオートで囲ってください．
 ```console
 $ cd PATH/TO/PROJECT
-$ slowdash-task config/slowtask-mytask.py --mesh=slowmq://localhost:18881 --parameters='{"p1":10,"p2":20}'
+$ slowdash-task contents/slowtask-mytask.py --mesh=slowmq://localhost:18881 --parameters='{"p1":10,"p2":20}'
 ```
 
 もしスクリプト中で `if __name__ == '__main__': tasklet.run(...)` をしているなら，通常の Python スクリプトとしての実行もできます．
 ただし，この場合は，タスクパラメータを渡すことはできません．
 ```console
 $ slowdash-activate-venv
-$ python config/slowtask-mytask.py
+$ python contents/slowtask-mytask.py
 ```
 
 独立に開始した SlowTask プロセスでも，SlowDash サーバーから停止操作 (Stop) を行えます．
@@ -792,7 +792,7 @@ SlowPlot の HTML フォームパネルで，タスク名と関数名を `name` 
 先頭の部分（この例では `test.`）はタスク名で，デフォルトでは，スクリプトのファイル名から先頭の `slowtask-` を除いたものになります．
 （タスク名に `-` が含まれる場合は `_` に置き換えられます．）
 
-HTML ファイルは，プロジェクトの `config` ディレクトリに `html-XXX.html` という名前で置きます．
+HTML ファイルは，プロジェクトの `contents` ディレクトリに `html-XXX.html` という名前で置きます．
 後述のように，SlowTask スクリプトの中で HTML の内容を生成することもできます．
 
 #### パラメータの受け渡し
@@ -1175,7 +1175,7 @@ async def stop():
 `ctrl.form(name).aio_set(dict)` で，複数の入力値をまとめて設定することもできます．
 
 ### コンテンツの動的生成
-`@tasklet.content(name)` デコレーターにより，通常は SlowDash プロジェクトの `config` 以下に置かれるファイルの内容を動的に生成することができます．
+`@tasklet.content(name)` デコレーターにより，通常は SlowDash プロジェクトの `contents` 以下に置かれるファイルの内容を動的に生成することができます．
 これにより，タスクスクリプトと，それをコントロールするための HTML フォームを一つのファイルにまとめて，整合をとりやすくできます．
 ```python
 @tasklet.content('html-test.html')
@@ -1187,7 +1187,7 @@ def html():
       </form>
     '''
 ```
-ブラウザからは，HTML ファイル `html-test.html` が `config` に存在するかのように見えます．
+ブラウザからは，HTML ファイル `html-test.html` が `contents` に存在するかのように見えます．
 
 HTML パネルで `On Update: Reload HTML` をチェックすると，データ更新のたびにこの関数が呼ばれるので，データを含んだ HTML ページを動的に生成することもできます．
 以下は，ディスクの使用量をテーブルに整形して表示する例です．
@@ -1206,7 +1206,7 @@ def html_disk_usage():
     '''
 ```
 
-`config/slowplot-XXX.json` も同じように生成できるので，HTML フォームと合わせて，SlowTask から，それを使うための完全なレイアウトを提供することができます．
+`contents/slowplot-XXX.json` も同じように生成できるので，HTML フォームと合わせて，SlowTask から，それを使うための完全なレイアウトを提供することができます．
 コンテンツ生成関数は普通の Python 関数なので，Jinja などのテンプレートエンジンを組み合わせて使うこともできます．
 
 ## Matplotlib 連携

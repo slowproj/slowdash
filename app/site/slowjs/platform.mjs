@@ -97,7 +97,7 @@ export class Platform {
         }
         
         else if (params.config_file) {
-            const response = await fetch('./api/config/content/' + params.config_file);
+            const response = await fetch('./api/content/content/' + params.config_file);
             let config = null;
             try {
                 config = await response.json();
@@ -207,7 +207,7 @@ export class Platform {
             }
         }
         
-        const response2 = await fetch('./api/config/contentlist');
+        const response2 = await fetch('./api/content/contentlist');
         const contentlist = await response2.json();
         if (contentlist) {
             let dashboard_dl = $('<datalist>').attr('id', 'sd-dashboard-datalist').appendTo(document.body);

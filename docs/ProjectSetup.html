@@ -134,9 +134,9 @@ id="toc-security-considerations">Security Considerations</a></li>
 <li><a href="#advanced-topics" id="toc-advanced-topics">Advanced
 Topics</a>
 <ul>
-<li><a href="#dynamic-generation-of-config-contents"
-id="toc-dynamic-generation-of-config-contents">Dynamic Generation of
-Config Contents</a></li>
+<li><a href="#dynamic-generation-of-contents"
+id="toc-dynamic-generation-of-contents">Dynamic Generation of
+Contents</a></li>
 </ul></li>
 </ul>
 </nav>
@@ -156,8 +156,8 @@ following:</p>
 <li><code>SLOWDASH_PROJECT</code> environmental variable</li>
 <li>current working directory</li>
 </ul></li>
-<li><p>Under the project directory, the <code>config</code> directory is
-automatically created. The web interface posts files only to this
+<li><p>Under the project directory, the <code>contents</code> directory
+is automatically created. The web interface posts files only to this
 directory.</p></li>
 </ul>
 <h2 id="project-configuration-file">Project Configuration File</h2>
@@ -275,7 +275,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="
 <li><code>logo</code>:
 <ul>
 <li><code>file</code>: file name of the logo image, stored under the
-project <code>config</code> directory.</li>
+project <code>contents</code> directory.</li>
 <li><code>position</code>: <code>left</code> or <code>right</code></li>
 <li><code>background</code>: background color (default
 <code>none</code>)</li>
@@ -308,7 +308,7 @@ expressions. See, e.g.,
 <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/background" target="_blank">a
 Mozilla document</a> for some examples.</p>
 <p>The logo file(s) must be placed under the project’s
-<code>config</code> directory.</p>
+<code>contents</code> directory.</p>
 <h3 id="plot-style-examples">Plot Style Examples</h3>
 <h4 id="default-style">Default Style</h4>
 <p><img src="fig/ProjectSetup-Styles-Default.png" style="width:50%;margin-left:2em;border:thin solid gray"></p>
@@ -712,19 +712,19 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <p>This feature might be dropped in future SlowDash releases. Using a
 reverse proxy server is recommended for long-term setups.</p>
 <h1 id="advanced-topics">Advanced Topics</h1>
-<h2 id="dynamic-generation-of-config-contents">Dynamic Generation of
-Config Contents</h2>
+<h2 id="dynamic-generation-of-contents">Dynamic Generation of
+Contents</h2>
 <p>Configuration of SlowDash contents (dashboard, plot layout, etc.) is
-described in JSON/YAML files in the project <code>config</code>
+described in JSON/YAML files in the project <code>contents</code>
 directory, with a name like <code>slowplot-XXX.json</code>. These static
 JSON/YAML (or any files with a name like <code>TYPE-XXX.EXT</code>
-placed in <code>config</code>) can be replaced with a Python script that
-generates the contents dynamically. To do so, put a Python script with a
-name like <code>slowplot-XXX.py</code> instead of
+placed in <code>contents</code>) can be replaced with a Python script
+that generates the contents dynamically. To do so, put a Python script
+with a name like <code>slowplot-XXX.py</code> instead of
 <code>slowplot-XXX.json</code>, and define an
-<code>async _setup(app)</code> function that returns the config content.
-The <code>app</code> parameter here is the SlowDash App object, with
-which you can access SlowDash resources such as the channel list.</p>
+<code>async _setup(app)</code> function that returns the contents. The
+<code>app</code> parameter here is the SlowDash App object, with which
+you can access SlowDash resources such as the channel list.</p>
 <p>This is an example of dynamically generating a slowplot page that
 shows all the time-series channels. This example can be found in
 <code>ExampleProjects/Advanced/DynamicContents</code>.</p>
