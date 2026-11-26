@@ -325,7 +325,7 @@ _buildConfig(...)
 Platform.initialize(defaults, options, args)
     |
     +-- GET ./api/config
-    +-- optional GET ./api/content/item/{contents_file}
+    +-- optional GET ./api/content/item/{content_file}
     +-- load theme CSS slowjs/slowdash-{theme}.css
     |
     v
@@ -391,7 +391,7 @@ Scheduler.start()</code></pre>
 <li>Parse URL options.</li>
 <li>Fetch project config from <code>./api/config</code>.</li>
 <li>Fetch page config from
-<code>./api/content/item/{contents_file}</code>.</li>
+<code>./api/content/item/{content_file}</code>.</li>
 <li>Decode inline base64 config data from the URL.</li>
 <li>Load theme CSS dynamically.</li>
 <li>Build <code>&lt;datalist&gt;</code> elements for channel and content

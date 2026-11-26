@@ -275,7 +275,7 @@ if __name__ == '__main__':
 ```console
 $ python generate-testdata.py
 ```
-（もしコピペに失敗してエラーが出るようであれば，同じ内容のファイルが `slowdash/ExampleProjects/QuickTour/01_DummyData/contents/slowtask-testdata.py` にあります．後で見るように，これをブラウザから実行することもできます．）
+（もしコピペに失敗してエラーが出るようであれば，同じ内容のファイルが `slowdash/ExampleProjects/QuickTour/01_DummyData/sd_contents/slowtask-testdata.py` にあります．後で見るように，これをブラウザから実行することもできます．）
 
 10 秒くらい経過したら `Ctrl`-`c` で止めて，できたファイルを確認してください．
 ```console
@@ -569,7 +569,7 @@ while True:
 見苦しいことになると思いますが，実害はないはずです．
 
 ### 読み出しスクリプトを SlowDash アプリに統合する
-任意の Python スクリプト(SlowPyを使う必要もない)を SlowDash プロジェクトディレクトリの下の `contents` ディレクトリ（すでに自動作成されているはず）に `slowtask-XXX.py` という名前で保存すると，SlowDash ホーム画面の左下の "SlowTask" セクションに作成したスクリプトが表示され，コントロールできるようになります．
+任意の Python スクリプト(SlowPyを使う必要もない)を SlowDash プロジェクトディレクトリの下の `sd_contents` ディレクトリ（すでに自動作成されているはず）に `slowtask-XXX.py` という名前で保存すると，SlowDash ホーム画面の左下の "SlowTask" セクションに作成したスクリプトが表示され，コントロールできるようになります．
 `SlowdashProject.yaml` の設定で，スクリプトを自動開始するようにしたり，ブラウザからこの Python ファイルを直接編集できるようにすることもできます．具体的な手順は，公式ドキュメントを参照してください．
 
 ただし，上記のスクリプトは，（上品に）停止させるためのコードがありません．アプリ側から停止や再実行をできるようにするためには，アプリからのコントロールを受けられるようにする必要があります．そのために，以下のように読み出しループを SlowDash で規定されているコールバックに置き換えます：
@@ -610,7 +610,7 @@ if __name__ == '__main__':
 ```
 
 ここまでを行った例が `ExampleProjects/QuickTour/02_RealDevice` にあります．
-Python 読み出しスクリプトはその下の `contents` においてあります．
+Python 読み出しスクリプトはその下の `sd_contents` においてあります．
 ```console
 $ cd PATH/TO/SLOWDASH/ExampleProjects/QuickTour/02_RealDevice
 $ slowdash --port=18881
@@ -621,7 +621,7 @@ $ slowdash --port=18881
 単体実行はいままでどおりです：
 ```console
 $ slowdash-activate-venv
-$ python contents/slowtask-read-my.py
+$ python sd_contents/slowtask-read-my.py
 ```
 
 
@@ -741,7 +741,7 @@ WantedBy=multi-user.target
 SlowDash ブラウザ上には，ユーザ作成の HTML フォームを表示できます．ここに `<input type="number">` などの入力エレメントを配置し，`<input type="submit">` でボタンを作ると，ボタンをクリックしたときにユーザの Python スクリプトの関数を呼び出すことができます．
 このときの呼び出す関数名は，ボタンの `name` 属性で指定します．
 
-まず，上記の例で作成したデバイスからの読み出しスクリプトに，読み出しの開始と停止の機能を追加します．今回は，`slowtask-testdaq.py` というファイル名にして，`contents` ディレクトリに保存します．
+まず，上記の例で作成したデバイスからの読み出しスクリプトに，読み出しの開始と停止の機能を追加します．今回は，`slowtask-testdaq.py` というファイル名にして，`sd_contents` ディレクトリに保存します．
 ```python
 from dataclasses import dataclass
 
@@ -779,7 +779,7 @@ def stop():
 データクラス `run_status` で，現在のランの状態を管理します．この後，ここにいろいろな状態変数を追加していきますが，今は「動作中」を示すフラグ `running` だけです．メインのループでこの変数を見て，デバイスからデータを読み出すかを決めます．また，この変数を外部から設定するための関数 `start()` と `stop()` を作成します．
 ついでに，エラー処理も追加して，もう少し現実的な状況で使えるようにしました．
 
-この `start()` と `stop()` をブラウザから呼ぶためのフォーム，`html-testdaq.html` というファイルを作成し，`contents` 以下に配置します．ファイル名は，`html-` で始まり，拡張子は `.html` である必要があります．
+この `start()` と `stop()` をブラウザから呼ぶためのフォーム，`html-testdaq.html` というファイルを作成し，`sd_contents` 以下に配置します．ファイル名は，`html-` で始まり，拡張子は `.html` である必要があります．
 
 ```html
 <form>
@@ -790,7 +790,7 @@ def stop():
 
 ここでは，それぞれの関数に対応したボタンを２つ作成しているだけです．それぞれのボタンの `name` 属性で，そのボタンがクリックされたときにどのファイルのどの関数を呼ぶかを指定しています．`name` の形式は，スクリプトファイル名（`slowtask-XXX.py` の `XXX` の部分）と，その中の関数名です．
 
-これらのファイルを作成して `contents` 以下に配置したら，slowdash を立ち上げ直してください．ホーム画面の左下の SlowTask セクションに `testdaq` というタスクがあるはずなので，そこの start をクリックしてスクリプトをスタートさせてください．
+これらのファイルを作成して `sd_contents` 以下に配置したら，slowdash を立ち上げ直してください．ホーム画面の左下の SlowTask セクションに `testdaq` というタスクがあるはずなので，そこの start をクリックしてスクリプトをスタートさせてください．
 毎回手動でスタートするのが面倒な場合は，`SlowdashProject.yaml` に以下のように書くと，スクリプトを slowdash 開始時に自動で開始するようにできます．
 ```yaml
 slowdash_project:
@@ -1058,8 +1058,8 @@ async def start(auto_stop:bool, run_length:float):
 
 #### コンテンツ生成関数
 
-`@tasklet.content(FILE_NAME)` デコレータにより，プロジェクトの `contents` ディレクトリの内容を動的に生成できます．
-以下は，前章の `contents/html-testdaq.html` ファイルをタスクスクリプトから生成するようにしたものです．
+`@tasklet.content(FILE_NAME)` デコレータにより，プロジェクトの `sd_contents` ディレクトリの内容を動的に生成できます．
+以下は，前章の `sd_contents/html-testdaq.html` ファイルをタスクスクリプトから生成するようにしたものです．
 
 ```python
 @tasklet.content('html-testdaq.html')
@@ -1138,10 +1138,10 @@ HTML パネルにおいて，フォームエレメントに名前をつけるこ
 - `Tasklet` を import してインスタンス `tasklet` を作成
 - `_loop()` コールバックを `@tasklet.loop(interval=1.0)` で明示的に指定．`_loop()` の中の `time.sleep(1.0)` を削除
 - ブラウザから呼ばれる関数 `start()` および `stop()` を，`@tasklet.mesh.export()` で明示的に指定
-- `contents/html-testdaq.html` ファイルを削除し，変わりにスクリプト中の `tasklet.content("html-testdaq.html")` の関数で生成
+- `sd_contents/html-testdaq.html` ファイルを削除し，変わりにスクリプト中の `tasklet.content("html-testdaq.html")` の関数で生成
 - HTML フォームに名前をつけて，入力値のブラウザ間同期と永続性を有効化
 
-以下は，変更後の完全な SlowTask スクリプト(`contents/slowtask-testdaq.py`)です．
+以下は，変更後の完全な SlowTask スクリプト(`sd_contents/slowtask-testdaq.py`)です．
 
 
 ```python

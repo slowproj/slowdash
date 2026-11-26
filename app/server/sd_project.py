@@ -29,9 +29,9 @@ class Project:
         else:
             self.contents_dir = os.path.join(self.project_dir, 'config')
             if os.path.isdir(self.contents_dir):
-                logging.warning('"config" directory is depreciated, rename to "contents"')
+                logging.warning('"config" directory is depreciated, rename to "sd_contents"')
             else:
-                self.contents_dir = os.path.join(self.project_dir, 'contents')
+                self.contents_dir = os.path.join(self.project_dir, 'sd_contents')
 
         self.config = None
         self.update()

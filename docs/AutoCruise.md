@@ -11,9 +11,9 @@ title: Auto-Cruise
 - Any websites can be added to the Auto-Cruise list, but for external pages, some functions (such as "pausing on mouse-click") are restricted due to security reasons.
 
 # Setup
-Place a JSON or YAML content file under `PROJECT/contents` with a name like `slowcruise-NAME.json` (the name must start with `slowcruise-`). The "Cruise Planner" tool available on the home page will provide a web interface for it.
+Place a JSON or YAML content file under `PROJECT/sd_contents` with a name like `slowcruise-NAME.json` (the name must start with `slowcruise-`). The "Cruise Planner" tool available on the home page will provide a web interface for it.
 
-Example of `Projects/ATDS/contents/slowcruise-ATDS.yaml`:
+Example of `Projects/ATDS/sd_contents/slowcruise-ATDS.yaml`:
 
 ```yaml
 meta:

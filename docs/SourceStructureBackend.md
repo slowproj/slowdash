@@ -169,7 +169,7 @@ The normal startup sequence is:
 4. `Project` finds the SlowDash system directory and project directory.
 5. `Project` loads `SlowdashProject.yaml`, or creates an initial config from environment variables when configured that way.
 6. `App` changes the process working directory to the project directory when available.
-7. `App` adds the system plugin directory, project directory, and project `contents` directory to `sys.path`.
+7. `App` adds the system plugin directory, project directory, and project `sd_contents` directory to `sys.path`.
 8. `App` includes all built-in components into its Slowlette router.
 9. The app is run as ASGI, WSGI, CGI, or command-line internal request depending on the selected mode.
 
@@ -339,7 +339,7 @@ When the app is not async, `_NoAsync` plugin files are preferred when available.
 Main responsibilities:
 
 - Expose `/api/content`.
-- List and load project `contents/*-*.*` content.
+- List and load project `sd_contents/*-*.*` content.
 - Serve contents files when allowed.
 - Manage transient content, such as generated plot content.
 
@@ -435,7 +435,7 @@ GET  /api/content/item/{filename}
 GET  /api/content/file/{filename}
 ```
 
-- Builds a catalog from `task` / `tasks` configuration and `contents/slowtask-*.py`. The default configured command is `slowdash-task <file_path> --name=<name>`, with the Mesh URL and JSON parameters added. `auto_start` (or the compatibility name `auto_load`) launches tasks using `subprocess.Popen`.
+- Builds a catalog from `task` / `tasks` configuration and `sd_contents/slowtask-*.py`. The default configured command is `slowdash-task <file_path> --name=<name>`, with the Mesh URL and JSON parameters added. `auto_start` (or the compatibility name `auto_load`) launches tasks using `subprocess.Popen`.
 - Subscribes to `sd.task.spec.>`, `sd.task.exit.>`, `sd.task.heartbeat.>`, and `sd.task.life_event.>` and maintains `TaskProxy` objects by `mesh_id`. Publishing `sd.task.control.introduce` requests task specifications, so independently launched tasks can also register.
 - `TaskFunctionProxy` prepares RPC arguments using the advertised argument specification. `TaskVariableProxy` reads values with `mesh.remote_node('<task>.<variable>')`.
 - Task-control actions are `start`, `stop`, `kill`, and `purge`. `stop` calls the `<task>._sd_stop` RPC; `kill` acts on child processes tracked by this server; `purge` publishes exit notifications to remove registrations.
@@ -478,11 +478,11 @@ slowdash_project:
     url: slowmq://localhost:18881
   task:
     - name: sensor
-      file_path: contents/slowtask-sensor.py
+      file_path: sd_contents/slowtask-sensor.py
       auto_start: true
 ```
 
-Contents of `contents/slowtask-sensor.py`:
+Contents of `sd_contents/slowtask-sensor.py`:
 
 ```python
 from slowpy.mesh import Tasklet, DataPacket

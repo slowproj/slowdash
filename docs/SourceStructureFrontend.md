@@ -183,7 +183,7 @@ _buildConfig(...)
 Platform.initialize(defaults, options, args)
     |
     +-- GET ./api/config
-    +-- optional GET ./api/content/item/{contents_file}
+    +-- optional GET ./api/content/item/{content_file}
     +-- load theme CSS slowjs/slowdash-{theme}.css
     |
     v
@@ -255,7 +255,7 @@ Main responsibilities:
 
 - Parse URL options.
 - Fetch project config from `./api/config`.
-- Fetch page config from `./api/content/item/{contents_file}`.
+- Fetch page config from `./api/content/item/{content_file}`.
 - Decode inline base64 config data from the URL.
 - Load theme CSS dynamically.
 - Build `<datalist>` elements for channel and content selectors.

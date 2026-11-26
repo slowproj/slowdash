@@ -393,7 +393,7 @@ that way.</li>
 <li><code>App</code> changes the process working directory to the
 project directory when available.</li>
 <li><code>App</code> adds the system plugin directory, project
-directory, and project <code>contents</code> directory to
+directory, and project <code>sd_contents</code> directory to
 <code>sys.path</code>.</li>
 <li><code>App</code> includes all built-in components into its Slowlette
 router.</li>
@@ -577,7 +577,7 @@ preferred when available.</p>
 <p>Main responsibilities:</p>
 <ul>
 <li>Expose <code>/api/content</code>.</li>
-<li>List and load project <code>contents/*-*.*</code> content.</li>
+<li>List and load project <code>sd_contents/*-*.*</code> content.</li>
 <li>Serve contents files when allowed.</li>
 <li>Manage transient content, such as generated plot content.</li>
 </ul>
@@ -664,7 +664,7 @@ GET  /api/content/item/{filename}
 GET  /api/content/file/{filename}</code></pre>
 <ul>
 <li>Builds a catalog from <code>task</code> / <code>tasks</code>
-configuration and <code>contents/slowtask-*.py</code>. The default
+configuration and <code>sd_contents/slowtask-*.py</code>. The default
 configured command is
 <code>slowdash-task &lt;file_path&gt; --name=&lt;name&gt;</code>, with
 the Mesh URL and JSON parameters added. <code>auto_start</code> (or the
@@ -742,9 +742,9 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb14-1"><a href=
 <span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> slowmq://localhost:18881</span></span>
 <span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">task</span><span class="kw">:</span></span>
 <span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> sensor</span></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">file_path</span><span class="kw">:</span><span class="at"> contents/slowtask-sensor.py</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">file_path</span><span class="kw">:</span><span class="at"> sd_contents/slowtask-sensor.py</span></span>
 <span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">auto_start</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code></pre></div>
-<p>Contents of <code>contents/slowtask-sensor.py</code>:</p>
+<p>Contents of <code>sd_contents/slowtask-sensor.py</code>:</p>
 <div class="sourceCode" id="cb15"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> Tasklet, DataPacket</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>

@@ -156,9 +156,9 @@ following:</p>
 <li><code>SLOWDASH_PROJECT</code> environmental variable</li>
 <li>current working directory</li>
 </ul></li>
-<li><p>Under the project directory, the <code>contents</code> directory
-is automatically created. The web interface posts files only to this
-directory.</p></li>
+<li><p>Under the project directory, the <code>sd_contents</code>
+directory is automatically created. The web interface posts files only
+to this directory.</p></li>
 </ul>
 <h2 id="project-configuration-file">Project Configuration File</h2>
 <p>The project configuration file describes:</p>
@@ -275,7 +275,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="
 <li><code>logo</code>:
 <ul>
 <li><code>file</code>: file name of the logo image, stored under the
-project <code>contents</code> directory.</li>
+project <code>sd_contents</code> directory.</li>
 <li><code>position</code>: <code>left</code> or <code>right</code></li>
 <li><code>background</code>: background color (default
 <code>none</code>)</li>
@@ -308,7 +308,7 @@ expressions. See, e.g.,
 <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/background" target="_blank">a
 Mozilla document</a> for some examples.</p>
 <p>The logo file(s) must be placed under the project’s
-<code>contents</code> directory.</p>
+<code>sd_contents</code> directory.</p>
 <h3 id="plot-style-examples">Plot Style Examples</h3>
 <h4 id="default-style">Default Style</h4>
 <p><img src="fig/ProjectSetup-Styles-Default.png" style="width:50%;margin-left:2em;border:thin solid gray"></p>
@@ -715,10 +715,10 @@ reverse proxy server is recommended for long-term setups.</p>
 <h2 id="dynamic-generation-of-contents">Dynamic Generation of
 Contents</h2>
 <p>Configuration of SlowDash contents (dashboard, plot layout, etc.) is
-described in JSON/YAML files in the project <code>contents</code>
+described in JSON/YAML files in the project <code>sd_contents</code>
 directory, with a name like <code>slowplot-XXX.json</code>. These static
 JSON/YAML (or any files with a name like <code>TYPE-XXX.EXT</code>
-placed in <code>contents</code>) can be replaced with a Python script
+placed in <code>sd_contents</code>) can be replaced with a Python script
 that generates the contents dynamically. To do so, put a Python script
 with a name like <code>slowplot-XXX.py</code> instead of
 <code>slowplot-XXX.json</code>, and define an

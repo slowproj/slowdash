@@ -336,9 +336,9 @@ class="sourceCode html"><code class="sourceCode html"><span id="cb8-1"><a href="
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;set_time_offset&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Set&quot;</span><span class="dt">&gt;</span></span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
 <p>Save this in a file named <code>html-WorldClock.html</code> and place
-it in the <code>contents</code> directory of the user project. Restart
-<code>slowdash</code> and on the web layout, add a new “HTML/Form” panel
-with HTML named <code>WorldClock</code>.</p>
+it in the <code>sd_contents</code> directory of the user project.
+Restart <code>slowdash</code> and on the web layout, add a new
+“HTML/Form” panel with HTML named <code>WorldClock</code>.</p>
 <p><img src="fig/UserModule-Dispatcher.png" style="width:70%;border:thin solid gray"></p>
 <p>When the <code>Set</code> button is clicked, the form data is sent to
 the user module as a JSON document. On the terminal screen, you will see
@@ -486,7 +486,7 @@ Content</h2>
 <p>HTML forms associated with a user module
 (<code>html-WorldClock.html</code> in the example above) can be created
 directly from the user module, eliminating the need for a separate HTML
-file in the <code>contents</code> directory. For this, define the
+file in the <code>sd_contents</code> directory. For this, define the
 <code>_get_html()</code> callback function and return the HTML text:</p>
 <div class="sourceCode" id="cb18"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _get_html():</span>
@@ -498,7 +498,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb18-1"><a h
 <span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="ss">    &#39;&#39;&#39;</span></span></code></pre></div>
 <p>This will insert an HTML element as if a file named
 <code>html-UserModuleName.html</code> existed in the
-<code>contents</code> directory.</p>
+<code>sd_contents</code> directory.</p>
 <p>When an HTML panel is placed on a layout, an “On Update” option is
 available, which includes a “reload HTML” checkbox. If this option is
 checked, the HTML content is reloaded with every data update, enabling a
@@ -523,7 +523,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb19-1"><a h
 <h2 id="dynamic-generation-of-panel-layouts">Dynamic Generation of Panel
 Layouts</h2>
 <p>Similar to the dynamic generation of HTML forms, panel layouts
-(content of <code>contents/slowplot-XXX.json</code> files) can be
+(content of <code>sd_contents/slowplot-XXX.json</code> files) can be
 dynamically generated. To do this, define the <code>_get_layout()</code>
 callback function and return a JSON object describing the layout:</p>
 <div class="sourceCode" id="cb20"><pre
@@ -540,7 +540,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb20-1"><a h
 <span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    }</span></code></pre></div>
 <p>This will insert a SlowPlot layout as if a file named
 <code>slowplot-UserModuleName.json</code> existed in the
-<code>contents</code> directory.</p>
+<code>sd_contents</code> directory.</p>
 <p>In the same way as HTML forms, multiple layouts can be generated:</p>
 <div class="sourceCode" id="cb21"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _get_layout_list():</span>
@@ -604,13 +604,13 @@ API Extension</h3>
 <p>Here is another example for overriding SlowDash API more
 aggressively. In this example, the handler for
 <code>/content/itemlist</code> (a request to return a list of project
-<code>contents</code> directory contents) inserts a slowplot file entry,
-<code>slowplot-PlotLayoutOverride.json</code>, which actually does not
-exist. Then the handler for the content request
-(<code>/contents/content/FILENAME</code>) returns dynamically generated
+<code>sd_contents</code> directory contents) inserts a slowplot file
+entry, <code>slowplot-PlotLayoutOverride.json</code>, which actually
+does not exist. Then the handler for the content request
+(<code>/content/item/FILENAME</code>) returns dynamically generated
 content (time-series plots for all channels, where the channel list is
 obtained from the SlowDash App in <code>_setup()</code>), as if the file
-existed in the <code>contents</code> directory with that content.</p>
+existed in the <code>sd_contents</code> directory with that content.</p>
 <div class="sourceCode" id="cb23"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>webapi <span class="op">=</span> slowlette.Slowlette()</span>

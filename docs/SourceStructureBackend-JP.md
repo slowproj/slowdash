@@ -169,7 +169,7 @@ SlowPy は，データ型，制御の抽象化，ストレージへの書き込�
 4. `Project` が SlowDash のシステムディレクトリとプロジェクトディレクトリを探す．
 5. `Project` が `SlowdashProject.yaml` を読み込む．設定によっては，環境変数から初期設定を生成する．
 6. プロジェクトディレクトリが存在する場合，`App` はプロセスの作業ディレクトリをプロジェクトディレクトリに移す．
-7. `App` は，システムのプラグインディレクトリ，プロジェクトディレクトリ，プロジェクトの `contents` ディレクトリを `sys.path` に追加する．
+7. `App` は，システムのプラグインディレクトリ，プロジェクトディレクトリ，プロジェクトの `sd_contents` ディレクトリを `sys.path` に追加する．
 8. `App` がすべての組み込みコンポーネントを，自身の Slowlette ルーターに組み込む．
 9. 選択されたモードに応じて，ASGI，WSGI，CGI，またはコマンドラインの内部リクエストとして実行される．
 
@@ -339,7 +339,7 @@ $$
 主な責務は次のとおりです．
 
 - `/api/content` を提供する．
-- プロジェクトの `contents/*-*.*` コンテンツを一覧・読み込みする．
+- プロジェクトの `sd_contents/*-*.*` コンテンツを一覧・読み込みする．
 - 許可されている場合に設定ファイルを配信する．
 - 生成されたプロット内容などの一時コンテンツを管理する．
 
@@ -435,7 +435,7 @@ GET  /api/content/item/{filename}
 GET  /api/content/file/{filename}
 ```
 
-- `task` / `tasks` 設定と `contents/slowtask-*.py` からカタログを作る．設定の既定コマンドは `slowdash-task <file_path> --name=<name>` で，Mesh URL と JSON パラメータも渡される．`auto_start`（互換名 `auto_load`）に従って `subprocess.Popen` で起動する．
+- `task` / `tasks` 設定と `sd_contents/slowtask-*.py` からカタログを作る．設定の既定コマンドは `slowdash-task <file_path> --name=<name>` で，Mesh URL と JSON パラメータも渡される．`auto_start`（互換名 `auto_load`）に従って `subprocess.Popen` で起動する．
 - `sd.task.spec.>`，`sd.task.exit.>`，`sd.task.heartbeat.>`，`sd.task.life_event.>` を購読し，`mesh_id` ごとの `TaskProxy` を管理する．`sd.task.control.introduce` でタスク仕様の再通知を要求するため，別途起動されたタスクも登録できる．
 - `TaskFunctionProxy` は通知された引数仕様に基づき RPC 引数を整える．`TaskVariableProxy` は `mesh.remote_node('<task>.<variable>')` を使って値を読む．
 - タスク制御の `action` は `start`，`stop`，`kill`，`purge`．`stop` は `<task>._sd_stop` RPC，`kill` はこのサーバーが保持する子プロセス，`purge` は終了通知による登録解除を扱う．
@@ -478,11 +478,11 @@ slowdash_project:
     url: slowmq://localhost:18881
   task:
     - name: sensor
-      file_path: contents/slowtask-sensor.py
+      file_path: sd_contents/slowtask-sensor.py
       auto_start: true
 ```
 
-`contents/slowtask-sensor.py` の内容:
+`sd_contents/slowtask-sensor.py` の内容:
 
 ```python
 from slowpy.mesh import Tasklet, DataPacket

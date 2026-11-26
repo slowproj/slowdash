@@ -446,7 +446,7 @@ href="ControlsScript.html">Controls
 <div class="sourceCode" id="cb16"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python generate-testdata.py</span></span></code></pre></div>
 <p>（もしコピペに失敗してエラーが出るようであれば，同じ内容のファイルが
-<code>slowdash/ExampleProjects/QuickTour/01_DummyData/contents/slowtask-testdata.py</code>
+<code>slowdash/ExampleProjects/QuickTour/01_DummyData/sd_contents/slowtask-testdata.py</code>
 にあります．後で見るように，これをブラウザから実行することもできます．）</p>
 <p>10 秒くらい経過したら <code>Ctrl</code>-<code>c</code>
 で止めて，できたファイルを確認してください．</p>
@@ -855,7 +855,7 @@ SlowDash を使えるようになります． この時点では，停止に
 id="読み出しスクリプトを-slowdash-アプリに統合する">読み出しスクリプトを
 SlowDash アプリに統合する</h3>
 <p>任意の Python スクリプト(SlowPyを使う必要もない)を SlowDash
-プロジェクトディレクトリの下の <code>contents</code>
+プロジェクトディレクトリの下の <code>sd_contents</code>
 ディレクトリ（すでに自動作成されているはず）に
 <code>slowtask-XXX.py</code> という名前で保存すると，SlowDash
 ホーム画面の左下の “SlowTask”
@@ -900,7 +900,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb37-1"><a h
 <span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>        _loop()</span></code></pre></div>
 <p>ここまでを行った例が
 <code>ExampleProjects/QuickTour/02_RealDevice</code> にあります． Python
-読み出しスクリプトはその下の <code>contents</code>
+読み出しスクリプトはその下の <code>sd_contents</code>
 においてあります．</p>
 <div class="sourceCode" id="cb38"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH/ExampleProjects/QuickTour/02_RealDevice</span></span>
@@ -914,7 +914,7 @@ Console に表示されるようになります．</p>
 <p>単体実行はいままでどおりです：</p>
 <div class="sourceCode" id="cb39"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv</span></span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python contents/slowtask-read-my.py</span></span></code></pre></div>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python sd_contents/slowtask-read-my.py</span></span></code></pre></div>
 <h3 id="追加の詳細">追加の詳細</h3>
 <p>電源ユニットを使用する場合で，出力電圧を設定するには以下のようにします．</p>
 <div class="sourceCode" id="cb40"><pre
@@ -1089,7 +1089,7 @@ Python スクリプトの関数を呼び出す</li>
 このときの呼び出す関数名は，ボタンの <code>name</code>
 属性で指定します．</p>
 <p>まず，上記の例で作成したデバイスからの読み出しスクリプトに，読み出しの開始と停止の機能を追加します．今回は，<code>slowtask-testdaq.py</code>
-というファイル名にして，<code>contents</code>
+というファイル名にして，<code>sd_contents</code>
 ディレクトリに保存します．</p>
 <div class="sourceCode" id="cb45"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dataclasses <span class="im">import</span> dataclass</span>
@@ -1132,7 +1132,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb45-1"><a h
 ついでに，エラー処理も追加して，もう少し現実的な状況で使えるようにしました．</p>
 <p>この <code>start()</code> と <code>stop()</code>
 をブラウザから呼ぶためのフォーム，<code>html-testdaq.html</code>
-というファイルを作成し，<code>contents</code>
+というファイルを作成し，<code>sd_contents</code>
 以下に配置します．ファイル名は，<code>html-</code> で始まり，拡張子は
 <code>.html</code> である必要があります．</p>
 <div class="sourceCode" id="cb46"><pre
@@ -1145,7 +1145,7 @@ class="sourceCode html"><code class="sourceCode html"><span id="cb46-1"><a href=
 属性で，そのボタンがクリックされたときにどのファイルのどの関数を呼ぶかを指定しています．<code>name</code>
 の形式は，スクリプトファイル名（<code>slowtask-XXX.py</code> の
 <code>XXX</code> の部分）と，その中の関数名です．</p>
-<p>これらのファイルを作成して <code>contents</code>
+<p>これらのファイルを作成して <code>sd_contents</code>
 以下に配置したら，slowdash を立ち上げ直してください．ホーム画面の左下の
 SlowTask セクションに <code>testdaq</code>
 というタスクがあるはずなので，そこの start
@@ -1437,9 +1437,9 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb59-1"><a h
 を使用した場合は明示的なエクスポートが必要です．</p>
 <h4 id="コンテンツ生成関数">コンテンツ生成関数</h4>
 <p><code>@tasklet.content(FILE_NAME)</code>
-デコレータにより，プロジェクトの <code>contents</code>
+デコレータにより，プロジェクトの <code>sd_contents</code>
 ディレクトリの内容を動的に生成できます． 以下は，前章の
-<code>contents/html-testdaq.html</code>
+<code>sd_contents/html-testdaq.html</code>
 ファイルをタスクスクリプトから生成するようにしたものです．</p>
 <div class="sourceCode" id="cb60"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;html-testdaq.html&#39;</span>)</span>
@@ -1521,14 +1521,14 @@ SlowTask のスクリプトを Tasklet を使って書き換えた例が
 <li>ブラウザから呼ばれる関数 <code>start()</code> および
 <code>stop()</code> を，<code>@tasklet.mesh.export()</code>
 で明示的に指定</li>
-<li><code>contents/html-testdaq.html</code>
+<li><code>sd_contents/html-testdaq.html</code>
 ファイルを削除し，変わりにスクリプト中の
 <code>tasklet.content("html-testdaq.html")</code> の関数で生成</li>
 <li>HTML
 フォームに名前をつけて，入力値のブラウザ間同期と永続性を有効化</li>
 </ul>
 <p>以下は，変更後の完全な SlowTask
-スクリプト(<code>contents/slowtask-testdaq.py</code>)です．</p>
+スクリプト(<code>sd_contents/slowtask-testdaq.py</code>)です．</p>
 <div class="sourceCode" id="cb64"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="co">### 先頭部分は以前と同じ</span></span>
 <span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a></span>

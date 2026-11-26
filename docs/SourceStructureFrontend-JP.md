@@ -183,7 +183,7 @@ _buildConfig(...)
 Platform.initialize(defaults, options, args)
     |
     +-- GET ./api/config
-    +-- optional GET ./api/content/item/{contents_file}
+    +-- optional GET ./api/content/item/{content_file}
     +-- load theme CSS slowjs/slowdash-{theme}.css
     |
     v
@@ -255,7 +255,7 @@ Scheduler.start()
 
 - URL のオプションを解析する．
 - `./api/config` からプロジェクト設定を取得する．
-- `./api/content/item/{contents_file}` からページ設定を取得する．
+- `./api/content/item/{content_file}` からページ設定を取得する．
 - URL 中のインライン base64 設定データをデコードする．
 - テーマの CSS を動的に読み込む．
 - チャンネルセレクタやコンテンツセレクタ用の `<datalist>` を作る．

@@ -86,7 +86,7 @@ while True:
 ```
 
 #### Calling a function from the SlowDash Web GUI
-Output voltage setting function `set_Vout()` in script `contents/slowtask-test.py`:
+Output voltage setting function `set_Vout()` in script `sd_contents/slowtask-test.py`:
 ```python
 from slowpy.control import control_system as ctrl
 Vout = ctrl.ethernet('192.168.1.43', 5025).scpi(append_opc=True).command('VOLT')
@@ -94,7 +94,7 @@ Vout = ctrl.ethernet('192.168.1.43', 5025).scpi(append_opc=True).command('VOLT')
 def set_Vout(value:float):
     Vout.set(value)
 ```
-User-created HTML for the Web GUI (`contents/html-test.html`):
+User-created HTML for the Web GUI (`sd_contents/html-test.html`):
 ```html
 <form>
   Voltage output: <input name="value">
@@ -610,7 +610,7 @@ server.start()
 ```
 
 # SlowTask: Binding the GUI and Scripts
-A SlowTask is a user Python script placed under the `contents` directory of a SlowDash project, with a name like `slowtask-XXX.py`.
+A SlowTask is a user Python script placed under the `sd_contents` directory of a SlowDash project, with a name like `slowtask-XXX.py`.
 From the SlowDash GUI, the script can be started and stopped, functions defined in the script can be called, variables in the script can be displayed, etc.
 The SlowPy library is designed to be used in SlowTask scripts, but using it is not mandatory.
 
@@ -635,7 +635,7 @@ if __name__ == '__main__':
 
 ## Starting and Stopping SlowTasks
 ### Starting from the SlowDash Server
-When a SlowTask script file (e.g., `slowtask-test.py`) is placed under the `contents` directory of the project, it is recognized by the SlowDash server and shown in the task management panel (the "SlowTask" section) of the SlowDash home page.
+When a SlowTask script file (e.g., `slowtask-test.py`) is placed under the `sd_contents` directory of the project, it is recognized by the SlowDash server and shown in the task management panel (the "SlowTask" section) of the SlowDash home page.
 By default, tasks are only "listed" and are not executed until the `start` button is clicked.
 
 By creating an entry in the SlowDash configuration file (`SlowdashProject.yaml`), a task can be configured to start automatically when the server starts.
@@ -670,7 +670,7 @@ The `task` entry can be a dict of one task, or a list of multiple tasks (`tasks`
 | `name` | Task name | (required) |
 | `auto_start` | Whether to start the task automatically when the server starts (the old name `auto_load` can also be used) | `false` |
 | `parameters` | Parameters passed to the script | none |
-| `file_path` | Path of the script file | `contents/slowtask-{name}.py` |
+| `file_path` | Path of the script file | `sd_contents/slowtask-{name}.py` |
 | `command` | Command to start the task | `slowdash-task {file_path} --name={name}` |
 
 `parameters` is optional; if specified, it is passed to the initialize callback of the SlowTask script (described later). It is also held in the `parameters` property of the Tasklet, so it can be used before `initialize`, such as in decorators.
@@ -706,14 +706,14 @@ Task parameters can also be passed by giving a JSON string to the `--parameters`
 In this case, enclose the entire JSON string in single quotes so that it is not misinterpreted by the shell.
 ```console
 $ cd PATH/TO/PROJECT
-$ slowdash-task contents/slowtask-mytask.py --mesh=slowmq://localhost:18881 --parameters='{"p1":10,"p2":20}'
+$ slowdash-task sd_contents/slowtask-mytask.py --mesh=slowmq://localhost:18881 --parameters='{"p1":10,"p2":20}'
 ```
 
 If the script has `if __name__ == '__main__': tasklet.run(...)`, it can also be run as a normal Python script.
 In this case, however, task parameters cannot be passed.
 ```console
 $ slowdash-activate-venv
-$ python contents/slowtask-mytask.py
+$ python sd_contents/slowtask-mytask.py
 ```
 
 SlowTask processes started independently can also be stopped (Stop) from the SlowDash server.
@@ -792,7 +792,7 @@ Here, the parentheses at the end of the button name indicate that this button is
 The first part (`test.` in this example) is the task name, which by default is the script file name with the leading `slowtask-` removed.
 (If the task name contains `-`, it is replaced with `_`.)
 
-HTML files are placed in the `contents` directory of the project, with names like `html-XXX.html`.
+HTML files are placed in the `sd_contents` directory of the project, with names like `html-XXX.html`.
 As described later, HTML contents can also be generated in a SlowTask script.
 
 #### Passing Parameters
@@ -1175,7 +1175,7 @@ async def stop():
 Multiple input values can also be set at once with `ctrl.form(name).aio_set(dict)`.
 
 ### Dynamic Content Generation
-With the `@tasklet.content(name)` decorator, the contents of files that are normally placed under `contents` of a SlowDash project can be generated dynamically.
+With the `@tasklet.content(name)` decorator, the contents of files that are normally placed under `sd_contents` of a SlowDash project can be generated dynamically.
 This makes it possible to put a task script and the HTML form to control it into a single file, making it easier to keep them consistent.
 ```python
 @tasklet.content('html-test.html')
@@ -1187,7 +1187,7 @@ def html():
       </form>
     '''
 ```
-From the browser, it looks as if the HTML file `html-test.html` exists in `contents`.
+From the browser, it looks as if the HTML file `html-test.html` exists in `sd_contents`.
 
 If `On Update: Reload HTML` is checked in the HTML panel, this function is called on every data update, so HTML pages containing data can be generated dynamically.
 Here is an example of displaying disk usage formatted in a table.
@@ -1206,7 +1206,7 @@ def html_disk_usage():
     '''
 ```
 
-`contents/slowplot-XXX.json` can be generated in the same way, so together with an HTML form, a SlowTask can provide a complete layout to use it.
+`sd_contents/slowplot-XXX.json` can be generated in the same way, so together with an HTML form, a SlowTask can provide a complete layout to use it.
 As content generation functions are ordinary Python functions, template engines such as Jinja can also be used with them.
 
 ## Matplotlib Integration

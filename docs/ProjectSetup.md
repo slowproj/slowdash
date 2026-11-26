@@ -13,7 +13,7 @@ title: Project Setup
   - `SLOWDASH_PROJECT` environmental variable
   - current working directory
 
-- Under the project directory, the `contents` directory is automatically created. The web interface posts files only to this directory.
+- Under the project directory, the `sd_contents` directory is automatically created. The web interface posts files only to this directory.
 
 
 ## Project Configuration File
@@ -102,7 +102,7 @@ Example:
   - `color`: title text color (default `white`)
   - `background`: title bar background (default `#4b2e83`)
 - `logo`: 
-  - `file`: file name of the logo image, stored under the project `contents` directory.
+  - `file`: file name of the logo image, stored under the project `sd_contents` directory.
   - `position`: `left` or `right`
   - `background`: background color (default `none`)
   - `link`: URL to open when the logo is clicked
@@ -126,7 +126,7 @@ Example:
 
 The `background` property takes CSS "background" values / expressions. See, e.g., <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/background" target="_blank">a Mozilla document</a> for some examples.
 
-The logo file(s) must be placed under the project's `contents` directory.
+The logo file(s) must be placed under the project's `sd_contents` directory.
 
 ### Plot Style Examples
 #### Default Style
@@ -514,7 +514,7 @@ This feature might be dropped in future SlowDash releases. Using a reverse proxy
 
 # Advanced Topics
 ## Dynamic Generation of Contents
-Configuration of SlowDash contents (dashboard, plot layout, etc.) is described in JSON/YAML files in the project `contents` directory, with a name like `slowplot-XXX.json`. These static JSON/YAML (or any files with a name like `TYPE-XXX.EXT` placed in `contents`) can be replaced with a Python script that generates the contents dynamically. To do so, put a Python script with a name like `slowplot-XXX.py` instead of `slowplot-XXX.json`, and define an `async _setup(app)` function that returns the contents. The `app` parameter here is the SlowDash App object, with which you can access SlowDash resources such as the channel list.
+Configuration of SlowDash contents (dashboard, plot layout, etc.) is described in JSON/YAML files in the project `sd_contents` directory, with a name like `slowplot-XXX.json`. These static JSON/YAML (or any files with a name like `TYPE-XXX.EXT` placed in `sd_contents`) can be replaced with a Python script that generates the contents dynamically. To do so, put a Python script with a name like `slowplot-XXX.py` instead of `slowplot-XXX.json`, and define an `async _setup(app)` function that returns the contents. The `app` parameter here is the SlowDash App object, with which you can access SlowDash resources such as the channel list.
 
 This is an example of dynamically generating a slowplot page that shows all the time-series channels. This example can be found in `ExampleProjects/Advanced/DynamicContents`.
 ```python

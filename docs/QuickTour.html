@@ -203,7 +203,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a hr
 href="ControlsScript.html">Controls</a> section. For now, just copy and
 paste the script and use it to generate some test data. (If
 copy-and-paste fails, the identical source can be found at
-<code>ExampleProjects/QuickTour/01_DummyData/contents/slowtask-testdata.py</code>.
+<code>ExampleProjects/QuickTour/01_DummyData/sd_contents/slowtask-testdata.py</code>.
 As we will see later, this script can be started from web browsers.)</p>
 <p>If you installed SlowPy in a virtual environment (the standard
 installation method), activate it using either:</p>
@@ -626,7 +626,7 @@ but it’s harmless.)</p>
 id="integrating-the-script-into-the-slowdash-application">Integrating
 the Script into the SlowDash Application</h2>
 <p>Any Python script (not necessarily using SlowPy) placed in your
-project’s <code>contents</code> directory as
+project’s <code>sd_contents</code> directory as
 <code>slowtask-XXX.py</code> will automatically appear in the “SlowTask”
 section of the SlowDash home screen, where it can be controlled via the
 web interface.</p>
@@ -678,7 +678,7 @@ SlowTask, with [start] and [stop] buttons.</p>
 <p>You can still run the script without the SlowDash app as before:</p>
 <div class="sourceCode" id="cb35"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv</span></span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python contents/slowtask-read-my.py</span></span></code></pre></div>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python sd_contents/slowtask-read-my.py</span></span></code></pre></div>
 <h2 id="additional-notes">Additional Notes</h2>
 <p>For power supply devices that need voltage control:</p>
 <div class="sourceCode" id="cb36"><pre
@@ -847,7 +847,7 @@ function in your Python script. The function name to call is specified
 with the button’s <code>name</code> attribute.</p>
 <p>First, we add start/stop control to the device readout script created
 in the previous example. This time, save it as
-<code>slowtask-testdaq.py</code> under the <code>contents</code>
+<code>slowtask-testdaq.py</code> under the <code>sd_contents</code>
 directory.</p>
 <div class="sourceCode" id="cb41"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dataclasses <span class="im">import</span> dataclass</span>
@@ -892,8 +892,8 @@ the script more practical in realistic situations.</p>
 <p>Create a form to call these <code>start()</code> and
 <code>stop()</code> functions from the browser, save it as
 <code>html-testdaq.html</code>, and place it under
-<code>contents</code>. The filename must start with <code>html-</code>
-and have the <code>.html</code> extension.</p>
+<code>sd_contents</code>. The filename must start with
+<code>html-</code> and have the <code>.html</code> extension.</p>
 <div class="sourceCode" id="cb42"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
 <span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;testdaq.start()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Start&quot;</span><span class="dt">&gt;</span></span>
@@ -905,13 +905,13 @@ function in which file should be called when the button is clicked. The
 <code>name</code> format is the script filename (the <code>XXX</code>
 part of <code>slowtask-XXX.py</code>) and the function name in that
 script.</p>
-<p>After creating and placing these files under <code>contents</code>,
-restart slowdash. In the SlowTask section at the lower left of the home
-screen, you should see a task called <code>testdaq</code>; click
-<code>start</code> there to start the script. If manually starting every
-time is inconvenient, add the following to
-<code>SlowdashProject.yaml</code> to auto-start the script when slowdash
-starts.</p>
+<p>After creating and placing these files under
+<code>sd_contents</code>, restart slowdash. In the SlowTask section at
+the lower left of the home screen, you should see a task called
+<code>testdaq</code>; click <code>start</code> there to start the
+script. If manually starting every time is inconvenient, add the
+following to <code>SlowdashProject.yaml</code> to auto-start the script
+when slowdash starts.</p>
 <div class="sourceCode" id="cb43"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
 <span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> QuickTour</span></span>
@@ -1200,10 +1200,10 @@ functions were exported implicitly. With Tasklet, functions must be
 exported explicitly.</p>
 <h3 id="content-generation-functions">Content Generation Functions</h3>
 <p>The <code>@tasklet.content(FILENAME)</code> decorator allows a script
-to dynamically generate content for the project’s <code>contents</code>
-directory. The following example generates the contents of the
-<code>contents/html-testdaq.html</code> file from the previous section
-within the task script.</p>
+to dynamically generate content for the project’s
+<code>sd_contents</code> directory. The following example generates the
+contents of the <code>sd_contents/html-testdaq.html</code> file from the
+previous section within the task script.</p>
 <div class="sourceCode" id="cb56"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;html-testdaq.html&#39;</span>)</span>
 <span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> html():</span>
@@ -1286,14 +1286,14 @@ instance.</li>
 <li>Explicitly export the browser-callable <code>start()</code> and
 <code>stop()</code> functions with
 <code>@tasklet.mesh.export()</code>.</li>
-<li>Remove <code>contents/html-testdaq.html</code> and generate its
+<li>Remove <code>sd_contents/html-testdaq.html</code> and generate its
 contents with a function decorated with
 <code>@tasklet.content("html-testdaq.html")</code>.</li>
 <li>Give the HTML form a name to enable synchronization across browsers
 and persistence of input values.</li>
 </ul>
 <p>Here is the complete updated SlowTask script
-(<code>contents/slowtask-testdaq.py</code>).</p>
+(<code>sd_contents/slowtask-testdaq.py</code>).</p>
 <div class="sourceCode" id="cb60"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="co">### The first part is unchanged.</span></span>
 <span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a></span>
