@@ -637,7 +637,7 @@ export class SlowpyPanel extends Panel {
 
         copyBtn.bind('click', e=>{
             if (true) {
-                // document.execCommand() is depreciated
+                // document.execCommand() is deprecated
                 let selection = window.getSelection();
                 selection.removeAllRanges();
                 let range = document.createRange();
