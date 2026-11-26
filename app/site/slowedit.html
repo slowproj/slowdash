@@ -181,7 +181,7 @@
                 return {};
             }
                 
-            let response = await fetch('./api/content/contentlist');
+            let response = await fetch('./api/content/itemlist');
             const contentlist = await response.json();
             for (const meta of contentlist) {
                 if (meta.config_file != config.filename) {

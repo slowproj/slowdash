@@ -338,12 +338,12 @@ When the app is not async, `_NoAsync` plugin files are preferred when available.
 
 Main responsibilities:
 
-- Expose `/api/contents`.
+- Expose `/api/content`.
 - List and load project `contents/*-*.*` content.
 - Serve contents files when allowed.
 - Manage transient content, such as generated plot content.
 
-The `/api/content/contentlist` and `/api/content/content/{filename}` endpoints are used by UI components to discover dashboards, plots, cruises, and other user content.
+The `/api/content/itemlist` and `/api/content/item/{filename}` endpoints are used by UI components to discover dashboards, plots, cruises, and other user content.
 
 ## `DataSourceComponent` and `DataSource`
 
@@ -430,8 +430,8 @@ POST /api/task/control/{taskname}
 POST /api/control
 GET  /api/channels
 GET  /api/data/{*}
-GET  /api/content/contentlist
-GET  /api/content/content/{filename}
+GET  /api/content/itemlist
+GET  /api/content/item/{filename}
 GET  /api/content/file/{filename}
 ```
 
@@ -519,7 +519,7 @@ The command name is a JSON key; other fields supply arguments. For inclusion in 
 
 ## `UserHtmlComponent`
 
-`sd_userhtml.py` serves user-provided HTML and related content. It also redirects or maps user URLs to internal content/content APIs.
+`sd_userhtml.py` serves user-provided HTML and related content. It also redirects or maps user URLs to internal content/item APIs.
 
 This lets project-specific UI pages live in the project configuration/content area without changing the core server.
 

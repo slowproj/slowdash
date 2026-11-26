@@ -937,7 +937,7 @@ export class CanvasPanel extends Panel {
             if (config.config_name != this.loaded_config_name) {
                 this.loaded_config_name = config.config_name;
 
-                const url ='./api/content/content/slowdash-' + config.config_name + '.json';
+                const url ='./api/content/item/slowdash-' + config.config_name + '.json';
                 const response = await fetch(url);
                 if (! response.ok) {
                     this.div.html(`

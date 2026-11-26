@@ -465,7 +465,7 @@ The handler for `/channels` above returns only one channel, but the client (web 
 
 ### Content List & Content API Extension
 Here is another example for overriding SlowDash API more aggressively. 
-In this example, the handler for `/content/contentlist` (a request to return a list of project `contents` directory contents) inserts a slowplot file entry, `slowplot-PlotLayoutOverride.json`, which actually does not exist. 
+In this example, the handler for `/content/itemlist` (a request to return a list of project `contents` directory contents) inserts a slowplot file entry, `slowplot-PlotLayoutOverride.json`, which actually does not exist. 
 Then the handler for the content request (`/contents/content/FILENAME`) returns dynamically generated content (time-series plots for all channels, where the channel list is obtained from the SlowDash App in `_setup()`), as if the file existed in the `contents` directory with that content. 
 ```python
 import slowlette
@@ -477,7 +477,7 @@ async def _setup(slowdash):
     channels = await slowdash.request_channels()
 
     
-@webapi.get('/api/content/contentlist')
+@webapi.get('/api/content/itemlist')
 def add_slowplot_PlotLayoutOverride():
     # this entry will be "injected" into the list through Slowlette's response aggregation
     entries = [{
@@ -490,7 +490,7 @@ def add_slowplot_PlotLayoutOverride():
     return entries
 
 
-@webapi.get('/api/content/content/slowplot-PlotLayoutOverride.json')
+@webapi.get('/api/content/item/slowplot-PlotLayoutOverride.json')
 def generate_slowplot_PlotLayoutOverride(request:slowlette.Request):
     request.abort()   # stop propagation to avoid being handled by SlowDash (no aggregation)
 

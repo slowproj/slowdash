@@ -576,13 +576,13 @@ preferred when available.</p>
 <h2 id="contentcomponent"><code>ContentComponent</code></h2>
 <p>Main responsibilities:</p>
 <ul>
-<li>Expose <code>/api/contents</code>.</li>
+<li>Expose <code>/api/content</code>.</li>
 <li>List and load project <code>contents/*-*.*</code> content.</li>
 <li>Serve contents files when allowed.</li>
 <li>Manage transient content, such as generated plot content.</li>
 </ul>
-<p>The <code>/api/content/contentlist</code> and
-<code>/api/content/content/{filename}</code> endpoints are used by UI
+<p>The <code>/api/content/itemlist</code> and
+<code>/api/content/item/{filename}</code> endpoints are used by UI
 components to discover dashboards, plots, cruises, and other user
 content.</p>
 <h2
@@ -659,8 +659,8 @@ POST /api/task/control/{taskname}
 POST /api/control
 GET  /api/channels
 GET  /api/data/{*}
-GET  /api/content/contentlist
-GET  /api/content/content/{filename}
+GET  /api/content/itemlist
+GET  /api/content/item/{filename}
 GET  /api/content/file/{filename}</code></pre>
 <ul>
 <li>Builds a catalog from <code>task</code> / <code>tasks</code>
@@ -784,7 +784,7 @@ inferred. The implementation uses this information to construct the
 specification and convert arguments on the server.</p>
 <h2 id="userhtmlcomponent"><code>UserHtmlComponent</code></h2>
 <p><code>sd_userhtml.py</code> serves user-provided HTML and related
-content. It also redirects or maps user URLs to internal content/content
+content. It also redirects or maps user URLs to internal content/item
 APIs.</p>
 <p>This lets project-specific UI pages live in the project
 configuration/content area without changing the core server.</p>

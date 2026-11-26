@@ -295,13 +295,13 @@ section</a>.</p>
 <pre><code>GET http://ADDRESS:PORT/api/blob/CHANNEL?id=ID</code></pre>
 <h2 id="listing-user-content-entries">Listing User Content Entries</h2>
 <h3 id="request-6">Request</h3>
-<pre><code>GET http://ADDRESS:PORT/api/content/contentlist</code></pre>
+<pre><code>GET http://ADDRESS:PORT/api/content/itemlist</code></pre>
 <h2 id="fetching-user-content">Fetching User Content</h2>
 <p>This returns decoded contents in JSON. If the file is YAML, it is
 converted into JSON. If the file is a Python script, the reply content
 will be dynamically generated.</p>
 <h3 id="request-7">Request</h3>
-<pre><code>GET http://ADDRESS:PORT/api/content/content/FILENAME</code></pre>
+<pre><code>GET http://ADDRESS:PORT/api/content/item/FILENAME</code></pre>
 <h2 id="listing-user-content-files">Listing User Content Files</h2>
 <h3 id="request-8">Request</h3>
 <pre><code>GET http://ADDRESS:PORT/api/content/filelist</code></pre>

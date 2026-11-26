@@ -88,7 +88,7 @@ class ContentComponent(Component):
         self.contents_dir = self.project.contents_dir
 
 
-    @slowlette.get('/api/content/contentlist')
+    @slowlette.get('/api/content/itemlist')
     async def get_contentlist(self):
         filelist = []
         if self.contents_dir is not None:
@@ -123,7 +123,7 @@ class ContentComponent(Component):
         return doc
 
         
-    @slowlette.get('/api/content/content/{filename}')
+    @slowlette.get('/api/content/item/{filename}')
     async def get_content(self, filename:str, content_type:str='json'):
         meta, content = await self._load_content(filename, content_type)
         if meta is None:

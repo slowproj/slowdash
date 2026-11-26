@@ -1195,10 +1195,10 @@ Returns values of variables exported by Tasks in the same format as data in the 
 
 ### General Content Access Interface
 
-#### GET `api/contents/contentlist`
+#### GET `api/content/itemlist`
 For contents provided by Tasks, generates and returns a list in the same form as files under the SlowDash Project `contents` directory.
 
-#### GET `api/contents/content/{content_name}`
+#### GET `api/content/item/{content_name}`
 Returns the contents of Task-provided content.
 
 

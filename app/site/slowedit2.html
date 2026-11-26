@@ -147,7 +147,7 @@
 
         let meta = {};
         if (content && (content.length > 0) && ['json', 'yaml'].includes(filetype)) {
-            let response = await fetch('./api/content/contentlist');
+            let response = await fetch('./api/content/itemlist');
             const contentlist = await response.json();
             for (const this_meta of contentlist) {
                 if (this_meta.config_file == filename) {

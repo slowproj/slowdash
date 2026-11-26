@@ -296,15 +296,15 @@ pages.</p>
 <code>https://unpkg.com/monaco-editor/...</code>.</li>
 </ul>
 <p>Both pages call SlowDash content access APIs such as:</p>
-<pre class="text"><code>GET /api/contents/file/{filename}
-GET /api/contents/contentlist
-POST /api/contents/file/{filename}</code></pre>
+<pre class="text"><code>GET /api/content/file/{filename}
+GET /api/content/itemlist
+POST /api/content/file/{filename}</code></pre>
 <h3 id="autocruise-page">Autocruise page</h3>
 <p><code>slowcruise.html</code> loads the <code>autocruise</code>
 submodule:</p>
 <div class="sourceCode" id="cb6"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">script</span><span class="ot"> type=</span><span class="st">&quot;text/javascript&quot;</span><span class="ot"> src</span><span class="op">=</span><span class="st">&quot;slowjs/autocruise/autocruise.js&quot;</span><span class="dt">&gt;&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">body</span><span class="ot"> autocruise-configbase</span><span class="op">=</span><span class="st">&quot;api/contents/content/&quot;</span><span class="ot"> autocruise-interval</span><span class="op">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span></code></pre></div>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">body</span><span class="ot"> autocruise-configbase</span><span class="op">=</span><span class="st">&quot;api/content/item/&quot;</span><span class="ot"> autocruise-interval</span><span class="op">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span></code></pre></div>
 <p>It uses <code>autocruise.js</code> to rotate through multiple
 dashboard/config pages.</p>
 <h1 id="main-dashboard-runtime-flow">Main Dashboard Runtime Flow</h1>
@@ -325,7 +325,7 @@ _buildConfig(...)
 Platform.initialize(defaults, options, args)
     |
     +-- GET ./api/config
-    +-- optional GET ./api/contents/content/{contents_file}
+    +-- optional GET ./api/content/item/{contents_file}
     +-- load theme CSS slowjs/slowdash-{theme}.css
     |
     v
@@ -343,7 +343,7 @@ config and wraps it into a single canvas panel.</p>
 <p>When <code>config</code> is a query string (as on
 <code>slowdash.html</code>), <code>SlowDash._buildSettings()</code> maps
 URL parameters to config values:</p>
-<pre class="text"><code>config=&lt;name&gt;        load a named page config from ./api/contents/content/
+<pre class="text"><code>config=&lt;name&gt;        load a named page config from ./api/content/item/
 configdata=&lt;base64&gt;  load an inline base64-encoded config (used by pop-out)
 mode=normal|protected|display
 theme=&lt;name&gt;         load slowjs/slowdash-&lt;name&gt;.css
@@ -391,7 +391,7 @@ Scheduler.start()</code></pre>
 <li>Parse URL options.</li>
 <li>Fetch project config from <code>./api/config</code>.</li>
 <li>Fetch page config from
-<code>./api/contents/content/{contents_file}</code>.</li>
+<code>./api/content/item/{contents_file}</code>.</li>
 <li>Decode inline base64 config data from the URL.</li>
 <li>Load theme CSS dynamically.</li>
 <li>Build <code>&lt;datalist&gt;</code> elements for channel and content
@@ -401,9 +401,9 @@ selectors.</li>
 </ul>
 <p>Important server calls:</p>
 <pre class="text"><code>GET  ./api/config
-GET  ./api/contents/content/{filename}
+GET  ./api/content/item/{filename}
 GET  api/channels?fields=name
-GET  ./api/contents/contentlist
+GET  ./api/content/itemlist
 POST ./api/{filename}</code></pre>
 <p>The final configuration is built by deep-merging:</p>
 <pre class="text"><code>defaults
@@ -775,7 +775,7 @@ dashboard.</p>
 messages through callbacks.</p>
 <h3 id="map-panels">Map panels</h3>
 <p><code>panel-map.mjs</code> loads map configuration from:</p>
-<pre class="text"><code>GET ./api/contents/file/map-{name}.json</code></pre>
+<pre class="text"><code>GET ./api/content/file/map-{name}.json</code></pre>
 <p>It uses map geometry and color scales to draw channel-based map
 displays.</p>
 <h3 id="table-tree-and-blob-panels">Table, tree, and blob panels</h3>
@@ -805,8 +805,8 @@ panels</h3>
 <li><code>ChannelListPanel</code></li>
 </ul>
 <p>It uses:</p>
-<pre class="text"><code>GET ./api/contents/contentlist
-GET ./api/contents/content/{filename}</code></pre>
+<pre class="text"><code>GET ./api/content/itemlist
+GET ./api/content/item/{filename}</code></pre>
 <p>to list and open configured SlowDash content.</p>
 <h3 id="download-and-slowpy-panels">Download and SlowPy panels</h3>
 <p><code>panel-download.mjs</code> includes:</p>
@@ -827,9 +827,9 @@ requests for downloadable data products.</p>
 <li><code>ConfigEditorPanel</code></li>
 </ul>
 <p>These panels use APIs such as:</p>
-<pre class="text"><code>GET  ./api/contents/filelist
-GET  ./api/contents/file/{filename}
-POST ./api/contents/file/{filename}
+<pre class="text"><code>GET  ./api/content/filelist
+GET  ./api/content/file/{filename}
+POST ./api/content/file/{filename}
 GET  api/control/task?since={revision}
 POST ./api/control/task/{taskname}
 GET  api/console?since={revision}
@@ -1021,11 +1021,11 @@ rotates through a list of pages, usually dashboard pages.</p>
 </ul>
 <p>SlowDash configures it with:</p>
 <div class="sourceCode" id="cb41"><pre
-class="sourceCode html"><code class="sourceCode html"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">body</span><span class="ot"> autocruise-configbase</span><span class="op">=</span><span class="st">&quot;api/contents/content/&quot;</span><span class="ot"> autocruise-interval</span><span class="op">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span></code></pre></div>
+class="sourceCode html"><code class="sourceCode html"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">body</span><span class="ot"> autocruise-configbase</span><span class="op">=</span><span class="st">&quot;api/content/item/&quot;</span><span class="ot"> autocruise-interval</span><span class="op">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span></code></pre></div>
 <p>This lets users open a cruise page such as:</p>
 <pre class="text"><code>slowcruise.html?config=slowcruise-example.json</code></pre>
 <p>and have <code>autocruise.js</code> fetch:</p>
-<pre class="text"><code>api/contents/content/slowcruise-example.json</code></pre>
+<pre class="text"><code>api/content/item/slowcruise-example.json</code></pre>
 <h3 id="runtime-model">Runtime model</h3>
 <p>Autocruise replaces the page body with its own UI:</p>
 <ul>
@@ -1054,11 +1054,11 @@ as pages loaded in iframes.</p>
 relative URLs.</p>
 <h3 id="configuration">Configuration</h3>
 <pre class="text"><code>GET ./api/config
-GET ./api/contents/content/{filename}
-GET ./api/contents/contentlist
-GET ./api/contents/file/{filename}
-GET ./api/contents/filelist
-POST ./api/contents/file/{filename}</code></pre>
+GET ./api/content/item/{filename}
+GET ./api/content/itemlist
+GET ./api/content/file/{filename}
+GET ./api/content/filelist
+POST ./api/content/file/{filename}</code></pre>
 <h3 id="data">Data</h3>
 <pre class="text"><code>GET api/channels?fields=name
 GET api/data/{channels}?length=...&amp;to=...&amp;resample=...
@@ -1114,7 +1114,7 @@ data types.</p>
 <h1 id="configuration-flow-into-panels">Configuration Flow into
 Panels</h1>
 <p>The page config usually comes from
-<code>/api/contents/content/{filename}</code> and has a structure
+<code>/api/content/item/{filename}</code> and has a structure
 containing:</p>
 <pre class="text"><code>meta
 control

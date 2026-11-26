@@ -791,7 +791,7 @@ class TaskComponent(Component):
         return record
     
 
-    @slowlette.get('/api/content/contentlist')
+    @slowlette.get('/api/content/itemlist')
     async def api_get_content_list(self):
         self._content_table = {}
 
@@ -828,7 +828,7 @@ class TaskComponent(Component):
         return doc
 
     
-    @slowlette.get('/api/content/content/{filename}')
+    @slowlette.get('/api/content/item/{filename}')
     async def api_get_content(self, filename:str):
         root_name = Path(filename).stem
         if '-' not in root_name:

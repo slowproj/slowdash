@@ -197,7 +197,7 @@ GET http://ADDRESS:PORT/api/blob/CHANNEL?id=ID
 ## Listing User Content Entries
 ### Request
 ```
-GET http://ADDRESS:PORT/api/content/contentlist
+GET http://ADDRESS:PORT/api/content/itemlist
 ```
 
 ## Fetching User Content
@@ -205,7 +205,7 @@ This returns decoded contents in JSON. If the file is YAML, it is converted into
 
 ### Request
 ```
-GET http://ADDRESS:PORT/api/content/content/FILENAME
+GET http://ADDRESS:PORT/api/content/item/FILENAME
 ```
 
 ## Listing User Content Files

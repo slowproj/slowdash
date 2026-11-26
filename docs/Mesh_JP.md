@@ -1203,10 +1203,10 @@ Task が export している変数の値をデータベース中のデータと�
 
 ### 一般 Content アクセスインターフェース
 
-#### GET `api/contents/contentlist`
+#### GET `api/content/itemlist`
 Task が提供している contents に対して，SlowDash Project の `contents` 以下にあるファイルと同様のリストを生成して返す
 
-#### GET `api/contents/content/{content_name}`
+#### GET `api/content/item/{content_name}`
 Task が提供している contents に対して，その内容を返す
 
 

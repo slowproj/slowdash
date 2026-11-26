@@ -572,8 +572,8 @@ id="組み込みサーバーコンポーネント">組み込みサーバーコ�
 <li>許可されている場合に設定ファイルを配信する．</li>
 <li>生成されたプロット内容などの一時コンテンツを管理する．</li>
 </ul>
-<p><code>/api/content/contentlist</code> と
-<code>/api/content/content/{filename}</code> のエンドポイントは，UI
+<p><code>/api/content/itemlist</code> と
+<code>/api/content/item/{filename}</code> のエンドポイントは，UI
 コンポーネントがダッシュボード，プロット，cruise，その他のユーザーコンテンツを見つけるために使われます．</p>
 <h2
 id="datasourcecomponent-と-datasource"><code>DataSourceComponent</code>
@@ -647,8 +647,8 @@ POST /api/task/control/{taskname}
 POST /api/control
 GET  /api/channels
 GET  /api/data/{*}
-GET  /api/content/contentlist
-GET  /api/content/content/{filename}
+GET  /api/content/itemlist
+GET  /api/content/item/{filename}
 GET  /api/content/file/{filename}</code></pre>
 <ul>
 <li><code>task</code> / <code>tasks</code> 設定と

@@ -343,7 +343,7 @@ $$
 - 許可されている場合に設定ファイルを配信する．
 - 生成されたプロット内容などの一時コンテンツを管理する．
 
-`/api/content/contentlist` と `/api/content/content/{filename}` のエンドポイントは，UI コンポーネントがダッシュボード，プロット，cruise，その他のユーザーコンテンツを見つけるために使われます．
+`/api/content/itemlist` と `/api/content/item/{filename}` のエンドポイントは，UI コンポーネントがダッシュボード，プロット，cruise，その他のユーザーコンテンツを見つけるために使われます．
 
 ## `DataSourceComponent` と `DataSource`
 
@@ -430,8 +430,8 @@ POST /api/task/control/{taskname}
 POST /api/control
 GET  /api/channels
 GET  /api/data/{*}
-GET  /api/content/contentlist
-GET  /api/content/content/{filename}
+GET  /api/content/itemlist
+GET  /api/content/item/{filename}
 GET  /api/content/file/{filename}
 ```
 

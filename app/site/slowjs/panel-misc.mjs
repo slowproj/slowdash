@@ -347,7 +347,7 @@ class ConfigEditorPanel extends Panel {
 
         let contentlist = [];
         try {
-            let response = await fetch('./api/content/contentlist/');
+            let response = await fetch('./api/content/itemlist');
             if (! response.ok) {
                 throw new Error(response.status + " " + response.statusText);
             }
