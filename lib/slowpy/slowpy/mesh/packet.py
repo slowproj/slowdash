@@ -50,9 +50,10 @@ class DataPacket(MeshPacket):
                 logging.error(f'mesh.DataPacket: tag is required for time-series data type')
                 return (None, None, None)
 
+            t = [ self.values.start + t for t in self.values.t ]
             fields = self.values.fields
             values = self.values.values
-            body = { self.tag: { fields[i]: values[i] for i in range(len(fields)) } }
+            body = { self.tag: { 't': t } | { fields[i]: values[i] for i in range(len(fields)) } }
         else:    
             t = self.timestamp if self.timestamp is not None else time.time()
             if type(t) in [ int, float ] and t <= 0:
