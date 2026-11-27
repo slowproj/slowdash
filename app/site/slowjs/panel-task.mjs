@@ -97,7 +97,8 @@ class TaskPanel extends Panel {
     configure(config, options={}, callbacks={}) {
         super.configure(config, options, callbacks);
 
-        this._shortForm = config.short_form ?? false;
+        const columns = 'STATUS,CONTROL,HEARTBEAT,LIFEEENT,PROCID,MESHID,COMMAND';
+        this._columns = (config.columns ?? columns).toUpperCase().split(',').map(s=>s.replace(/[^A-Z]/g, ''));
         this._isSecure = options.is_secure;
         
         this._taskCatalog = null;
@@ -167,7 +168,7 @@ class TaskPanel extends Panel {
                 taskList.push({
                     name: task.name,
                     status: status,
-                    heartbeat: (heartbeat > 0) ? (new JGDateTime(heartbeat)).asString('%a, %H:%M:%S') : '',
+                    heartbeat: (heartbeat > 0) ? (new JGDateTime(heartbeat)).asString('%b %d, %H:%M:%S') : '',
                     file_path: catalog ? catalog.file_path : null,
                     command: catalog ? catalog.command : null,
                     proc_id: task.proc_id,
@@ -213,14 +214,14 @@ class TaskPanel extends Panel {
         this.table.empty();
         let tr = $('<tr>');
         $('<th>').text("Name").appendTo(tr);
-        $('<th>').text("Status").appendTo(tr);
-        $('<th>').text("Control").appendTo(tr);
-        if (! this._shortForm) {
-            $('<th>').text("Heartbeat").appendTo(tr);
-            $('<th>').text("Life Event").appendTo(tr);
-            $('<th>').text("Proc ID").appendTo(tr);
-            $('<th>').text("Mesh ID").appendTo(tr);
-            $('<th>').text("Command").appendTo(tr);
+        for (const col of this._columns) {
+            if (col === 'STATUS') $('<th>').text("Status").appendTo(tr);
+            if (col === 'CONTROL') $('<th>').text("Control").appendTo(tr);
+            if (col === 'HEARTBEAT') $('<th>').text("Heartbeat").appendTo(tr);
+            if (col === 'LIFEEVENT') $('<th>').text("Life Event").appendTo(tr);
+            if (col === 'PROCID') $('<th>').text("Proc ID").appendTo(tr);
+            if (col === 'MESHID') $('<th>').text("Mesh ID").appendTo(tr);
+            if (col === 'COMMAND') $('<th>').text("Command").appendTo(tr);
         }
         tr.appendTo(this.table);
         const bg = window.getComputedStyle(tr.get()).getPropertyValue('background-color');
@@ -250,6 +251,9 @@ class TaskPanel extends Panel {
             killButton.enabled(task.proc_id != null && task.proc_id.length > 0);
             purgeButton.enabled(task.status == 'ghost');
 
+            let command = $('<span>').text('...(mouse here)...');
+            command.attr('title', task.command??'(none)');
+            
             let tr = $('<tr>');
             if (
                 this._isSecure && task.command && 
@@ -261,15 +265,17 @@ class TaskPanel extends Panel {
             else {
                 $('<td>').appendTo(tr).text(task.name);
             }
-            $('<td>').appendTo(tr).html(status_label);
-            $('<td>').appendTo(tr).append(buttons);
-            if (! this._shortForm) {
-                $('<td>').appendTo(tr).text(task.heartbeat ?? '');
-                $('<td>').appendTo(tr).text(task.last_event ?? '');
-                $('<td>').appendTo(tr).text((task.proc_id ?? []).join(','));
-                $('<td>').appendTo(tr).text(task.mesh_id ?? '');
-                $('<td>').appendTo(tr).text(task.command ?? '');
+
+            for (const col of this._columns) {
+                if (col === 'STATUS') $('<td>').appendTo(tr).html(status_label);
+                if (col === 'CONTROL') $('<td>').appendTo(tr).append(buttons);
+                if (col === 'HEARTBEAT') $('<td>').appendTo(tr).text(task.heartbeat ?? '');
+                if (col === 'LASTEVENT') $('<td>').appendTo(tr).text(task.last_event ?? '');
+                if (col === 'PROCID') $('<td>').appendTo(tr).text((task.proc_id ?? []).join(','));
+                if (col === 'MESHID') $('<td>').appendTo(tr).text(task.mesh_id ?? '');
+                if (col === 'COMMAND') $('<td>').appendTo(tr).append(command);
             }
+            
             tr.appendTo(this.table);
 
             tr.find('button').bind('click', e=>{
@@ -282,7 +288,7 @@ class TaskPanel extends Panel {
 
 
     _handleStdout(data) {
-        const now = new JGDateTime().asString('%a,%H:%M:%S');
+        const now = new JGDateTime().asString('%b %d, %H:%M:%S');
         if (this._consoleLines.length > 100) {
             this._consoleLines.shift();
         }
@@ -424,7 +430,7 @@ class LogPanel extends Panel {
     
     _render(logs) {
         for (const [ts, level, logger, location, message] of logs) {
-            const time = new JGDateTime(ts).asString('%a,%H:%M:%S');
+            const time = new JGDateTime(ts).asString('%b %d, %H:%M:%S');
             const source = logger + ' (' + location + ')';
             let line = time + '  ' + level.padEnd(10, ' ') + (source + ': ').padEnd(25, ' ') + message;
             

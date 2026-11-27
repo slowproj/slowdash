@@ -21,32 +21,39 @@ class SlowMQComponent(Component):
 
         self._max_send_failures = 5
 
-        self._start_time = time.time()
+        self._start_time = int(time.time())
         self._receive_count = 0
         self._send_count = 0
         self._failure_count = 0
+        self._uptime = 0
+        self._last_count = 0
+        self._rate = '0'
         
 
     def public_config(self):
-        up_time = time.time() - self._start_time + 0.01
-        rate = (self._receive_count + self._send_count) / up_time
-        if rate >= 100:
-            rate = '%.0f' % rate
-        elif rate >= 10:
-            rate = '%.1f' % rate
-        else:
-            rate = '%.3f' % rate
+        uptime = int(time.time()) - self._start_time
+        if uptime != self._uptime:
+            count = self._send_count + self._receive_count
+            rate = (count - self._last_count) / (uptime - self._uptime)
+            self._uptime = uptime
+            self._last_count = count
+            if rate >= 100:
+                self._rate = '%.0f' % rate
+            elif rate >= 10:
+                self._rate = '%.1f' % rate
+            else:
+                self._rate = '%.3f' % rate
         
         return { 'slowmq': {
             'enabled': self.enabled,
             'n_connections': len(self._clients),
             'topics': { topic:len(clients) for topic,clients in self._subscribers.items() },
             'statistics': {
-                'up_time': int(up_time),
+                'up_time': uptime,
                 'received': self._receive_count,
                 'sent': self._send_count,
                 'failed': self._failure_count,
-                'message_rate': float(rate),
+                'message_rate': self._rate,
             },
         }}
 

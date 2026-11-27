@@ -382,7 +382,10 @@ class TaskComponent(Component):
                     'pid': [ proc.pid for proc in proc_set ],
                 }
                 for name, proc_set in self._proc_set_table.items()
-            }
+            },
+            'statistics': {
+                'active_tasks': len(self._task_table),
+            },
         }}
 
 

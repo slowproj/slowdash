@@ -10,7 +10,10 @@ class MiscApiComponent(Component):
     def __init__(self, app, project):
         super().__init__(app, project)
 
-        self._start_time = time.time()
+        self._start_time = int(time.time())
+        self._uptime = 0
+        self._last_slowlette_count = 0
+        self._slowlette_rate = '0'
         
 
     def public_config(self):
@@ -34,20 +37,24 @@ class MiscApiComponent(Component):
         }
         
         now = time.time()
-        up_time = now - self._start_time + 0.01
-        requests = self.app.slowlette.request_count
-        rate = requests / up_time
-        if rate >= 100:
-            rate = '%.0f' % rate
-        elif rate >= 10:
-            rate = '%.1f' % rate
-        else:
-            rate = '%.3f' % rate
+        uptime = int(now) - self._start_time
+        if uptime != self._uptime:
+            count = self.app.slowlette.request_count
+            rate = (count - self._last_slowlette_count) / (uptime - self._uptime)
+            self._uptime = uptime
+            self._last_slowlette_count = count
+            if rate >= 100:
+                self._slowlette_rate = '%.0f' % rate
+            elif rate >= 10:
+                self._slowlette_rate = '%.1f' % rate
+            else:
+                self._slowlette_rate = '%.3f' % rate
+
         doc['slowlette'] = {
             'statistics': {
-                'up_time': int(up_time),
-                'requests': requests,
-                'request_rate': float(rate),
+                'up_time': uptime,
+                'requests': self.app.slowlette.request_count,
+                'request_rate': self._slowlette_rate,
             },
             'current_requests': [
                 f'{(now - req.time):.3f}s, {req}'
